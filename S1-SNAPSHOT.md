@@ -4,7 +4,7 @@
 |-------|-------|
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
-| **Commit** | `55fb252` |
+| **Commit** | `249e3e7` (run `git rev-parse S1` to verify) |
 | **Saved** | 2026-05-27 |
 
 ## What's included (100% website)
