@@ -23,10 +23,10 @@ if ($status) {
   git commit -m $msg
 }
 
-git tag -d S1 2>$null
+$null = git tag -d S1 2>&1
 git tag -a S1 -m "S1 PDF Doctor complete website snapshot"
 
-git branch -D s1-backup 2>$null
+$null = git branch -D s1-backup 2>&1
 git branch s1-backup
 
 $hash = git rev-parse HEAD
