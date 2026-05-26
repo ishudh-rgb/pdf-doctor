@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 */1 * * *"
+    }
+  ],
+  "functions": {
+    "src/app/api/tools/*/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/ai/*/route.ts": {
+      "maxDuration": 120
+    }
+  }
+}

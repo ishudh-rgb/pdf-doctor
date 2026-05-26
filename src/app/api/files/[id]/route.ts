@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from "next/server";
+import { deleteFile, getFileUrl } from "@/lib/services/upload.service";
+import { getUploadedFileById, deleteUploadedFileRecord, logError } from "@/lib/db/queries";
+import { createClient } from "@/lib/supabase/server";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const file = await getUploadedFileById(id);
+
+    if (!file) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
+    if (file.expires_at && new Date(file.expires_at) < new Date()) {
+      return NextResponse.json({ error: "File has expired" }, { status: 410 });
+    }
+
+    if (file.user_id && file.user_id !== user?.id) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    const fileUrl = await getFileUrl(file.storage_path);
+
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      return NextResponse.json({ error: "Failed to retrieve file" }, { status: 500 });
+    }
+
+    const fileBuffer = await response.arrayBuffer();
+
+    return new NextResponse(fileBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": file.mime_type,
+        "Content-Disposition": `attachment; filename="${file.original_name}"`,
+        "Content-Length": String(file.size),
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to download file";
+
+    await logError({
+      user_id: null,
+      tool_name: "file-download",
+      error_type: "DOWNLOAD_ERROR",
+      error_message: message,
+      stack_trace: error instanceof Error ? error.stack : undefined,
+    }).catch(() => {});
+
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const file = await getUploadedFileById(id);
+
+    if (!file) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
+    if (file.user_id !== user.id) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    await deleteFile(file.storage_path);
+    await deleteUploadedFileRecord(id);
+
+    return NextResponse.json({ success: true, message: "File deleted successfully" });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to delete file";
+
+    await logError({
+      user_id: null,
+      tool_name: "file-delete",
+      error_type: "DELETE_ERROR",
+      error_message: message,
+      stack_trace: error instanceof Error ? error.stack : undefined,
+    }).catch(() => {});
+
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

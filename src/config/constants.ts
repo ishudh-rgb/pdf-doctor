@@ -1,0 +1,373 @@
+import type { Tool, MegaMenuCategory, PricingPlan } from "@/types";
+
+export const APP_NAME = "PDF Doctor";
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+export const APP_DESCRIPTION =
+  "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs. No signup required for basic tools.";
+
+export const FILE_LIMITS = {
+  maxFreeFileSizeMB: Number(process.env.MAX_FREE_FILE_SIZE_MB) || 25,
+  maxProFileSizeMB: Number(process.env.MAX_PRO_FILE_SIZE_MB) || 200,
+  fileRetentionHours: Number(process.env.FILE_RETENTION_HOURS) || 2,
+  maxFreeUsesPerDay: 5,
+  maxProUsesPerDay: 100,
+  maxFilesPerMerge: 20,
+  maxFilesPerMergePro: 50,
+} as const;
+
+export const SUPPORTED_FILE_TYPES = {
+  pdf: {
+    mimeTypes: ["application/pdf"],
+    extensions: [".pdf"],
+    label: "PDF",
+  },
+  word: {
+    mimeTypes: [
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ],
+    extensions: [".doc", ".docx"],
+    label: "Word",
+  },
+  image: {
+    mimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+    extensions: [".jpg", ".jpeg", ".png", ".webp", ".gif"],
+    label: "Image",
+  },
+  excel: {
+    mimeTypes: [
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ],
+    extensions: [".xls", ".xlsx"],
+    label: "Excel",
+  },
+  powerpoint: {
+    mimeTypes: [
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ],
+    extensions: [".ppt", ".pptx"],
+    label: "PowerPoint",
+  },
+} as const;
+
+export const TOOLS: Tool[] = [
+  {
+    name: "Merge PDF",
+    slug: "merge-pdf",
+    description: "Combine multiple PDFs into one",
+    icon: "Layers",
+    category: "organize",
+    color: "#4CAF50",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 20,
+  },
+  {
+    name: "Split PDF",
+    slug: "split-pdf",
+    description: "Split PDF into separate pages",
+    icon: "Scissors",
+    category: "organize",
+    color: "#2196F3",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "Compress PDF",
+    slug: "compress-pdf",
+    description: "Reduce PDF file size",
+    icon: "Minimize2",
+    category: "optimize",
+    color: "#FF9800",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "PDF to Word",
+    slug: "pdf-to-word",
+    description: "Convert PDF to editable Word",
+    icon: "FileText",
+    category: "convert-from",
+    color: "#1565C0",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "PDF to Excel",
+    slug: "pdf-to-excel",
+    description: "Convert PDF to Excel spreadsheet",
+    icon: "Table",
+    category: "convert-from",
+    color: "#217346",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "PDF to PowerPoint",
+    slug: "pdf-to-ppt",
+    description: "Convert PDF to PowerPoint slides",
+    icon: "Presentation",
+    category: "convert-from",
+    color: "#D24726",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "Word to PDF",
+    slug: "word-to-pdf",
+    description: "Convert Word documents to PDF",
+    icon: "FileUp",
+    category: "convert-to",
+    color: "#C62828",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["word"],
+    maxFiles: 1,
+  },
+  {
+    name: "Excel to PDF",
+    slug: "excel-to-pdf",
+    description: "Convert Excel spreadsheets to PDF",
+    icon: "FileSpreadsheet",
+    category: "convert-to",
+    color: "#217346",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["excel"],
+    maxFiles: 1,
+  },
+  {
+    name: "PowerPoint to PDF",
+    slug: "ppt-to-pdf",
+    description: "Convert PowerPoint presentations to PDF",
+    icon: "Presentation",
+    category: "convert-to",
+    color: "#D24726",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["powerpoint"],
+    maxFiles: 1,
+  },
+  {
+    name: "JPG to PDF",
+    slug: "jpg-to-pdf",
+    description: "Convert images to PDF",
+    icon: "Image",
+    category: "convert-to",
+    color: "#7B1FA2",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["image"],
+    maxFiles: 20,
+  },
+  {
+    name: "Edit PDF",
+    slug: "edit-pdf",
+    description: "Add text, images, annotations",
+    icon: "Pencil",
+    category: "edit",
+    color: "#00897B",
+    requiresLogin: false,
+    isPro: true,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "Sign PDF",
+    slug: "sign-pdf",
+    description: "Add signature to PDF",
+    icon: "PenTool",
+    category: "edit",
+    color: "#F57C00",
+    requiresLogin: false,
+    isPro: true,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "Add Watermark",
+    slug: "add-watermark",
+    description: "Add text or image watermark to PDF",
+    icon: "Stamp",
+    category: "edit",
+    color: "#0891B2",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "AI PDF Summarizer",
+    slug: "ai-pdf-summarizer",
+    description: "Get AI summary of PDF",
+    icon: "Sparkles",
+    category: "ai",
+    color: "#6A1B9A",
+    requiresLogin: true,
+    isPro: true,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "PDF Scanner",
+    slug: "pdf-scanner",
+    description: "Scan documents to PDF",
+    icon: "ScanLine",
+    category: "scan",
+    color: "#455A64",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["image"],
+    maxFiles: 10,
+  },
+  {
+    name: "Unlock PDF",
+    slug: "unlock-pdf",
+    description: "Remove password from your PDF",
+    icon: "Unlock",
+    category: "security",
+    color: "#D32F2F",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
+    name: "Protect PDF",
+    slug: "protect-pdf",
+    description: "Add password to PDF",
+    icon: "Lock",
+    category: "security",
+    color: "#1976D2",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+];
+
+export const MEGA_MENU_CATEGORIES: MegaMenuCategory[] = [
+  {
+    label: "Organize PDF",
+    tools: [
+      { name: "Merge PDF", slug: "merge-pdf", icon: "Layers", color: "#4CAF50" },
+      { name: "Split PDF", slug: "split-pdf", icon: "Scissors", color: "#2196F3" },
+    ],
+  },
+  {
+    label: "Optimize PDF",
+    tools: [
+      { name: "Compress PDF", slug: "compress-pdf", icon: "Minimize2", color: "#FF9800" },
+    ],
+  },
+  {
+    label: "Convert from PDF",
+    tools: [
+      { name: "PDF to Word", slug: "pdf-to-word", icon: "FileText", color: "#1565C0" },
+      { name: "PDF to Excel", slug: "pdf-to-excel", icon: "Table", color: "#217346" },
+      { name: "PDF to PowerPoint", slug: "pdf-to-ppt", icon: "Presentation", color: "#D24726" },
+    ],
+  },
+  {
+    label: "Convert to PDF",
+    tools: [
+      { name: "Word to PDF", slug: "word-to-pdf", icon: "FileUp", color: "#C62828" },
+      { name: "Excel to PDF", slug: "excel-to-pdf", icon: "FileSpreadsheet", color: "#217346" },
+      { name: "PowerPoint to PDF", slug: "ppt-to-pdf", icon: "Presentation", color: "#D24726" },
+      { name: "JPG to PDF", slug: "jpg-to-pdf", icon: "Image", color: "#7B1FA2" },
+    ],
+  },
+  {
+    label: "Edit & Sign",
+    tools: [
+      { name: "Edit PDF", slug: "edit-pdf", icon: "Pencil", color: "#00897B" },
+      { name: "Sign PDF", slug: "sign-pdf", icon: "PenTool", color: "#F57C00" },
+      { name: "Add Watermark", slug: "add-watermark", icon: "Stamp", color: "#0891B2" },
+    ],
+  },
+  {
+    label: "Security",
+    tools: [
+      { name: "Protect PDF", slug: "protect-pdf", icon: "Lock", color: "#1976D2" },
+      { name: "Unlock PDF", slug: "unlock-pdf", icon: "Unlock", color: "#D32F2F" },
+    ],
+  },
+  {
+    label: "AI Tools",
+    tools: [
+      { name: "AI PDF Summarizer", slug: "ai-pdf-summarizer", icon: "Sparkles", color: "#6A1B9A" },
+    ],
+  },
+  {
+    label: "Scan",
+    tools: [
+      { name: "PDF Scanner", slug: "pdf-scanner", icon: "ScanLine", color: "#455A64" },
+    ],
+  },
+];
+
+export const PRICING_PLANS: PricingPlan[] = [
+  {
+    name: "Free",
+    tier: "free",
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    currency: "INR",
+    features: [
+      "5 tool uses per day",
+      "Max 25 MB file size",
+      "Basic PDF tools",
+      "Standard processing speed",
+      "Files deleted after 2 hours",
+      "Community support",
+    ],
+    highlighted: false,
+    ctaText: "Get Started Free",
+  },
+  {
+    name: "Pro",
+    tier: "pro",
+    monthlyPrice: 299,
+    yearlyPrice: 2399,
+    currency: "INR",
+    features: [
+      "100 tool uses per day",
+      "Max 200 MB file size",
+      "All PDF tools including Edit & Sign",
+      "AI PDF Summarizer",
+      "Priority processing speed",
+      "Files deleted after 24 hours",
+      "No ads",
+      "Priority email support",
+      "Batch processing",
+    ],
+    highlighted: true,
+    ctaText: "Upgrade to Pro",
+  },
+];
+
+export function getToolBySlug(slug: string): Tool | undefined {
+  return TOOLS.find((t) => t.slug === slug);
+}
+
+export function getToolsByCategory(category: string): Tool[] {
+  return TOOLS.filter((t) => t.category === category);
+}
+
+export const PROTECTED_ROUTES = ["/dashboard", "/admin"];
+export const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
+
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@pdfdoctor.com";

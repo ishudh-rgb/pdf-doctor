@@ -1,0 +1,31 @@
+---
+description: S1 website snapshot — save and revert PDF Doctor to exact saved state
+alwaysApply: true
+---
+
+# S1 Snapshot — PDF Doctor Restore Point
+
+## When user says "revert to s1" (any casing)
+
+Restore the **entire** `pdf-doctor` website to tag **S1** — no partial fixes.
+
+1. `cd pdf-doctor` (workspace: `c:\Users\NiTiN Dhiman\Documents\Cursor\pdf-doctor`)
+2. Run: `.\scripts\revert-to-s1.ps1`
+3. Verify: `git describe --tags` → must show `S1`
+4. Run: `npm run build` to confirm
+5. Tell user restore is complete
+
+**Strict rules:**
+- Use `git reset --hard S1` via the script — do not hand-pick files
+- Do not skip `npm install` after revert
+- `.env.local` restores from `.snapshots/s1/.env.local.backup` if present
+
+## When user says "save s1" or "save this as s1"
+
+1. Run: `.\scripts\save-s1.ps1`
+2. Confirm tag `S1` and branch `s1-backup` updated
+
+## S1 includes
+
+All source, styles, public images, tools, previews, i18n, auth/dashboard theme.
+See `S1-SNAPSHOT.md` for commit hash and manifest.

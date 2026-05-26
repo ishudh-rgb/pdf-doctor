@@ -1,26 +1,211 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafbff;
+  --foreground: #0f172a;
+  --brand-indigo: #6366f1;
+  --brand-violet: #8b5cf6;
+  --brand-coral: #f43f5e;
+  --surface-glass: rgba(255, 255, 255, 0.72);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+
+  --animate-fade-in: fade-in 0.15s ease-out;
+  --animate-modal-enter: modal-enter 0.2s ease-out;
+  --animate-bounce-once: bounce-once 0.5s ease-out;
+  --animate-float-slow: float-slow 6s ease-in-out infinite;
+  --animate-float-medium: float-medium 5s ease-in-out infinite;
+  --animate-float-fast: float-fast 4s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+html[lang="hi"] body,
+html[data-lang="hi"] body {
+  font-family: var(--font-devanagari), var(--font-inter), system-ui, sans-serif;
+}
+
+html[lang="hi"] h1,
+html[lang="hi"] h2,
+html[lang="hi"] h3,
+html[data-lang="hi"] h1,
+html[data-lang="hi"] h2,
+html[data-lang="hi"] h3 {
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes bounce-once {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-medium {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes float-fast {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes mesh-shift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(2%, -2%) scale(1.03);
+  }
+}
+
+/* Drag-and-drop pulse */
+@keyframes drop-pulse {
+  0%,
+  100% {
+    border-color: #6366f1;
+  }
+  50% {
+    border-color: #a5b4fc;
+  }
+}
+
+.drag-active {
+  animation: drop-pulse 1s ease-in-out infinite;
+}
+
+/* Marketing backgrounds */
+.mesh-hero {
+  background-color: #fafbff;
+  background-image:
+    radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.18) 0, transparent 50%),
+    radial-gradient(at 80% 10%, rgba(139, 92, 246, 0.14) 0, transparent 45%),
+    radial-gradient(at 70% 80%, rgba(34, 211, 238, 0.1) 0, transparent 40%),
+    radial-gradient(at 10% 90%, rgba(244, 63, 94, 0.08) 0, transparent 35%);
+}
+
+.mesh-section {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(at 0% 50%, rgba(99, 102, 241, 0.06) 0, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0, transparent 40%);
+}
+
+.section-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+}
+
+.glass-panel {
+  background: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Tool card hover glow */
+.tool-card-glow {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.tool-card-glow:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow:
+    0 4px 6px -1px rgba(99, 102, 241, 0.08),
+    0 20px 40px -12px rgba(99, 102, 241, 0.18);
+}
+
+/* Modal backdrop blur */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }

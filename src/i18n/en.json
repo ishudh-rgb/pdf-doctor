@@ -1,0 +1,557 @@
+{
+  "app": {
+    "name": "PDF Doctor",
+    "tagline": "Your Complete PDF Toolkit",
+    "description": "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs."
+  },
+
+  "nav": {
+    "home": "Home",
+    "tools": "All PDF Tools",
+    "pricing": "Pricing",
+    "login": "Log In",
+    "signup": "Sign Up",
+    "dashboard": "Dashboard",
+    "admin": "Admin Panel",
+    "logout": "Log Out",
+    "profile": "Profile",
+    "settings": "Settings",
+    "megaMenu": {
+      "organize": "Organize PDF",
+      "optimize": "Optimize PDF",
+      "convertFrom": "Convert from PDF",
+      "convertTo": "Convert to PDF",
+      "editSign": "Edit & Sign",
+      "security": "Security",
+      "aiTools": "AI Tools",
+      "scan": "Scan"
+    }
+  },
+
+  "hero": {
+    "title": "Every PDF Tool You'll Ever Need",
+    "subtitle": "Merge, split, compress, convert, edit, and sign PDFs — all in one place. Free, fast, and secure.",
+    "cta": "Explore All Tools",
+    "ctaSecondary": "See Pricing",
+    "trustedBy": "Trusted by thousands of users across India",
+    "filesProcessed": "Files Processed",
+    "activeUsers": "Active Users",
+    "toolsAvailable": "PDF Tools"
+  },
+
+  "tools": {
+    "mergePdf": {
+      "name": "Merge PDF",
+      "description": "Combine multiple PDFs into one",
+      "longDescription": "Merge multiple PDF files into a single document. Drag and drop to reorder pages before combining."
+    },
+    "splitPdf": {
+      "name": "Split PDF",
+      "description": "Split PDF into separate pages",
+      "longDescription": "Extract specific pages or split your PDF into individual files. Choose custom page ranges."
+    },
+    "compressPdf": {
+      "name": "Compress PDF",
+      "description": "Reduce PDF file size",
+      "longDescription": "Compress your PDF files without losing quality. Perfect for email attachments and uploads."
+    },
+    "pdfToWord": {
+      "name": "PDF to Word",
+      "description": "Convert PDF to editable Word",
+      "longDescription": "Convert your PDF documents to editable Word (.docx) files while preserving formatting."
+    },
+    "wordToPdf": {
+      "name": "Word to PDF",
+      "description": "Convert Word documents to PDF",
+      "longDescription": "Convert your Word documents (.doc, .docx) to PDF format with perfect formatting."
+    },
+    "jpgToPdf": {
+      "name": "JPG to PDF",
+      "description": "Convert images to PDF",
+      "longDescription": "Convert JPG, PNG, and other image formats to PDF. Combine multiple images into one PDF."
+    },
+    "editPdf": {
+      "name": "Edit PDF",
+      "description": "Add text, images, annotations",
+      "longDescription": "Edit your PDFs online — add text, images, shapes, highlights, and annotations."
+    },
+    "signPdf": {
+      "name": "Sign PDF",
+      "description": "Add signature to PDF",
+      "longDescription": "Sign your PDF documents digitally. Draw, type, or upload your signature."
+    },
+    "aiPdfSummarizer": {
+      "name": "AI PDF Summarizer",
+      "description": "Get AI summary of PDF",
+      "longDescription": "Use AI to get instant summaries, key points, and insights from your PDF documents."
+    },
+    "pdfScanner": {
+      "name": "PDF Scanner",
+      "description": "Scan documents to PDF",
+      "longDescription": "Convert scanned images and photos of documents into clean, searchable PDFs."
+    },
+    "unlockPdf": {
+      "name": "Unlock PDF",
+      "description": "Remove password from your PDF",
+      "longDescription": "Remove password protection from your PDF files. You must know the password to unlock."
+    },
+    "protectPdf": {
+      "name": "Protect PDF",
+      "description": "Add password to PDF",
+      "longDescription": "Secure your PDF files with password protection. Set permissions for printing and editing."
+    },
+    "pdfToExcel": {
+      "name": "PDF to Excel",
+      "description": "Convert PDF to Excel spreadsheet",
+      "longDescription": "Extract text and tables from PDF into an editable Excel (.xlsx) spreadsheet."
+    },
+    "pdfToPpt": {
+      "name": "PDF to PowerPoint",
+      "description": "Convert PDF to PowerPoint slides",
+      "longDescription": "Turn PDF pages into an editable PowerPoint (.pptx) presentation."
+    },
+    "excelToPdf": {
+      "name": "Excel to PDF",
+      "description": "Convert Excel spreadsheets to PDF",
+      "longDescription": "Convert Excel (.xls, .xlsx) files to PDF with table layout preserved."
+    },
+    "pptToPdf": {
+      "name": "PowerPoint to PDF",
+      "description": "Convert PowerPoint to PDF",
+      "longDescription": "Convert PowerPoint (.ppt, .pptx) presentations to PDF format."
+    },
+    "addWatermark": {
+      "name": "Add Watermark",
+      "description": "Add text or image watermark",
+      "longDescription": "Stamp a text or image watermark on every page of your PDF document."
+    }
+  },
+
+  "toolPage": {
+    "uploadTitle": "Upload your files",
+    "uploadSubtitle": "Drag & drop files here or click to browse",
+    "selectFiles": "Select Files",
+    "orDragDrop": "or drag and drop",
+    "maxFileSize": "Max file size: {size} MB",
+    "supportedFormats": "Supported formats: {formats}",
+    "processing": "Processing your file...",
+    "processingSubtitle": "This may take a few seconds",
+    "downloadReady": "Your file is ready!",
+    "download": "Download",
+    "downloadAll": "Download All",
+    "processAnother": "Process Another File",
+    "removeFile": "Remove",
+    "addMoreFiles": "Add More Files",
+    "proFeature": "Pro Feature",
+    "proFeatureDescription": "This tool requires a Pro subscription.",
+    "loginRequired": "Login Required",
+    "loginRequiredDescription": "Please log in to use this tool.",
+    "usageLimitReached": "Daily Limit Reached",
+    "usageLimitDescription": "You've reached your daily usage limit. Upgrade to Pro for more.",
+    "fileCount": "{count} file(s) selected",
+    "pageRange": "Page Range",
+    "pageRangeHint": "e.g., 1-3, 5, 8-10",
+    "allPages": "All Pages",
+    "customPages": "Custom Pages",
+    "compressionLevel": "Compression Level",
+    "compressionLow": "Low (better quality)",
+    "compressionMedium": "Medium (balanced)",
+    "compressionHigh": "High (smaller size)",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "passwordHint": "Enter the password for this PDF",
+    "newPassword": "New Password",
+    "setPassword": "Set Password"
+  },
+
+  "pricing": {
+    "title": "Simple, Transparent Pricing",
+    "subtitle": "Start free. Upgrade when you need more power.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "yearlyDiscount": "Save 33%",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "currentPlan": "Current Plan",
+    "upgrade": "Upgrade to Pro",
+    "getStarted": "Get Started Free",
+    "mostPopular": "Most Popular",
+    "features": "Features",
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "Can I use PDF Doctor for free?",
+      "a1": "Yes! Our basic tools are free to use with a limit of 5 uses per day and 25 MB max file size. No signup required for most tools.",
+      "q2": "What payment methods do you accept?",
+      "a2": "We accept all major payment methods through Razorpay — credit cards, debit cards, UPI, net banking, and wallets.",
+      "q3": "Can I cancel my subscription anytime?",
+      "a3": "Yes, you can cancel your Pro subscription at any time. You'll continue to have access until the end of your billing period.",
+      "q4": "Is my data safe?",
+      "a4": "Absolutely. All files are encrypted during transfer and automatically deleted within 2 hours of processing. We never access or share your files.",
+      "q5": "Do you offer refunds?",
+      "a5": "We offer a full refund within 7 days of purchase if you're not satisfied with the Pro plan."
+    }
+  },
+
+  "auth": {
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Log in to your PDF Doctor account",
+    "signupTitle": "Create Account",
+    "signupSubtitle": "Get started with PDF Doctor",
+    "email": "Email Address",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Log In",
+    "signupButton": "Create Account",
+    "orContinueWith": "Or continue with",
+    "google": "Continue with Google",
+    "github": "Continue with GitHub",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signupLink": "Sign up",
+    "loginLink": "Log in",
+    "resetPasswordTitle": "Reset Password",
+    "resetPasswordSubtitle": "Enter your email to receive a reset link",
+    "sendResetLink": "Send Reset Link",
+    "resetLinkSent": "Check your email for the reset link",
+    "newPassword": "New Password",
+    "updatePassword": "Update Password",
+    "passwordUpdated": "Your password has been updated successfully"
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {name}!",
+    "overview": "Overview",
+    "recentActivity": "Recent Activity",
+    "usageToday": "Usage Today",
+    "totalFiles": "Total Files Processed",
+    "subscription": "Subscription",
+    "currentPlan": "Current Plan",
+    "renewsOn": "Renews on {date}",
+    "expiresOn": "Expires on {date}",
+    "upgradePlan": "Upgrade Plan",
+    "manageBilling": "Manage Billing",
+    "noActivity": "No recent activity",
+    "noActivityDescription": "Start using PDF tools to see your activity here.",
+    "history": "Processing History",
+    "historyEmpty": "No processing history yet",
+    "downloadAgain": "Download Again",
+    "expired": "Expired",
+    "deleteAccount": "Delete Account",
+    "deleteAccountWarning": "This action cannot be undone. All your data will be permanently deleted.",
+    "accountSettings": "Account Settings",
+    "changeLanguage": "Language",
+    "changePassword": "Change Password",
+    "welcomeBackSimple": "Welcome back!",
+    "quickAccess": "Quick Access",
+    "recentJobs": "Recent Jobs",
+    "todaysUsage": "Today's Usage",
+    "aiSummaries": "AI Summaries",
+    "filesProcessed": "{used} of {total} files processed",
+    "summariesUsed": "{used} of {total} used today",
+    "upgradeToPro": "Upgrade to Pro",
+    "tool": "Tool",
+    "fileName": "File Name",
+    "date": "Date",
+    "status": "Status",
+    "action": "Action",
+    "download": "Download",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "freePlan": "Free"
+  },
+
+  "admin": {
+    "title": "Admin Panel",
+    "overview": "Overview",
+    "users": "Users",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "errorLogs": "Error Logs",
+    "coupons": "Coupons",
+    "revenue": "Revenue",
+    "totalUsers": "Total Users",
+    "proUsers": "Pro Users",
+    "todayUsage": "Today's Usage",
+    "totalRevenue": "Total Revenue",
+    "recentErrors": "Recent Errors",
+    "recentPayments": "Recent Payments",
+    "userManagement": "User Management",
+    "searchUsers": "Search users...",
+    "filterByPlan": "Filter by plan",
+    "filterByStatus": "Filter by status",
+    "exportCsv": "Export CSV",
+    "createCoupon": "Create Coupon",
+    "couponCode": "Coupon Code",
+    "discountPercent": "Discount %",
+    "maxUses": "Max Uses",
+    "validUntil": "Valid Until",
+    "appSettings": "App Settings",
+    "maintenanceMode": "Maintenance Mode",
+    "maintenanceModeDescription": "Disable all tools while you perform maintenance",
+    "maxFileSizeFree": "Max File Size (Free)",
+    "maxFileSizePro": "Max File Size (Pro)",
+    "dailyLimitFree": "Daily Limit (Free)",
+    "dailyLimitPro": "Daily Limit (Pro)",
+    "saveSettings": "Save Settings"
+  },
+
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "sortBy": "Sort By",
+    "noResults": "No results found",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "viewAll": "View All",
+    "learnMore": "Learn More",
+    "comingSoon": "Coming Soon",
+    "beta": "Beta",
+    "new": "New",
+    "pro": "Pro",
+    "free": "Free",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "and": "and",
+    "copyLink": "Copy Link",
+    "copied": "Copied!",
+    "share": "Share"
+  },
+
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "networkError": "Network error. Please check your connection.",
+    "fileTooBig": "File is too large. Maximum size is {size} MB.",
+    "invalidFileType": "Invalid file type. Please upload a supported format.",
+    "uploadFailed": "Upload failed. Please try again.",
+    "processingFailed": "Processing failed. Please try again with a different file.",
+    "loginRequired": "Please log in to continue.",
+    "unauthorized": "You don't have permission to access this.",
+    "notFound": "Page not found.",
+    "rateLimited": "Too many requests. Please wait a moment.",
+    "serverError": "Server error. Our team has been notified.",
+    "maintenanceMode": "We're currently performing maintenance. Please try again later.",
+    "sessionExpired": "Your session has expired. Please log in again.",
+    "passwordMismatch": "Passwords don't match.",
+    "weakPassword": "Password must be at least 8 characters with a number and special character.",
+    "invalidEmail": "Please enter a valid email address.",
+    "emailInUse": "This email is already registered.",
+    "invalidCoupon": "Invalid or expired coupon code.",
+    "paymentFailed": "Payment failed. Please try again or use a different method.",
+    "fileLimitReached": "You can upload a maximum of {count} files.",
+    "emptyFile": "The uploaded file is empty.",
+    "corruptedPdf": "This PDF appears to be corrupted or invalid.",
+    "passwordProtected": "This PDF is password protected. Please use the Unlock PDF tool first."
+  },
+
+  "privacy": {
+    "badge": "Your Privacy Matters",
+    "title": "100% Secure & Private",
+    "description": "Your files are encrypted during transfer and automatically deleted after processing. We never access, share, or store your documents.",
+    "encryption": "256-bit SSL Encryption",
+    "autoDelete": "Auto-deleted after {hours} hours",
+    "noStorage": "No permanent storage",
+    "gdprCompliant": "GDPR Compliant"
+  },
+
+  "upload": {
+    "dropzone": "Drop your files here",
+    "dropzoneActive": "Release to upload",
+    "selectFiles": "Select Files",
+    "dragDrop": "Drag & drop files here",
+    "browseFiles": "Browse Files",
+    "uploading": "Uploading...",
+    "uploaded": "Uploaded successfully",
+    "preparing": "Preparing files...",
+    "maxSize": "Max {size} MB per file",
+    "supportedTypes": "Supported: {types}",
+    "removeAll": "Remove All"
+  },
+
+  "footer": {
+    "description": "PDF Doctor is a free online PDF toolkit. Merge, split, compress, convert, edit, sign, and protect your PDFs — all from your browser.",
+    "tools": "PDF Tools",
+    "company": "Company",
+    "about": "About Us",
+    "contact": "Contact",
+    "blog": "Blog",
+    "careers": "Careers",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "cookies": "Cookie Policy",
+    "refund": "Refund Policy",
+    "support": "Support",
+    "helpCenter": "Help Center",
+    "faq": "FAQ",
+    "reportBug": "Report a Bug",
+    "featureRequest": "Feature Request",
+    "madeInIndia": "Made with ❤️ in India",
+    "allRightsReserved": "© {year} PDF Doctor. All rights reserved."
+  },
+
+  "seo": {
+    "homeTitle": "PDF Doctor — Free Online PDF Tools | Merge, Split, Compress, Convert",
+    "homeDescription": "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs. No signup required. Fast, secure, and easy to use.",
+    "pricingTitle": "Pricing — PDF Doctor | Affordable PDF Tool Plans",
+    "pricingDescription": "Choose the right plan for your PDF needs. Start free with basic tools or upgrade to Pro for unlimited access, AI features, and more.",
+    "dashboardTitle": "Dashboard — PDF Doctor",
+    "loginTitle": "Log In — PDF Doctor",
+    "signupTitle": "Create Account — PDF Doctor"
+  },
+
+  "cta": {
+    "startFree": "Start for Free",
+    "tryNow": "Try Now",
+    "upgradePro": "Upgrade to Pro",
+    "signUpFree": "Sign Up Free",
+    "getStarted": "Get Started",
+    "exploreTool": "Use This Tool",
+    "downloadNow": "Download Now",
+    "processFile": "Process File",
+    "mergeNow": "Merge Now",
+    "splitNow": "Split Now",
+    "compressNow": "Compress Now",
+    "convertNow": "Convert Now"
+  },
+
+  "features": {
+    "title": "Why Choose PDF Doctor?",
+    "subtitle": "The simplest way to handle all your PDF tasks",
+    "fast": {
+      "title": "Lightning Fast",
+      "description": "Process your PDFs in seconds, not minutes. Our optimized pipeline handles files quickly."
+    },
+    "secure": {
+      "title": "Bank-Level Security",
+      "description": "256-bit SSL encryption. Files are auto-deleted after processing. Your data stays private."
+    },
+    "easy": {
+      "title": "Dead Simple",
+      "description": "No software to install. Just upload, process, and download. Works on any device."
+    },
+    "free": {
+      "title": "Free to Use",
+      "description": "Most tools are completely free. No hidden charges, no credit card required."
+    },
+    "ai": {
+      "title": "AI-Powered",
+      "description": "Our Pro plan includes AI features like PDF summarization powered by advanced language models."
+    },
+    "allInOne": {
+      "title": "All-in-One Toolkit",
+      "description": "12+ PDF tools in one place. No need to switch between different websites."
+    }
+  },
+
+  "testimonials": {
+    "title": "What Our Users Say",
+    "subtitle": "Join thousands of happy users"
+  },
+
+  "meta": {
+    "language": "English",
+    "languageCode": "en",
+    "direction": "ltr"
+  },
+
+  "landing": {
+    "heroBadge": "Free PDF tools · No install needed",
+    "heroTitle": "Every PDF tool you need,",
+    "heroTitleHighlight": "in one beautiful place.",
+    "heroSubtitle": "Merge, split, compress, convert, scan, sign, protect, unlock, and summarize PDFs — all in your browser with a fast, secure workflow.",
+    "heroCtaPrimary": "Choose a PDF Tool",
+    "heroCtaSecondary": "Try AI PDF Summarizer",
+    "heroTrust": "Free tools available · Files auto-delete after 2 hours",
+    "statTools": "PDF tools",
+    "statDelete": "Auto file delete",
+    "statLimit": "Free upload limit",
+    "statBrowser": "Browser-based",
+    "workflowEyebrow": "Simple workflow",
+    "workflowTitle": "Upload. Process. Download.",
+    "workflowDesc": "Three steps from messy documents to polished PDFs — no software to install.",
+    "workflowUpload": "Upload",
+    "workflowUploadDesc": "Drag & drop any PDF, Word, or image file",
+    "workflowProcess": "Process",
+    "workflowProcessDesc": "Our servers handle merge, convert, or AI in seconds",
+    "workflowDownload": "Download",
+    "workflowDownloadDesc": "Get your result instantly — files auto-delete later",
+    "toolsEyebrow": "Tool suite",
+    "toolsTitle": "Popular PDF Tools",
+    "toolsDesc": "Everything you need to work with PDFs — fast, free, and secure.",
+    "toolsOpen": "Open tool",
+    "toolsViewAll": "View all tools",
+    "aiBadge": "AI-Powered",
+    "aiTitle": "AI-Powered PDF Summarizer",
+    "aiDesc": "Drop any PDF and get an instant, intelligent summary. Our AI reads every page so you don't have to — extracting insights, action items, and key dates in a clean report layout.",
+    "aiFeature1Title": "Short Summary",
+    "aiFeature1Desc": "Concise overview in seconds.",
+    "aiFeature2Title": "Key Points",
+    "aiFeature2Desc": "Important takeaways as bullets.",
+    "aiFeature3Title": "Action Items",
+    "aiFeature3Desc": "Tasks and next steps extracted.",
+    "aiFeature4Title": "Important Dates",
+    "aiFeature4Desc": "Deadlines and milestones found.",
+    "aiCta": "Try AI Summarizer",
+    "securityEyebrow": "Privacy first",
+    "securityTitle": "Your Files Are Safe",
+    "securityDesc": "We take privacy seriously. Every file is handled securely and never stored longer than necessary.",
+    "security1Title": "Auto-Delete",
+    "security1Desc": "Files deleted after 2 hours — 24 hours for Pro.",
+    "security2Title": "Secure Upload",
+    "security2Desc": "TLS encryption. Your data never exposed in transit.",
+    "security3Title": "User-Controlled",
+    "security3Desc": "Delete files anytime before the retention window.",
+    "security4Title": "No Permanent Storage",
+    "security4Desc": "We never keep files beyond the retention window.",
+    "pricingEyebrow": "Pricing",
+    "pricingTitle": "Simple Pricing",
+    "pricingDesc": "Get started for free. Upgrade when you need more.",
+    "pricingFree": "Free",
+    "pricingPro": "Pro",
+    "pricingPopular": "Popular",
+    "pricingPerMonth": "/month",
+    "pricingFreeCta": "Get Started Free",
+    "pricingProCta": "Upgrade to Pro",
+    "pricingSeeAll": "See full pricing",
+    "faqTitle": "Frequently Asked Questions",
+    "ctaTitle": "Start Using PDF Doctor Today",
+    "ctaDesc": "Join thousands of users who trust PDF Doctor for all their PDF needs — no signup required.",
+    "ctaButton": "Get Started — It's Free",
+    "secureBadge": "256-bit TLS",
+    "autoDeleteBadge": "After 2 hours",
+    "secureLabel": "Secure",
+    "autoDeleteLabel": "Auto-delete",
+    "faq1q": "How does PDF Doctor work?",
+    "faq1a": "Upload your PDF file, choose the tool you need, and let PDF Doctor handle the rest. All processing happens securely on our servers, and your files are automatically deleted after 2 hours.",
+    "faq2q": "Is PDF Doctor free?",
+    "faq2a": "Yes! PDF Doctor offers a generous free tier with 5 tool uses per day and support for files up to 25 MB. For power users, our Pro plan unlocks higher limits, AI tools, and priority processing.",
+    "faq3q": "Are my files safe?",
+    "faq3a": "Absolutely. Files are transmitted over encrypted connections, processed in isolated environments, and automatically deleted after 2 hours (24 hours for Pro users). We never share or sell your data.",
+    "faq4q": "What is the file size limit?",
+    "faq4a": "Free users can upload files up to 25 MB. Pro users enjoy a 200 MB limit, making it easy to work with large documents.",
+    "faq5q": "How does AI PDF Summarizer work?",
+    "faq5a": "Our AI Summarizer reads your PDF and generates a concise summary with key points, action items, and important dates. It's powered by advanced language models and is available exclusively to Pro users.",
+    "faq6q": "What payment methods are accepted?",
+    "faq6a": "We accept all major credit/debit cards, UPI, net banking, and wallets through Razorpay. All transactions are processed securely in INR.",
+    "faq7q": "Can I cancel my Pro subscription?",
+    "faq7a": "Yes, you can cancel anytime from your dashboard. You'll continue to have Pro access until the end of your current billing period."
+  }
+}

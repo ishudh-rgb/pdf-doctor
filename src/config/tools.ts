@@ -1,0 +1,458 @@
+import type { ToolSEO } from "@/types";
+
+export const TOOL_SEO: Record<string, ToolSEO> = {
+  "merge-pdf": {
+    title: "Merge PDF — Combine Multiple PDFs into One | PDF Doctor",
+    metaDescription:
+      "Merge multiple PDF files into a single document online for free. Drag and drop to reorder pages. No signup required. Fast, secure, and easy to use.",
+    h1: "Merge PDF Files Online — Free & Fast",
+    seoContent:
+      "Combine two or more PDF files into a single document in seconds. PDF Doctor's Merge PDF tool lets you drag and drop multiple files, reorder pages as needed, and download a perfectly combined PDF — all from your browser. No software to install, no registration required. Whether you're merging reports, contracts, or study notes, our tool handles files up to 25 MB for free users and 200 MB for Pro users with zero quality loss.",
+    faqs: [
+      {
+        question: "How do I merge PDF files?",
+        answer:
+          "Simply upload your PDF files using the upload area or drag and drop them. Reorder the files if needed by dragging them into the desired sequence, then click 'Merge' to combine them into one PDF.",
+      },
+      {
+        question: "Is there a limit on how many PDFs I can merge?",
+        answer:
+          "Free users can merge up to 20 PDF files at once, while Pro users can combine up to 50 files in a single operation.",
+      },
+      {
+        question: "Will merging reduce the quality of my PDFs?",
+        answer:
+          "No, our merge tool combines your PDFs without any re-compression or quality loss. The output file retains the exact same quality as the original documents.",
+      },
+      {
+        question: "Is my data safe when merging PDFs online?",
+        answer:
+          "Absolutely. All files are transferred using 256-bit SSL encryption and are automatically deleted from our servers within 2 hours of processing.",
+      },
+    ],
+  },
+
+  "split-pdf": {
+    title: "Split PDF — Extract Pages from PDF Online | PDF Doctor",
+    metaDescription:
+      "Split PDF files into individual pages or extract specific page ranges online for free. Fast, secure, and no signup required.",
+    h1: "Split PDF — Extract Pages Instantly",
+    seoContent:
+      "Need to extract specific pages from a large PDF? PDF Doctor's Split PDF tool makes it easy. Upload your PDF, select the pages or page ranges you want, and download them as separate files. Perfect for extracting chapters from an e-book, pulling specific pages from a report, or breaking down large documents into manageable sections. Works entirely in your browser with no software needed.",
+    faqs: [
+      {
+        question: "How do I split a PDF into separate pages?",
+        answer:
+          "Upload your PDF file, then choose whether to split all pages into individual files or specify custom page ranges (e.g., 1-3, 5, 8-10). Click 'Split' and download your files.",
+      },
+      {
+        question: "Can I extract just a few pages from a PDF?",
+        answer:
+          "Yes, you can specify exactly which pages to extract using page ranges. For example, entering '2-5, 8' will extract pages 2 through 5 and page 8.",
+      },
+      {
+        question: "Does splitting a PDF affect the original file?",
+        answer:
+          "No, the original PDF remains unchanged. Our tool creates new files from the pages you select without modifying the source document.",
+      },
+    ],
+  },
+
+  "compress-pdf": {
+    title: "Compress PDF — Reduce PDF File Size Online | PDF Doctor",
+    metaDescription:
+      "Compress PDF files to reduce size without losing quality. Choose from multiple compression levels. Free, fast, and secure.",
+    h1: "Compress PDF — Reduce File Size Instantly",
+    seoContent:
+      "Reduce the size of your PDF files without sacrificing quality. PDF Doctor's Compress PDF tool offers three compression levels — low, medium, and high — so you can find the perfect balance between file size and quality. Ideal for emailing large documents, uploading to portals with size limits, or saving storage space. Our intelligent compression algorithm preserves text clarity and image quality while significantly reducing file size.",
+    faqs: [
+      {
+        question: "How much can I reduce my PDF file size?",
+        answer:
+          "Depending on the content and compression level you choose, you can typically reduce PDF file sizes by 30% to 80%. Image-heavy PDFs see the most significant size reductions.",
+      },
+      {
+        question: "Will compression affect the quality of my PDF?",
+        answer:
+          "Our low compression setting maintains near-original quality. Medium offers a good balance, and high compression prioritizes smaller file size which may slightly reduce image quality while keeping text sharp.",
+      },
+      {
+        question: "What is the maximum file size I can compress?",
+        answer:
+          "Free users can compress PDFs up to 25 MB, while Pro users can handle files up to 200 MB.",
+      },
+    ],
+  },
+
+  "pdf-to-word": {
+    title: "PDF to Word — Convert PDF to Editable DOCX Online | PDF Doctor",
+    metaDescription:
+      "Convert PDF files to editable Word documents (.docx) online for free. Preserves formatting, tables, and images. No signup required.",
+    h1: "Convert PDF to Word — Free Online Converter",
+    seoContent:
+      "Transform your PDF documents into fully editable Word files (.docx) while preserving the original formatting, tables, images, and layout. PDF Doctor's PDF to Word converter uses advanced parsing technology to ensure accurate conversions. Perfect for editing contracts, updating reports, or modifying any PDF content. The converted file opens seamlessly in Microsoft Word, Google Docs, or any compatible word processor.",
+    faqs: [
+      {
+        question: "How accurate is the PDF to Word conversion?",
+        answer:
+          "Our converter preserves most formatting including fonts, tables, images, and layout. Complex PDFs with unusual fonts or intricate layouts may have minor formatting differences.",
+      },
+      {
+        question: "Can I convert a scanned PDF to Word?",
+        answer:
+          "Currently, our converter works best with text-based PDFs. For scanned documents, we recommend using the PDF Scanner tool first to create a clean PDF, then converting to Word.",
+      },
+      {
+        question: "What Word format does the converter output?",
+        answer:
+          "The converter outputs .docx format (Microsoft Word 2007 and later), which is compatible with Microsoft Word, Google Docs, LibreOffice, and most modern word processors.",
+      },
+      {
+        question: "Is there a page limit for conversion?",
+        answer:
+          "There's no specific page limit, but the file must be within the size limits — 25 MB for free users and 200 MB for Pro users.",
+      },
+    ],
+  },
+
+  "word-to-pdf": {
+    title: "Word to PDF — Convert DOCX to PDF Online | PDF Doctor",
+    metaDescription:
+      "Convert Word documents (.doc, .docx) to PDF format online for free. Perfect formatting preservation. Fast and secure.",
+    h1: "Convert Word to PDF — Free Online Tool",
+    seoContent:
+      "Convert your Word documents to PDF format with perfect formatting preservation. PDF Doctor's Word to PDF converter handles .doc and .docx files, maintaining all your fonts, images, tables, headers, and footers exactly as they appear in the original document. Ideal for sharing professional documents, submitting assignments, or creating print-ready files. The resulting PDF looks identical on every device and platform.",
+    faqs: [
+      {
+        question: "Will the formatting be preserved in the PDF?",
+        answer:
+          "Yes, our converter maintains the formatting of your Word document including fonts, images, tables, margins, headers, and footers in the output PDF.",
+      },
+      {
+        question: "Can I convert .doc files (older Word format)?",
+        answer:
+          "Yes, we support both .doc (Word 97-2003) and .docx (Word 2007+) formats for conversion to PDF.",
+      },
+      {
+        question: "Is there a file size limit?",
+        answer:
+          "Free users can convert files up to 25 MB, while Pro users can convert files up to 200 MB.",
+      },
+    ],
+  },
+
+  "jpg-to-pdf": {
+    title: "JPG to PDF — Convert Images to PDF Online | PDF Doctor",
+    metaDescription:
+      "Convert JPG, PNG, and other images to PDF format online for free. Combine multiple images into one PDF. Fast and easy.",
+    h1: "Convert Images to PDF — JPG, PNG & More",
+    seoContent:
+      "Convert your images to PDF format quickly and easily. PDF Doctor's Image to PDF converter supports JPG, JPEG, PNG, WebP, and GIF formats. Upload multiple images and combine them into a single PDF document — perfect for creating photo albums, digitizing documents, or preparing image portfolios. Drag and drop to reorder images before conversion. Each image is placed on its own page with optimal sizing.",
+    faqs: [
+      {
+        question: "What image formats can I convert to PDF?",
+        answer:
+          "We support JPG/JPEG, PNG, WebP, and GIF image formats for conversion to PDF.",
+      },
+      {
+        question: "Can I combine multiple images into one PDF?",
+        answer:
+          "Yes, you can upload up to 20 images (50 for Pro users) and combine them into a single PDF. Drag and drop to reorder the images before converting.",
+      },
+      {
+        question: "What will be the quality of images in the PDF?",
+        answer:
+          "Images are embedded in the PDF at their original resolution and quality. There is no compression applied to the images during conversion.",
+      },
+      {
+        question: "Can I set the page size for the PDF?",
+        answer:
+          "The default page size is A4 with images automatically scaled to fit. Images maintain their aspect ratio and are centered on each page.",
+      },
+    ],
+  },
+
+  "edit-pdf": {
+    title: "Edit PDF — Add Text, Images & Annotations Online | PDF Doctor",
+    metaDescription:
+      "Edit PDF files online. Add text, images, shapes, highlights, and annotations to your PDFs. Pro feature with powerful editing tools.",
+    h1: "Edit PDF Online — Add Text, Images & More",
+    seoContent:
+      "Edit your PDF documents directly in the browser with PDF Doctor's powerful PDF editor. Add text in any font and color, insert images, draw shapes, highlight important sections, and add annotations. Our editor preserves the original document layout while giving you the flexibility to make changes. Available as a Pro feature with a full suite of editing tools including freehand drawing, text boxes, stamps, and more.",
+    faqs: [
+      {
+        question: "What can I edit in a PDF?",
+        answer:
+          "You can add new text, images, shapes (rectangles, circles, lines), highlights, freehand drawings, and annotations to your PDF. You can also adjust colors, font sizes, and opacity.",
+      },
+      {
+        question: "Is the Edit PDF tool free?",
+        answer:
+          "Edit PDF is a Pro feature. You'll need a Pro subscription to access the full editing capabilities. Free users can explore the editor interface with limited functionality.",
+      },
+      {
+        question: "Can I edit the existing text in a PDF?",
+        answer:
+          "Currently, you can add new text and annotations on top of existing content. Direct editing of existing PDF text requires more advanced desktop software.",
+      },
+      {
+        question: "Will editing change the original file?",
+        answer:
+          "No, the original file remains unchanged. A new PDF with your edits is created for download.",
+      },
+    ],
+  },
+
+  "sign-pdf": {
+    title: "Sign PDF — Add Digital Signature to PDF Online | PDF Doctor",
+    metaDescription:
+      "Add your signature to PDF documents online. Draw, type, or upload your signature. Secure and legally acceptable digital signatures.",
+    h1: "Sign PDF Documents Online — Quick & Secure",
+    seoContent:
+      "Sign your PDF documents digitally with PDF Doctor. Create your signature by drawing with your mouse or touchscreen, typing your name in a signature font, or uploading an image of your handwritten signature. Place your signature anywhere on the document, resize it as needed, and download the signed PDF. Perfect for contracts, agreements, forms, and official documents. Our digital signatures are secure and widely accepted.",
+    faqs: [
+      {
+        question: "How can I create my signature?",
+        answer:
+          "You can create your signature in three ways: draw it using your mouse or touchscreen, type your name and choose a signature style font, or upload an image of your handwritten signature.",
+      },
+      {
+        question: "Are digital signatures legally valid?",
+        answer:
+          "Digital signatures created with PDF Doctor are widely accepted for most business documents. For legally binding documents requiring certified digital signatures, you may need a certificate-based signature solution.",
+      },
+      {
+        question: "Is the Sign PDF tool free?",
+        answer:
+          "Sign PDF is a Pro feature that requires a Pro subscription for full access.",
+      },
+      {
+        question: "Can I sign multiple pages?",
+        answer:
+          "Yes, you can place your signature on any page of the document and add multiple signatures or initials as needed.",
+      },
+    ],
+  },
+
+  "ai-pdf-summarizer": {
+    title: "AI PDF Summarizer — Get Instant PDF Summary | PDF Doctor",
+    metaDescription:
+      "Use AI to summarize your PDF documents instantly. Get key points, summaries, and insights powered by advanced AI. Pro feature.",
+    h1: "AI PDF Summarizer — Instant Summaries & Insights",
+    seoContent:
+      "Let AI read your PDF and provide a concise summary in seconds. PDF Doctor's AI PDF Summarizer uses advanced language models to extract key points, main ideas, and important details from your documents. Perfect for research papers, reports, legal documents, and lengthy articles. Get a structured summary with bullet points, main themes, and actionable insights. Available exclusively for Pro users with a login account.",
+    faqs: [
+      {
+        question: "How does the AI PDF Summarizer work?",
+        answer:
+          "Our AI reads the text content of your PDF and uses advanced language models to identify key points, main arguments, and important details. It then generates a structured summary with bullet points and main themes.",
+      },
+      {
+        question: "What types of documents work best?",
+        answer:
+          "The AI summarizer works best with text-heavy documents like research papers, reports, articles, and legal documents. It may not produce optimal results for image-heavy PDFs or scanned documents.",
+      },
+      {
+        question: "Is my document content kept private?",
+        answer:
+          "Yes, your document content is processed securely and is not stored after summarization. We do not use your documents to train AI models.",
+      },
+      {
+        question: "Is this tool free to use?",
+        answer:
+          "The AI PDF Summarizer is a Pro feature that requires both a login account and a Pro subscription.",
+      },
+      {
+        question: "How long does summarization take?",
+        answer:
+          "Most documents are summarized within 10-30 seconds, depending on the length and complexity of the PDF.",
+      },
+    ],
+  },
+
+  "pdf-scanner": {
+    title: "PDF Scanner — Scan Documents to PDF Online | PDF Doctor",
+    metaDescription:
+      "Convert scanned images and photos of documents into clean, professional PDFs. Enhance contrast and readability automatically.",
+    h1: "PDF Scanner — Turn Photos into Clean PDFs",
+    seoContent:
+      "Transform photos of documents, receipts, whiteboards, and notes into clean, professional-looking PDFs. PDF Doctor's PDF Scanner applies automatic image enhancement including contrast adjustment, perspective correction, and background cleanup to make your scanned documents look crisp and readable. Upload photos from your phone or computer and get a clean PDF in seconds. Perfect for digitizing paper documents on the go.",
+    faqs: [
+      {
+        question: "What types of images can I scan to PDF?",
+        answer:
+          "You can upload photos or scans of documents, receipts, business cards, whiteboards, notes, or any physical document in JPG, PNG, or WebP format.",
+      },
+      {
+        question: "Does the scanner enhance image quality?",
+        answer:
+          "Yes, our scanner automatically adjusts contrast, brightness, and sharpness to make your scanned documents more readable and professional-looking.",
+      },
+      {
+        question: "Can I scan multiple pages into one PDF?",
+        answer:
+          "Yes, upload up to 10 images (more for Pro users) and combine them into a single multi-page PDF document.",
+      },
+    ],
+  },
+
+  "unlock-pdf": {
+    title: "Unlock PDF — Remove Password from PDF Online | PDF Doctor",
+    metaDescription:
+      "Remove password protection from your PDF files online. You must know the password. Free, fast, and secure.",
+    h1: "Unlock PDF — Remove Password Protection",
+    seoContent:
+      "Remove password protection from your PDF files easily with PDF Doctor. If you know the password to your protected PDF, our tool can remove the restriction so you can freely open, print, and edit the document without entering a password each time. This tool is designed for legitimate use — you must provide the correct password to unlock the document. Your files are processed securely and deleted automatically after processing.",
+    faqs: [
+      {
+        question: "Can I unlock a PDF without the password?",
+        answer:
+          "No, you must know and provide the correct password to unlock a protected PDF. Our tool removes the password requirement from the file once you authenticate with the correct password.",
+      },
+      {
+        question: "What types of PDF protection can be removed?",
+        answer:
+          "Our tool can remove user passwords (required to open the PDF) and owner passwords (that restrict printing, editing, and copying) when you provide the correct password.",
+      },
+      {
+        question: "Is it legal to unlock a PDF?",
+        answer:
+          "It is legal to remove password protection from PDFs that you own or have authorization to access. Do not use this tool to bypass protection on documents you don't have permission to access.",
+      },
+    ],
+  },
+
+  "protect-pdf": {
+    title: "Protect PDF — Add Password to PDF Online | PDF Doctor",
+    metaDescription:
+      "Add password protection to your PDF files online. Set open and permission passwords. Secure your sensitive documents for free.",
+    h1: "Protect PDF — Add Password & Encrypt",
+    seoContent:
+      "Secure your sensitive PDF documents with password protection using PDF Doctor. Set a password that recipients must enter to open the document, and optionally set permissions to control whether the document can be printed, edited, or copied. Our tool uses strong AES-256 encryption to ensure your documents are genuinely secure. Perfect for confidential reports, financial documents, legal files, and any sensitive information you need to share safely.",
+    faqs: [
+      {
+        question: "What type of encryption is used?",
+        answer:
+          "We use AES-256 encryption, which is the same encryption standard used by banks and government agencies, to protect your PDF documents.",
+      },
+      {
+        question: "Can I set different permissions?",
+        answer:
+          "Yes, you can set a password to open the document and optionally restrict permissions for printing, editing, copying text, and adding annotations.",
+      },
+      {
+        question: "Can I remove the password later?",
+        answer:
+          "Yes, use our Unlock PDF tool to remove the password from a protected PDF. You'll need to provide the correct password to remove the protection.",
+      },
+      {
+        question: "Is my password stored anywhere?",
+        answer:
+          "No, we never store your passwords. The password is applied directly to the PDF during processing and is not retained on our servers.",
+      },
+    ],
+  },
+
+  "pdf-to-excel": {
+    title: "PDF to Excel — Convert PDF to XLSX Spreadsheet Online | PDF Doctor",
+    metaDescription:
+      "Convert PDF files to Excel spreadsheets (.xlsx) online for free. Extract text and tables from PDF into editable Excel format.",
+    h1: "Convert PDF to Excel — Free Online Tool",
+    seoContent:
+      "Extract text and tabular data from your PDF documents into editable Excel spreadsheets (.xlsx). PDF Doctor's PDF to Excel converter parses text-based PDFs and organizes content into rows and columns. Best for reports, invoices, and data tables. Scanned PDFs without selectable text may need OCR first.",
+    faqs: [
+      {
+        question: "Will tables be preserved in Excel?",
+        answer:
+          "Text-based PDFs with clear column structure convert well. Complex layouts or scanned documents may require manual cleanup after conversion.",
+      },
+      {
+        question: "Does it work with scanned PDFs?",
+        answer:
+          "This tool extracts selectable text from PDFs. For scanned documents, use the PDF Scanner tool first or ensure your PDF has a text layer.",
+      },
+    ],
+  },
+
+  "excel-to-pdf": {
+    title: "Excel to PDF — Convert XLSX to PDF Online | PDF Doctor",
+    metaDescription:
+      "Convert Excel spreadsheets (.xls, .xlsx) to PDF format online for free. Preserves worksheet data in a printable PDF.",
+    h1: "Convert Excel to PDF — Free Online Converter",
+    seoContent:
+      "Convert your Excel spreadsheets to PDF documents ready for sharing and printing. PDF Doctor renders each worksheet as a formatted table in the PDF. Supports .xls and .xlsx files with multiple sheets.",
+    faqs: [
+      {
+        question: "Are all worksheets included?",
+        answer: "Yes, each worksheet in your Excel file is included as a separate section in the PDF.",
+      },
+      {
+        question: "Will formulas be preserved?",
+        answer: "The PDF shows calculated cell values, not formulas. Formatting is simplified for print-friendly output.",
+      },
+    ],
+  },
+
+  "pdf-to-ppt": {
+    title: "PDF to PowerPoint — Convert PDF to PPTX Online | PDF Doctor",
+    metaDescription:
+      "Convert PDF files to PowerPoint presentations (.pptx) online for free. Turn PDF pages into editable slides.",
+    h1: "Convert PDF to PowerPoint — Free Online Tool",
+    seoContent:
+      "Transform PDF content into an editable PowerPoint presentation (.pptx). Each PDF page becomes one or more slides with extracted text organized as titles and bullet points. Ideal for repurposing reports and documents into presentations.",
+    faqs: [
+      {
+        question: "Are images from the PDF included?",
+        answer:
+          "Currently, the converter extracts text content. Images and complex graphics are not transferred to the slides.",
+      },
+      {
+        question: "Can I edit the slides after conversion?",
+        answer: "Yes, the output .pptx file opens in Microsoft PowerPoint, Google Slides, and other compatible apps.",
+      },
+    ],
+  },
+
+  "ppt-to-pdf": {
+    title: "PowerPoint to PDF — Convert PPTX to PDF Online | PDF Doctor",
+    metaDescription:
+      "Convert PowerPoint presentations (.ppt, .pptx) to PDF format online for free. Share slides as a single PDF document.",
+    h1: "Convert PowerPoint to PDF — Free Online Converter",
+    seoContent:
+      "Convert PowerPoint presentations to PDF for easy sharing and printing. PDF Doctor extracts slide content and renders it as a clean PDF document. Supports .ppt and .pptx formats.",
+    faqs: [
+      {
+        question: "Will slide designs be preserved exactly?",
+        answer:
+          "The converter extracts text content from slides. For pixel-perfect slide rendering, export directly from PowerPoint if available.",
+      },
+      {
+        question: "How many slides can I convert?",
+        answer: "There is no slide count limit within the file size limits — 25 MB for free users and 200 MB for Pro users.",
+      },
+    ],
+  },
+
+  "add-watermark": {
+    title: "Add Watermark to PDF — Text & Image Watermarks Online | PDF Doctor",
+    metaDescription:
+      "Add text or image watermarks to PDF files online for free. Customize opacity, rotation, and font size.",
+    h1: "Add Watermark to PDF — Free Online Tool",
+    seoContent:
+      "Protect and brand your PDF documents with custom watermarks. Add text watermarks like CONFIDENTIAL or DRAFT, or upload an image logo. Adjust opacity, rotation angle, and font size. The watermark is applied to every page of your PDF.",
+    faqs: [
+      {
+        question: "Can I use my company logo as a watermark?",
+        answer: "Yes, upload a PNG or JPG image and it will be placed as a semi-transparent watermark on all pages.",
+      },
+      {
+        question: "Can I watermark only specific pages?",
+        answer: "The current tool applies watermarks to all pages. Page-specific watermarks may be added in a future update.",
+      },
+    ],
+  },
+};
+
+export function getToolSEO(slug: string): ToolSEO | undefined {
+  return TOOL_SEO[slug];
+}
