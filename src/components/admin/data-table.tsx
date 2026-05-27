@@ -102,18 +102,18 @@ export function DataTable<T extends Record<string, unknown>>({
 
   if (loading) {
     return (
-      <div className={cn("rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden", className)}>
+      <div className={cn("rounded-2xl bg-pd-surface border border-pd-border shadow-sm overflow-hidden", className)}>
         {searchable && (
-          <div className="p-4 border-b border-gray-100">
-            <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="p-4 border-b border-pd-border">
+            <div className="h-10 bg-pd-border rounded-xl animate-pulse" />
           </div>
         )}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50">
+              <tr className="border-b border-pd-border bg-pd-background/50">
                 {columns.map((col) => (
-                  <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold text-pd-muted uppercase tracking-wider">
                     {col.label}
                   </th>
                 ))}
@@ -121,10 +121,10 @@ export function DataTable<T extends Record<string, unknown>>({
             </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-gray-50">
+                <tr key={i} className="border-b border-pd-border">
                   {columns.map((col) => (
                     <td key={col.key} className="px-4 py-3">
-                      <div className="h-4 bg-gray-100 rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
+                      <div className="h-4 bg-pd-border rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
                     </td>
                   ))}
                 </tr>
@@ -137,11 +137,11 @@ export function DataTable<T extends Record<string, unknown>>({
   }
 
   return (
-    <div className={cn("rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden", className)}>
+    <div className={cn("rounded-2xl bg-pd-surface border border-pd-border shadow-sm overflow-hidden", className)}>
       {searchable && (
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-pd-border">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-pd-muted" />
             <input
               type="text"
               value={search}
@@ -150,7 +150,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 setPage(0);
               }}
               placeholder={searchPlaceholder}
-              className="w-full h-10 pl-10 pr-4 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+              className="w-full h-10 pl-10 pr-4 rounded-xl border border-pd-border bg-pd-background text-sm text-pd-foreground placeholder:text-pd-muted focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20 transition-colors"
             />
           </div>
         </div>
@@ -159,13 +159,13 @@ export function DataTable<T extends Record<string, unknown>>({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50">
+            <tr className="border-b border-pd-border bg-pd-background/50">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider",
-                    col.sortable && "cursor-pointer select-none hover:text-gray-700",
+                    "px-4 py-3 text-left text-xs font-semibold text-pd-muted uppercase tracking-wider",
+                    col.sortable && "cursor-pointer select-none hover:text-pd-foreground",
                     col.className
                   )}
                   onClick={col.sortable ? () => handleSort(col.key) : undefined}
@@ -173,11 +173,11 @@ export function DataTable<T extends Record<string, unknown>>({
                   <span className="inline-flex items-center gap-1">
                     {col.label}
                     {col.sortable && (
-                      <span className="text-gray-300">
+                      <span className="text-pd-muted">
                         {sortKey === col.key && sortDir === "asc" ? (
-                          <ChevronUp className="h-3.5 w-3.5 text-gray-700" />
+                          <ChevronUp className="h-3.5 w-3.5 text-pd-muted" />
                         ) : sortKey === col.key && sortDir === "desc" ? (
-                          <ChevronDown className="h-3.5 w-3.5 text-gray-700" />
+                          <ChevronDown className="h-3.5 w-3.5 text-pd-muted" />
                         ) : (
                           <ChevronsUpDown className="h-3.5 w-3.5" />
                         )}
@@ -192,7 +192,7 @@ export function DataTable<T extends Record<string, unknown>>({
             {paged.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-16 text-center">
-                  <div className="flex flex-col items-center gap-3 text-gray-400">
+                  <div className="flex flex-col items-center gap-3 text-pd-muted">
                     {emptyIcon || <Inbox className="h-10 w-10" />}
                     <p className="text-sm">{emptyMessage}</p>
                   </div>
@@ -203,13 +203,13 @@ export function DataTable<T extends Record<string, unknown>>({
                 <tr
                   key={i}
                   className={cn(
-                    "border-b border-gray-50 transition-colors",
-                    onRowClick && "cursor-pointer hover:bg-blue-50/50"
+                    "border-b border-pd-border transition-colors",
+                    onRowClick && "cursor-pointer hover:bg-pd-brand-muted/50"
                   )}
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((col) => (
-                    <td key={col.key} className={cn("px-4 py-3 text-sm text-gray-700", col.className)}>
+                    <td key={col.key} className={cn("px-4 py-3 text-sm text-pd-muted", col.className)}>
                       {col.render ? col.render(row, safePage * pageSize + i) : (String(row[col.key] ?? "—"))}
                     </td>
                   ))}
@@ -221,15 +221,15 @@ export function DataTable<T extends Record<string, unknown>>({
       </div>
 
       {sorted.length > pageSize && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-          <p className="text-sm text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-pd-border">
+          <p className="text-sm text-pd-muted">
             Showing {safePage * pageSize + 1}–{Math.min((safePage + 1) * pageSize, sorted.length)} of {sorted.length}
           </p>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage(Math.max(0, safePage - 1))}
               disabled={safePage === 0}
-              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-pd-muted hover:bg-pd-background disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -251,8 +251,8 @@ export function DataTable<T extends Record<string, unknown>>({
                   className={cn(
                     "h-8 w-8 rounded-lg text-sm font-medium transition-colors cursor-pointer",
                     safePage === pageNum
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
+                      ? "bg-pd-brand text-white"
+                      : "text-pd-muted hover:bg-pd-background"
                   )}
                 >
                   {pageNum + 1}
@@ -262,7 +262,7 @@ export function DataTable<T extends Record<string, unknown>>({
             <button
               onClick={() => setPage(Math.min(totalPages - 1, safePage + 1))}
               disabled={safePage >= totalPages - 1}
-              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-pd-muted hover:bg-pd-background disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

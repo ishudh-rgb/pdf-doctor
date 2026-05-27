@@ -13,14 +13,14 @@ export function StatsBar() {
   ];
 
   return (
-    <div className="border-y border-slate-200/80 bg-white/70 backdrop-blur-sm">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 sm:px-6 md:grid-cols-4 lg:px-8">
+    <div className="border-y border-pd-border bg-pd-surface/80 backdrop-blur-sm">
+      <div className="pd-container grid grid-cols-2 gap-6 py-8 md:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.label} className="text-center">
-            <p className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            <p className="text-2xl font-extrabold tracking-tight text-pd-foreground sm:text-3xl">
               {stat.value}
             </p>
-            <p className="mt-1 text-sm font-medium text-slate-500">{stat.label}</p>
+            <p className="mt-1 text-sm font-medium text-pd-muted">{stat.label}</p>
           </div>
         ))}
       </div>

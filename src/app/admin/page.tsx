@@ -133,20 +133,20 @@ export default function AdminDashboard() {
   if (loading || !data) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+        <h2 className="text-2xl font-bold text-pd-foreground">Dashboard</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <StatCardSkeleton key={i} />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 h-72 animate-pulse">
-            <div className="h-5 w-32 bg-gray-100 rounded mb-4" />
-            <div className="h-full bg-gray-50 rounded-xl" />
+          <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6 h-72 animate-pulse">
+            <div className="h-5 w-32 bg-pd-border rounded mb-4" />
+            <div className="h-full bg-pd-background rounded-xl" />
           </div>
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 h-72 animate-pulse">
-            <div className="h-5 w-32 bg-gray-100 rounded mb-4" />
-            <div className="h-full bg-gray-50 rounded-xl" />
+          <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6 h-72 animate-pulse">
+            <div className="h-5 w-32 bg-pd-border rounded mb-4" />
+            <div className="h-full bg-pd-background rounded-xl" />
           </div>
         </div>
       </div>
@@ -158,69 +158,65 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+      <h2 className="text-2xl font-bold text-pd-foreground">Dashboard</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           label="Total Users"
           value={data.stats.totalUsers.toLocaleString()}
           icon={Users}
-          variant="blue"
           trend={{ value: data.stats.usersTrend, label: "vs last month" }}
         />
         <StatCard
           label="Pro Users"
           value={data.stats.proUsers.toLocaleString()}
           icon={Crown}
-          variant="purple"
           trend={{ value: data.stats.proTrend, label: "vs last month" }}
         />
         <StatCard
           label="Files Processed Today"
           value={data.stats.filesProcessedToday.toLocaleString()}
           icon={FileCheck}
-          variant="green"
           trend={{ value: data.stats.fileTrend, label: "vs yesterday" }}
         />
         <StatCard
           label="Revenue This Month"
           value={`₹${data.stats.revenueThisMonth.toLocaleString()}`}
           icon={IndianRupee}
-          variant="orange"
           trend={{ value: data.stats.revenueTrend, label: "vs last month" }}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Daily Usage (This Week)</h3>
+        <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6">
+          <h3 className="text-base font-semibold text-pd-foreground mb-4">Daily Usage (This Week)</h3>
           <div className="flex items-end gap-3 h-48">
             {data.dailyUsage.map((day) => (
               <div key={day.date} className="flex-1 flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-gray-500">{day.count.toLocaleString()}</span>
+                <span className="text-xs font-medium text-pd-muted">{day.count.toLocaleString()}</span>
                 <div
-                  className="w-full bg-blue-500 rounded-t-lg transition-all hover:bg-blue-600"
+                  className="w-full bg-pd-brand rounded-t-lg transition-all hover:bg-pd-brand-hover"
                   style={{ height: `${(day.count / maxUsage) * 100}%`, minHeight: "8px" }}
                 />
-                <span className="text-xs text-gray-500">{day.date}</span>
+                <span className="text-xs text-pd-muted">{day.date}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Tool Popularity</h3>
+        <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6">
+          <h3 className="text-base font-semibold text-pd-foreground mb-4">Tool Popularity</h3>
           <div className="space-y-3">
             {data.toolPopularity.map((tool) => (
               <div key={tool.tool} className="flex items-center gap-3">
-                <span className="text-sm text-gray-700 w-28 truncate shrink-0">{tool.tool}</span>
-                <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                <span className="text-sm text-pd-muted w-28 truncate shrink-0">{tool.tool}</span>
+                <div className="flex-1 h-6 bg-pd-border rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
+                    className="h-full bg-pd-brand rounded-full transition-all"
                     style={{ width: `${(tool.count / maxPopularity) * 100}%` }}
                   />
                 </div>
-                <span className="text-xs font-medium text-gray-500 w-12 text-right">{tool.count.toLocaleString()}</span>
+                <span className="text-xs font-medium text-pd-muted w-12 text-right">{tool.count.toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -228,33 +224,33 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Activity</h3>
+        <div className="lg:col-span-2 rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6">
+          <h3 className="text-base font-semibold text-pd-foreground mb-4">Recent Activity</h3>
           <div className="space-y-3">
             {data.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
-                <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                  <Activity className="h-4 w-4 text-blue-600" />
+              <div key={activity.id} className="flex items-start gap-3 py-2 border-b border-pd-border last:border-0">
+                <div className="h-8 w-8 rounded-full bg-pd-brand-muted flex items-center justify-center shrink-0 mt-0.5">
+                  <Activity className="h-4 w-4 text-pd-brand" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">{activity.action}</p>
-                  <p className="text-xs text-gray-500 truncate">{activity.user}</p>
+                  <p className="text-sm text-pd-foreground">{activity.action}</p>
+                  <p className="text-xs text-pd-muted truncate">{activity.user}</p>
                 </div>
-                <span className="text-xs text-gray-400 shrink-0">{activity.time}</span>
+                <span className="text-xs text-pd-muted shrink-0">{activity.time}</span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">System Health</h3>
+          <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6">
+            <h3 className="text-base font-semibold text-pd-foreground mb-4">System Health</h3>
             <div className="space-y-3">
               {Object.entries(data.systemHealth).map(([service, status]) => {
                 const StatusIcon = healthIcons[status];
                 return (
                   <div key={service} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700 capitalize">{service}</span>
+                    <span className="text-sm text-pd-muted capitalize">{service}</span>
                     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ${healthColors[status]}`}>
                       <StatusIcon className="h-3.5 w-3.5" />
                       {status}
@@ -265,8 +261,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
+          <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6">
+            <h3 className="text-base font-semibold text-pd-foreground mb-4">Quick Actions</h3>
             <div className="space-y-2">
               <Button
                 variant="outline"

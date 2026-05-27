@@ -1,8 +1,9 @@
 @import "tailwindcss";
+@import "../styles/design-tokens.css";
+@import "../styles/brand-themes.css";
+@import "../styles/layout-styles.css";
 
 :root {
-  --background: #fafbff;
-  --foreground: #0f172a;
   --brand-indigo: #6366f1;
   --brand-violet: #8b5cf6;
   --brand-coral: #f43f5e;
@@ -12,7 +13,6 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
 
   --animate-fade-in: fade-in 0.15s ease-out;
   --animate-modal-enter: modal-enter 0.2s ease-out;
@@ -24,11 +24,6 @@
 
 html {
   scroll-behavior: smooth;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
 }
 
 html[lang="hi"] body,
@@ -171,14 +166,18 @@ html[data-lang="hi"] h3 {
 }
 
 .mesh-section {
-  background-color: #ffffff;
+  background-color: var(--pd-surface);
   background-image:
-    radial-gradient(at 0% 50%, rgba(99, 102, 241, 0.06) 0, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0, transparent 40%);
+    radial-gradient(at 0% 50%, color-mix(in srgb, var(--pd-brand) 6%, transparent) 0, transparent 50%),
+    radial-gradient(at 100% 0%, color-mix(in srgb, var(--pd-brand) 5%, transparent) 0, transparent 40%);
 }
 
 .section-dark {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+  background: linear-gradient(
+    135deg,
+    var(--pd-foreground) 0%,
+    color-mix(in srgb, var(--pd-brand) 35%, var(--pd-foreground)) 100%
+  );
 }
 
 .glass-panel {
@@ -198,10 +197,10 @@ html[data-lang="hi"] h3 {
 
 .tool-card-glow:hover {
   transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: color-mix(in srgb, var(--pd-brand) 25%, transparent);
   box-shadow:
-    0 4px 6px -1px rgba(99, 102, 241, 0.08),
-    0 20px 40px -12px rgba(99, 102, 241, 0.18);
+    0 4px 6px -1px color-mix(in srgb, var(--pd-brand) 8%, transparent),
+    0 20px 40px -12px color-mix(in srgb, var(--pd-brand) 18%, transparent);
 }
 
 /* Modal backdrop blur */

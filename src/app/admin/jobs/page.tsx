@@ -18,7 +18,7 @@ interface Job {
 }
 
 const statusColors: Record<string, string> = {
-  pending: "bg-gray-100 text-gray-700",
+  pending: "bg-pd-border text-pd-muted",
   processing: "bg-yellow-100 text-yellow-700",
   completed: "bg-green-100 text-green-700",
   failed: "bg-red-100 text-red-700",
@@ -91,14 +91,14 @@ export default function AdminJobsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Tool Jobs</h2>
+      <h2 className="text-2xl font-bold text-pd-foreground">Tool Jobs</h2>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative">
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="h-10 rounded-xl border border-gray-200 bg-white pl-3 pr-8 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="h-10 rounded-xl border border-pd-border bg-pd-surface pl-3 pr-8 text-sm text-pd-muted focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
@@ -111,7 +111,7 @@ export default function AdminJobsPage() {
           <select
             value={toolFilter}
             onChange={(e) => { setToolFilter(e.target.value); setPage(1); }}
-            className="h-10 rounded-xl border border-gray-200 bg-white pl-3 pr-8 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="h-10 rounded-xl border border-pd-border bg-pd-surface pl-3 pr-8 text-sm text-pd-muted focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
           >
             {toolOptions.map((tool) => (
               <option key={tool} value={tool}>
@@ -123,67 +123,67 @@ export default function AdminJobsPage() {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm overflow-hidden">
           <div className="animate-pulse">
-            <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-3">
+            <div className="border-b border-pd-border bg-pd-background/50 px-4 py-3">
               <div className="flex gap-4">
                 {Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className="h-4 w-16 rounded bg-gray-200" />
+                  <div key={i} className="h-4 w-16 rounded bg-pd-border" />
                 ))}
               </div>
             </div>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex gap-4 border-b border-gray-50 px-4 py-4">
-                <div className="h-4 w-20 rounded bg-gray-100" />
-                <div className="h-4 w-32 rounded bg-gray-100" />
-                <div className="h-4 w-24 rounded bg-gray-100" />
-                <div className="h-4 w-16 rounded bg-gray-100" />
-                <div className="h-4 w-16 rounded bg-gray-100" />
-                <div className="h-4 w-16 rounded bg-gray-100" />
-                <div className="h-4 w-24 rounded bg-gray-100" />
+              <div key={i} className="flex gap-4 border-b border-pd-border px-4 py-4">
+                <div className="h-4 w-20 rounded bg-pd-border/60" />
+                <div className="h-4 w-32 rounded bg-pd-border/60" />
+                <div className="h-4 w-24 rounded bg-pd-border/60" />
+                <div className="h-4 w-16 rounded bg-pd-border/60" />
+                <div className="h-4 w-16 rounded bg-pd-border/60" />
+                <div className="h-4 w-16 rounded bg-pd-border/60" />
+                <div className="h-4 w-24 rounded bg-pd-border/60" />
               </div>
             ))}
           </div>
         </div>
       ) : jobs.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
-          <Search className="mx-auto h-10 w-10 text-gray-300" />
-          <h3 className="mt-4 text-lg font-semibold text-gray-900">No jobs found</h3>
-          <p className="mt-1 text-sm text-gray-500">
+        <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-12 text-center">
+          <Search className="mx-auto h-10 w-10 text-pd-muted" />
+          <h3 className="mt-4 text-lg font-semibold text-pd-foreground">No jobs found</h3>
+          <p className="mt-1 text-sm text-pd-muted">
             No jobs match the current filters.
           </p>
         </div>
       ) : (
         <>
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/50">
-                    <th className="px-4 py-3 font-medium text-gray-500">Job ID</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">User</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Tool</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Status</th>
-                    <th className="hidden px-4 py-3 font-medium text-gray-500 md:table-cell">Size</th>
-                    <th className="hidden px-4 py-3 font-medium text-gray-500 lg:table-cell">Time</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Created</th>
+                  <tr className="border-b border-pd-border bg-pd-background/50">
+                    <th className="px-4 py-3 font-medium text-pd-muted">Job ID</th>
+                    <th className="px-4 py-3 font-medium text-pd-muted">User</th>
+                    <th className="px-4 py-3 font-medium text-pd-muted">Tool</th>
+                    <th className="px-4 py-3 font-medium text-pd-muted">Status</th>
+                    <th className="hidden px-4 py-3 font-medium text-pd-muted md:table-cell">Size</th>
+                    <th className="hidden px-4 py-3 font-medium text-pd-muted lg:table-cell">Time</th>
+                    <th className="px-4 py-3 font-medium text-pd-muted">Created</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-pd-border">
                   {paginatedJobs.map((job) => (
                     <>
                       <tr
                         key={job.id}
                         onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
-                        className="cursor-pointer transition-colors hover:bg-gray-50"
+                        className="cursor-pointer transition-colors hover:bg-pd-background"
                       >
-                        <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                        <td className="px-4 py-3 font-mono text-xs text-pd-muted">
                           {job.id.slice(0, 8)}...
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-pd-muted">
                           {job.user_email || "Guest"}
                         </td>
-                        <td className="px-4 py-3 text-gray-900 font-medium">
+                        <td className="px-4 py-3 text-pd-foreground font-medium">
                           {job.tool}
                         </td>
                         <td className="px-4 py-3">
@@ -191,34 +191,34 @@ export default function AdminJobsPage() {
                             {job.status}
                           </span>
                         </td>
-                        <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
+                        <td className="hidden px-4 py-3 text-pd-muted md:table-cell">
                           {formatFileSize(job.file_size)}
                         </td>
-                        <td className="hidden px-4 py-3 text-gray-500 lg:table-cell">
+                        <td className="hidden px-4 py-3 text-pd-muted lg:table-cell">
                           {job.processing_time_ms ? `${(job.processing_time_ms / 1000).toFixed(1)}s` : "—"}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-4 py-3 text-pd-muted">
                           {formatDate(job.created_at)}
                         </td>
                       </tr>
                       {expandedJob === job.id && (
                         <tr key={`${job.id}-detail`}>
-                          <td colSpan={7} className="bg-gray-50 px-4 py-4">
+                          <td colSpan={7} className="bg-pd-background px-4 py-4">
                             <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                               <div>
-                                <p className="text-xs text-gray-500">Full Job ID</p>
-                                <p className="font-mono text-xs text-gray-900">{job.id}</p>
+                                <p className="text-xs text-pd-muted">Full Job ID</p>
+                                <p className="font-mono text-xs text-pd-foreground">{job.id}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500">Input File</p>
-                                <p className="text-gray-900">{job.input_file_name || "—"}</p>
+                                <p className="text-xs text-pd-muted">Input File</p>
+                                <p className="text-pd-foreground">{job.input_file_name || "—"}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500">Output File</p>
-                                <p className="text-gray-900">{job.output_file_name || "—"}</p>
+                                <p className="text-xs text-pd-muted">Output File</p>
+                                <p className="text-pd-foreground">{job.output_file_name || "—"}</p>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500">Error</p>
+                                <p className="text-xs text-pd-muted">Error</p>
                                 <p className="text-red-600">{job.error_message || "None"}</p>
                               </div>
                             </div>
@@ -234,24 +234,24 @@ export default function AdminJobsPage() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-pd-muted">
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, jobs.length)} of {jobs.length}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-50 disabled:opacity-50"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-pd-border bg-pd-surface text-pd-muted transition hover:bg-pd-background disabled:opacity-50"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-pd-muted">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-50 disabled:opacity-50"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-pd-border bg-pd-surface text-pd-muted transition hover:bg-pd-background disabled:opacity-50"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>

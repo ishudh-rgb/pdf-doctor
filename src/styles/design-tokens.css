@@ -1,0 +1,123 @@
+/* PDF Doctor v2 — base design tokens (theme/layout override these) */
+
+:root {
+  --pd-background: #f8fafc;
+  --pd-foreground: #0f172a;
+  --pd-muted: #64748b;
+  --pd-brand: #2563eb;
+  --pd-brand-hover: #1d4ed8;
+  --pd-brand-muted: #eff6ff;
+  --pd-surface: #ffffff;
+  --pd-surface-elevated: #ffffff;
+  --pd-border: #e2e8f0;
+  --pd-border-strong: #cbd5e1;
+  --pd-success: #059669;
+  --pd-danger: #dc2626;
+  --pd-warning: #d97706;
+  --pd-radius-sm: 0.375rem;
+  --pd-radius-md: 0.625rem;
+  --pd-radius-lg: 0.875rem;
+  --pd-radius-xl: 1rem;
+  --pd-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --pd-shadow-md: 0 4px 12px rgb(15 23 42 / 0.08);
+  --pd-shadow-lg: 0 12px 32px rgb(15 23 42 / 0.1);
+  --pd-container: 80rem;
+  --pd-prose: 65ch;
+  --pd-section-y: 4rem;
+  --pd-density: 1;
+  --pd-header-height: 4rem;
+  --pd-btn-radius: var(--pd-radius-lg);
+}
+
+@theme inline {
+  --color-pd-background: var(--pd-background);
+  --color-pd-foreground: var(--pd-foreground);
+  --color-pd-muted: var(--pd-muted);
+  --color-pd-brand: var(--pd-brand);
+  --color-pd-brand-hover: var(--pd-brand-hover);
+  --color-pd-brand-muted: var(--pd-brand-muted);
+  --color-pd-surface: var(--pd-surface);
+  --color-pd-surface-elevated: var(--pd-surface-elevated);
+  --color-pd-border: var(--pd-border);
+  --color-pd-success: var(--pd-success);
+  --color-pd-danger: var(--pd-danger);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-inter);
+}
+
+/* Legacy aliases — migrate pages gradually */
+:root {
+  --background: var(--pd-background);
+  --foreground: var(--pd-foreground);
+}
+
+body {
+  background: var(--pd-background);
+  color: var(--pd-foreground);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+.pd-display {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  text-wrap: balance;
+}
+
+.pd-prose {
+  max-width: var(--pd-prose);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.pd-container {
+  width: 100%;
+  max-width: var(--pd-container);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .pd-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pd-container {
+    padding-inline: 2rem;
+  }
+}
+
+.pd-section {
+  padding-block: var(--pd-section-y);
+}
+
+.pd-skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 9999;
+  padding: 0.75rem 1rem;
+  background: var(--pd-brand);
+  color: white;
+  border-radius: var(--pd-radius-md);
+}
+
+.pd-skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

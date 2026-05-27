@@ -54,25 +54,26 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
 
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-[250px] bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out",
-          "lg:translate-x-0 lg:static lg:z-auto",
+          "fixed left-0 top-0 z-50 flex h-full w-[250px] flex-col border-r border-pd-border bg-pd-surface transition-transform duration-300 ease-in-out",
+          "lg:static lg:z-auto lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-gray-100 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-600 to-blue-600 flex items-center justify-center">
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-pd-border px-5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pd-brand">
             <FileText className="h-4 w-4 text-white" />
           </div>
-          <span className="font-bold text-gray-900">PDF Doctor</span>
+          <span className="font-bold text-pd-foreground">PDF Doctor</span>
           <button
+            type="button"
             onClick={onClose}
-            className="ml-auto lg:hidden p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+            className="ml-auto cursor-pointer rounded-lg p-1.5 text-pd-muted hover:bg-pd-background lg:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -82,25 +83,25 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                   active
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-pd-brand-muted text-pd-brand"
+                    : "text-pd-muted hover:bg-pd-background hover:text-pd-foreground"
                 )}
               >
-                <Icon className={cn("h-5 w-5 shrink-0", active ? "text-blue-600" : "text-gray-400")} />
+                <Icon className={cn("h-5 w-5 shrink-0", active ? "text-pd-brand" : "text-pd-muted")} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="px-3 py-4 border-t border-gray-100">
+        <div className="border-t border-pd-border px-3 py-4">
           <Link
             href="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-pd-muted transition-colors hover:bg-pd-background hover:text-pd-foreground"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-400" />
+            <ArrowLeft className="h-5 w-5 text-pd-muted" />
             Back to Site
           </Link>
         </div>

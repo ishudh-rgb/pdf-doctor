@@ -23,13 +23,13 @@ export function SectionHeading({
       )}
     >
       {eyebrow && (
-        <span className="inline-flex items-center rounded-full border border-indigo-200/80 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-700">
+        <span className="inline-flex items-center rounded-full border border-pd-border bg-pd-brand-muted px-3 py-1 text-xs font-semibold uppercase tracking-wider text-pd-brand">
           {eyebrow}
         </span>
       )}
       <h2
         className={cn(
-          "text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl",
+          "text-3xl font-bold tracking-tight text-pd-foreground sm:text-4xl",
           eyebrow && "mt-4"
         )}
       >
@@ -38,7 +38,7 @@ export function SectionHeading({
       {description && (
         <p
           className={cn(
-            "mt-3 text-lg text-slate-600",
+            "mt-3 text-lg text-pd-muted",
             align === "center" && "mx-auto max-w-2xl"
           )}
         >

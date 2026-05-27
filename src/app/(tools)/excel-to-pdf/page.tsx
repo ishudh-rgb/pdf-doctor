@@ -1,6 +1,5 @@
 "use client";
 
-import { FileSpreadsheet } from "lucide-react";
 import { ConvertToolPage } from "@/components/tools/convert-tool-page";
 
 export default function ExcelToPdfPage() {
@@ -8,8 +7,6 @@ export default function ExcelToPdfPage() {
     <ConvertToolPage
       title="Excel to PDF"
       description="Convert Excel spreadsheets to PDF documents"
-      icon={<FileSpreadsheet className="w-8 h-8" style={{ color: "#217346" }} />}
-      accentColor="#217346"
       accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       uploadHint="Select an Excel file (.xls or .xlsx)"
       processLabel="Convert to PDF"
@@ -20,9 +17,9 @@ export default function ExcelToPdfPage() {
       outputExtension="pdf"
       apiPath="/api/tools/excel-to-pdf"
       relatedTools={[
-        { name: "PDF to Excel", href: "/pdf-to-excel", color: "#217346" },
-        { name: "Word to PDF", href: "/word-to-pdf", color: "#C62828" },
-        { name: "Compress PDF", href: "/compress-pdf", color: "#FF9800" },
+        { name: "PDF to Excel", href: "/pdf-to-excel" },
+        { name: "Word to PDF", href: "/word-to-pdf" },
+        { name: "Compress PDF", href: "/compress-pdf" },
       ]}
     />
   );

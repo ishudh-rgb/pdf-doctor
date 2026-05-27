@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { PenTool, Upload, Loader2, Download, AlertCircle, ChevronRight, Type, ImageIcon, Eraser } from 'lucide-react';
-import Link from 'next/link';
-import Head from 'next/head';
+import { PenTool, Type, ImageIcon, Eraser } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { formatFileSize } from '@/lib/utils/file';
+import { ToolPageShell } from '@/components/layout/tool-page-shell';
+import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
 import { SignaturePlacementPreview } from '@/components/tools/previews/signature-preview';
 import {
   getSignaturePosition,
@@ -13,12 +13,18 @@ import {
   type SignatureSize,
 } from '@/lib/utils/signature-placement';
 import { canvasToPngBlob, canvasToPngDataUrl } from '@/lib/utils/canvas-trim';
+import {
+  ToolDropzone,
+  ToolErrorBanner,
+  ToolPrimaryButton,
+  ToolSuccessPanel,
+} from '@/components/tools/tool-ui';
 
 const RELATED_TOOLS = [
-  { name: 'Protect PDF', href: '/protect-pdf', color: '#D32F2F' },
-  { name: 'Merge PDF', href: '/merge-pdf', color: '#4CAF50' },
-  { name: 'Compress PDF', href: '/compress-pdf', color: '#FF9800' },
-  { name: 'Unlock PDF', href: '/unlock-pdf', color: '#00897B' },
+  { name: 'Protect PDF', href: '/protect-pdf' },
+  { name: 'Merge PDF', href: '/merge-pdf' },
+  { name: 'Compress PDF', href: '/compress-pdf' },
+  { name: 'Unlock PDF', href: '/unlock-pdf' },
 ];
 
 const FAQS = [
@@ -263,345 +269,281 @@ export default function SignPdfPage() {
     (signatureTab === 'type' && typedName.trim().length > 0) ||
     (signatureTab === 'upload' && signatureImage !== null);
 
+  const showPreview = hasSignature && files.length > 0 && !completed;
+
   return (
-    <>
-      <Head>
-        <title>Sign PDF Online Free | PDF Doctor</title>
-        <meta name="description" content="Add your signature to any PDF document online for free. Draw, type, or upload your signature." />
-      </Head>
-      <main className="min-h-screen bg-gray-50 py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ backgroundColor: '#E6531318' }}>
-              <PenTool className="w-8 h-8" style={{ color: '#E65313' }} />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign PDF</h1>
-            <p className="text-gray-600 text-lg">Add your signature to any PDF document</p>
-            <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
-              Pro Feature
-            </span>
+    <ToolPageShell
+      title="Sign PDF"
+      description="Add your signature to any PDF document"
+      relatedTools={mapRelatedTools(RELATED_TOOLS)}
+      faqs={mapFaqs(FAQS)}
+      preview={
+        showPreview ? (
+          <SignaturePlacementPreview
+            signatureImageUrl={placementPreviewUrl}
+            pageNumber={pageNumber}
+            placement={placement}
+            size={signatureSize}
+            posX={signaturePosition.x}
+            posY={signaturePosition.y}
+            sigWidth={signaturePosition.width}
+            sigHeight={signaturePosition.height}
+          />
+        ) : undefined
+      }
+    >
+      {completed && resultUrl ? (
+        <ToolSuccessPanel
+          title="PDF Signed Successfully!"
+          description="Your signed document is ready to download."
+          downloadUrl={resultUrl}
+          downloadFilename={resultFilename || 'signed.pdf'}
+          downloadLabel="Download Signed PDF"
+          resetLabel="Sign another document"
+          onReset={() => {
+            setCompleted(false);
+            setFiles([]);
+            setResultUrl(null);
+            clearCanvas();
+            setTypedName('');
+            setSignatureImage(null);
+            setSignaturePreview(null);
+          }}
+        />
+      ) : (
+        <div className="space-y-6">
+          <div>
+            <h2 className="mb-4 text-lg font-semibold text-pd-foreground">1. Upload PDF</h2>
+            <ToolDropzone
+              hint="Drop a PDF file here or click to browse"
+              subHint="Select a PDF to sign"
+              dragOver={dragOver}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => e.target.files && handleFiles(e.target.files)}
+            />
+
+            {files.length > 0 && (
+              <div className="mt-4 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">
+                <PenTool className="h-4 w-4 shrink-0 text-pd-brand" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-pd-foreground">{files[0].name}</p>
+                  <p className="text-xs text-pd-muted">{formatFileSize(files[0].size)}</p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {!completed && (
-            <>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">1. Upload PDF</h2>
-                <div
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
+          <div>
+            <h2 className="mb-4 text-lg font-semibold text-pd-foreground">2. Create Signature</h2>
+
+            <div className="mb-6 flex gap-2">
+              {([
+                { id: 'draw' as const, label: 'Draw', icon: PenTool },
+                { id: 'type' as const, label: 'Type', icon: Type },
+                { id: 'upload' as const, label: 'Upload', icon: ImageIcon },
+              ]).map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSignatureTab(tab.id)}
                   className={cn(
-                    'border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-200',
-                    dragOver ? 'border-[#E65313] bg-[#E65313]/5' : 'border-gray-300 hover:border-[#E65313] hover:bg-gray-50'
+                    'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all',
+                    signatureTab === tab.id
+                      ? 'bg-pd-brand text-white'
+                      : 'bg-pd-background text-pd-muted hover:bg-pd-border/50'
                   )}
                 >
-                  <Upload className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-                  <p className="text-gray-700 font-medium mb-1">Drop a PDF file here or click to browse</p>
-                  <p className="text-sm text-gray-500">Select a PDF to sign</p>
+                  <tab.icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {signatureTab === 'draw' && (
+              <div>
+                <div className="overflow-hidden rounded-xl border-2 border-pd-border bg-pd-surface">
+                  <canvas
+                    ref={canvasRef}
+                    width={600}
+                    height={200}
+                    className="w-full cursor-crosshair touch-none"
+                    style={{ height: '200px' }}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={clearCanvas}
+                  className="mt-2 flex items-center gap-1.5 text-sm text-pd-muted transition-colors hover:text-pd-foreground"
+                >
+                  <Eraser className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+              </div>
+            )}
+
+            {signatureTab === 'type' && (
+              <div>
+                <input
+                  type="text"
+                  value={typedName}
+                  onChange={(e) => setTypedName(e.target.value)}
+                  placeholder="Type your name"
+                  className="w-full rounded-xl border border-pd-border px-4 py-3 text-lg focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
+                />
+                {typedName && (
+                  <div className="mt-4 rounded-xl border-2 border-dashed border-pd-border p-6 text-center">
+                    <p className="text-3xl italic text-pd-foreground" style={{ fontFamily: 'Georgia, serif' }}>
+                      {typedName}
+                    </p>
+                    <p className="mt-2 text-xs text-pd-muted">Signature preview</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {signatureTab === 'upload' && (
+              <div>
+                <div
+                  onClick={() => sigImageInputRef.current?.click()}
+                  className="cursor-pointer rounded-xl border-2 border-dashed border-pd-border p-8 text-center transition-all hover:border-pd-brand hover:bg-pd-background"
+                >
+                  {signaturePreview ? (
+                    <img src={signaturePreview} alt="Signature" className="mx-auto max-h-24" />
+                  ) : (
+                    <>
+                      <ImageIcon className="mx-auto mb-2 h-8 w-8 text-pd-muted" />
+                      <p className="text-sm text-pd-muted">Click to upload signature image</p>
+                    </>
+                  )}
                 </div>
                 <input
-                  ref={fileInputRef}
+                  ref={sigImageInputRef}
                   type="file"
-                  accept=".pdf"
+                  accept="image/*"
                   className="hidden"
-                  onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                  onChange={handleSigImageChange}
                 />
-
-                {files.length > 0 && (
-                  <div className="mt-4 p-3 bg-orange-50 rounded-lg flex items-center gap-3">
-                    <PenTool className="w-4 h-4 text-[#E65313]" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{files[0].name}</p>
-                      <p className="text-xs text-gray-500">{formatFileSize(files[0].size)}</p>
-                    </div>
-                  </div>
-                )}
               </div>
+            )}
+          </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">2. Create Signature</h2>
-
-                <div className="flex gap-2 mb-6">
-                  {([
-                    { id: 'draw' as const, label: 'Draw', icon: PenTool },
-                    { id: 'type' as const, label: 'Type', icon: Type },
-                    { id: 'upload' as const, label: 'Upload', icon: ImageIcon },
-                  ]).map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setSignatureTab(tab.id)}
-                      className={cn(
-                        'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                        signatureTab === tab.id
-                          ? 'bg-[#E65313] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      )}
-                    >
-                      <tab.icon className="w-4 h-4" />
-                      {tab.label}
-                    </button>
-                  ))}
+          {hasSignature && files.length > 0 && (
+            <div>
+              <h2 className="mb-1 text-lg font-semibold text-pd-foreground">3. Place Signature</h2>
+              <p className="mb-6 text-sm text-pd-muted">Choose where your signature should appear on the page.</p>
+              <div className="space-y-6">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-pd-foreground">
+                    Which page to sign?
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={pageNumber}
+                    onChange={(e) => setPageNumber(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-full max-w-[160px] rounded-lg border border-pd-border px-3 py-2 focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
+                  />
+                  <p className="mt-1.5 text-xs text-pd-muted">Usually page 1 for single-page forms, or the last page for contracts.</p>
                 </div>
 
-                {signatureTab === 'draw' && (
-                  <div>
-                    <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white">
-                      <canvas
-                        ref={canvasRef}
-                        width={600}
-                        height={200}
-                        className="w-full cursor-crosshair touch-none"
-                        style={{ height: '200px' }}
-                        onMouseDown={startDrawing}
-                        onMouseMove={draw}
-                        onMouseUp={stopDrawing}
-                        onMouseLeave={stopDrawing}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchEnd={stopDrawing}
-                      />
-                    </div>
-                    <button
-                      onClick={clearCanvas}
-                      className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                    >
-                      <Eraser className="w-3.5 h-3.5" />
-                      Clear
-                    </button>
-                  </div>
-                )}
-
-                {signatureTab === 'type' && (
-                  <div>
-                    <input
-                      type="text"
-                      value={typedName}
-                      onChange={(e) => setTypedName(e.target.value)}
-                      placeholder="Type your name"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E65313]/20 focus:border-[#E65313] text-lg"
-                    />
-                    {typedName && (
-                      <div className="mt-4 p-6 border-2 border-dashed border-gray-200 rounded-xl text-center">
-                        <p className="text-3xl italic text-gray-800" style={{ fontFamily: 'Georgia, serif' }}>
-                          {typedName}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-2">Signature preview</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {signatureTab === 'upload' && (
-                  <div>
-                    <div
-                      onClick={() => sigImageInputRef.current?.click()}
-                      className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-[#E65313] hover:bg-gray-50 transition-all"
-                    >
-                      {signaturePreview ? (
-                        <img src={signaturePreview} alt="Signature" className="max-h-24 mx-auto" />
-                      ) : (
-                        <>
-                          <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm text-gray-600">Click to upload signature image</p>
-                        </>
-                      )}
-                    </div>
-                    <input
-                      ref={sigImageInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleSigImageChange}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {hasSignature && files.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-1">3. Place Signature</h2>
-                  <p className="text-sm text-gray-500 mb-6">Choose where your signature should appear on the page.</p>
-                  <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Which page to sign?
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          value={pageNumber}
-                          onChange={(e) => setPageNumber(Math.max(1, Number(e.target.value) || 1))}
-                          className="w-full max-w-[160px] px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E65313]/20 focus:border-[#E65313]"
-                        />
-                        <p className="mt-1.5 text-xs text-gray-500">Usually page 1 for single-page forms, or the last page for contracts.</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Signature position
-                        </label>
-                        <div className="grid grid-cols-3 gap-3">
-                          {([
-                            { id: 'bottom-left' as const, label: 'Bottom left' },
-                            { id: 'bottom-center' as const, label: 'Bottom center' },
-                            { id: 'bottom-right' as const, label: 'Bottom right' },
-                          ]).map((option) => (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setPlacement(option.id)}
-                              className={cn(
-                                'rounded-xl border-2 p-3 text-left transition-all',
-                                placement === option.id
-                                  ? 'border-[#E65313] bg-[#E65313]/5'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              )}
-                            >
-                              <div className="relative mx-auto mb-2 aspect-[3/4] w-full max-w-[72px] rounded-md border border-slate-200 bg-white">
-                                <div className="absolute inset-x-2 top-2 h-1 rounded bg-slate-100" />
-                                <div className="absolute inset-x-2 top-4 h-1 rounded bg-slate-100" />
-                                <span
-                                  className={cn(
-                                    'absolute bottom-2 h-2 w-6 rounded-sm bg-[#E65313]/70',
-                                    option.id === 'bottom-left' && 'left-2',
-                                    option.id === 'bottom-center' && 'left-1/2 -translate-x-1/2',
-                                    option.id === 'bottom-right' && 'right-2'
-                                  )}
-                                />
-                              </div>
-                              <p className="text-center text-xs font-medium text-gray-800">{option.label}</p>
-                            </button>
-                          ))}
+                <div>
+                  <label className="mb-3 block text-sm font-medium text-pd-foreground">
+                    Signature position
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {([
+                      { id: 'bottom-left' as const, label: 'Bottom left' },
+                      { id: 'bottom-center' as const, label: 'Bottom center' },
+                      { id: 'bottom-right' as const, label: 'Bottom right' },
+                    ]).map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setPlacement(option.id)}
+                        className={cn(
+                          'rounded-xl border-2 p-3 text-left transition-all',
+                          placement === option.id
+                            ? 'border-pd-brand bg-pd-brand-muted'
+                            : 'border-pd-border hover:border-pd-muted'
+                        )}
+                      >
+                        <div className="relative mx-auto mb-2 aspect-[3/4] w-full max-w-[72px] rounded-md border border-pd-border bg-pd-surface">
+                          <div className="absolute inset-x-2 top-2 h-1 rounded bg-pd-background" />
+                          <div className="absolute inset-x-2 top-4 h-1 rounded bg-pd-background" />
+                          <span
+                            className={cn(
+                              'absolute bottom-2 h-2 w-6 rounded-sm bg-pd-brand/70',
+                              option.id === 'bottom-left' && 'left-2',
+                              option.id === 'bottom-center' && 'left-1/2 -translate-x-1/2',
+                              option.id === 'bottom-right' && 'right-2'
+                            )}
+                          />
                         </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Signature size
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {([
-                            { id: 'small' as const, label: 'Small' },
-                            { id: 'medium' as const, label: 'Medium' },
-                            { id: 'large' as const, label: 'Large' },
-                          ]).map((option) => (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setSignatureSize(option.id)}
-                              className={cn(
-                                'rounded-lg px-4 py-2 text-sm font-medium border-2 transition-all',
-                                signatureSize === option.id
-                                  ? 'border-[#E65313] bg-[#E65313]/5 text-[#E65313]'
-                                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                              )}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <SignaturePlacementPreview
-                      signatureImageUrl={placementPreviewUrl}
-                      pageNumber={pageNumber}
-                      placement={placement}
-                      size={signatureSize}
-                      posX={signaturePosition.x}
-                      posY={signaturePosition.y}
-                      sigWidth={signaturePosition.width}
-                      sigHeight={signaturePosition.height}
-                    />
+                        <p className="text-center text-xs font-medium text-pd-foreground">{option.label}</p>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
 
-              {error && (
-                <div className="mb-8 flex items-center gap-2 p-3 bg-red-50 rounded-lg text-red-700 text-sm">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {error}
+                <div>
+                  <label className="mb-3 block text-sm font-medium text-pd-foreground">
+                    Signature size
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      { id: 'small' as const, label: 'Small' },
+                      { id: 'medium' as const, label: 'Medium' },
+                      { id: 'large' as const, label: 'Large' },
+                    ]).map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setSignatureSize(option.id)}
+                        className={cn(
+                          'rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all',
+                          signatureSize === option.id
+                            ? 'border-pd-brand bg-pd-brand-muted text-pd-brand'
+                            : 'border-pd-border text-pd-muted hover:border-pd-muted'
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
-
-              <button
-                onClick={handleProcess}
-                disabled={files.length === 0 || !hasSignature || processing}
-                className={cn(
-                  'mb-8 w-full py-3.5 rounded-xl font-semibold text-white transition-all duration-200',
-                  files.length > 0 && hasSignature && !processing
-                    ? 'bg-[#E65313] hover:bg-[#D84315] shadow-lg shadow-[#E65313]/25'
-                    : 'bg-gray-300 cursor-not-allowed'
-                )}
-              >
-                {processing ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Signing your PDF...
-                  </span>
-                ) : 'Sign & Download'}
-              </button>
-            </>
-          )}
-
-          {completed && resultUrl && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#E65313]/10 flex items-center justify-center mx-auto mb-4">
-                <Download className="w-8 h-8 text-[#E65313]" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">PDF Signed Successfully!</h2>
-              <p className="text-gray-600 mb-6">Your signed document is ready to download.</p>
-              <a
-                href={resultUrl}
-                download={resultFilename || 'signed.pdf'}
-                className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#E65313] hover:bg-[#D84315] text-white font-semibold rounded-xl shadow-lg shadow-[#E65313]/25 transition-all duration-200"
-              >
-                <Download className="w-5 h-5" />
-                Download Signed PDF
-              </a>
-              <button
-                onClick={() => { setCompleted(false); setFiles([]); setResultUrl(null); clearCanvas(); setTypedName(''); setSignatureImage(null); setSignaturePreview(null); }}
-                className="block mx-auto mt-4 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                Sign another document
-              </button>
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Related Tools</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {RELATED_TOOLS.map(tool => (
-                <Link
-                  key={tool.href}
-                  href={tool.href}
-                  className="flex items-center gap-2 p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200"
-                >
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tool.color }} />
-                  <span className="text-sm font-medium text-gray-700">{tool.name}</span>
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-400 ml-auto" />
-                </Link>
-              ))}
-            </div>
-          </div>
+          {error && <ToolErrorBanner message={error} />}
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <div className="space-y-3">
-              {FAQS.map((faq, i) => (
-                <details key={i} className="group border border-gray-100 rounded-xl">
-                  <summary className="flex items-center justify-between p-4 cursor-pointer font-medium text-gray-800 hover:bg-gray-50 rounded-xl transition-colors">
-                    {faq.q}
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <p className="px-4 pb-4 text-gray-600 text-sm leading-relaxed">{faq.a}</p>
-                </details>
-              ))}
-            </div>
-          </div>
+          <ToolPrimaryButton
+            onClick={handleProcess}
+            disabled={files.length === 0 || !hasSignature}
+            loading={processing}
+            loadingLabel="Signing your PDF..."
+            className="mt-0"
+          >
+            Sign & Download
+          </ToolPrimaryButton>
         </div>
-      </main>
-    </>
+      )}
+    </ToolPageShell>
   );
 }

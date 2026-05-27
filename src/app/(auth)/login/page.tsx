@@ -6,7 +6,11 @@ import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n";
+
+const inputClass =
+  "w-full rounded-xl border border-pd-border bg-pd-surface py-2.5 text-sm text-pd-foreground outline-none transition focus:border-pd-brand focus:ring-2 focus:ring-pd-brand/20";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -50,11 +54,11 @@ export default function LoginPage() {
   return (
     <AuthShell title={t("auth.loginTitle")} subtitle={t("auth.loginSubtitle")}>
       <div className="mb-6 hidden flex-col items-center gap-2 lg:flex">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pd-brand">
           <FileText className="h-5 w-5 text-white" />
         </div>
-        <h1 className="text-xl font-bold text-slate-900">{t("auth.loginTitle")}</h1>
-        <p className="text-sm text-slate-500">{t("auth.loginSubtitle")}</p>
+        <h1 className="text-xl font-bold text-pd-foreground">{t("auth.loginTitle")}</h1>
+        <p className="text-sm text-pd-muted">{t("auth.loginSubtitle")}</p>
       </div>
 
       {successMessage && (
@@ -71,11 +75,11 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-pd-foreground">
             {t("auth.email")}
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-muted" />
             <input
               id="email"
               type="email"
@@ -83,17 +87,17 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              className={cn(inputClass, "pl-10 pr-4")}
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-700">
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-pd-foreground">
             {t("auth.password")}
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-muted" />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -101,12 +105,12 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-11 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              className={cn(inputClass, "pl-10 pr-11")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-pd-muted hover:text-pd-foreground"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -115,33 +119,26 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-end">
-          <Link href="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+          <Link href="/forgot-password" className="text-sm font-medium text-pd-brand hover:text-pd-brand-hover">
             {t("auth.forgotPassword")}
           </Link>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:from-indigo-700 hover:to-violet-700",
-            loading && "cursor-not-allowed opacity-70"
-          )}
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           {t("auth.loginButton")}
-        </button>
+        </Button>
       </form>
 
       <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-slate-200" />
-        <span className="text-xs text-slate-400">{t("auth.orContinueWith")}</span>
-        <div className="h-px flex-1 bg-slate-200" />
+        <div className="h-px flex-1 bg-pd-border" />
+        <span className="text-xs text-pd-muted">{t("auth.orContinueWith")}</span>
+        <div className="h-px flex-1 bg-pd-border" />
       </div>
 
       <button
         type="button"
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-pd-border bg-pd-surface px-4 py-2.5 text-sm font-medium text-pd-foreground transition hover:bg-pd-background"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -152,9 +149,9 @@ export default function LoginPage() {
         {t("auth.google")}
       </button>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-pd-muted">
         {t("auth.noAccount")}{" "}
-        <Link href="/signup" className="font-semibold text-indigo-600 hover:text-indigo-700">
+        <Link href="/signup" className="font-semibold text-pd-brand hover:text-pd-brand-hover">
           {t("auth.signupLink")}
         </Link>
       </p>

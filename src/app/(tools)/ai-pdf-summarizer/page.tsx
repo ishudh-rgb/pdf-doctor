@@ -24,6 +24,7 @@ import {
   Square,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { ToolPageShell } from "@/components/layout/tool-page-shell";
 import {
   cleanSummaryText,
   getDetailedDisplayBlocks,
@@ -194,43 +195,38 @@ export default function AIPDFSummarizerPage() {
 
   if (isLoggedIn === false) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100">
-            <LogIn className="h-8 w-8 text-purple-600" />
+      <ToolPageShell
+        title="AI PDF Summarizer"
+        description="Upload a PDF and get a clear summary, key points, and action items."
+      >
+        <div className="max-w-md mx-auto text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-pd-brand-muted">
+            <LogIn className="h-8 w-8 text-pd-brand" />
           </div>
-          <h1 className="mt-6 text-2xl font-bold text-gray-900">Login Required</h1>
-          <p className="mt-3 text-gray-600">
+          <h2 className="mt-6 text-2xl font-bold text-pd-foreground">Login Required</h2>
+          <p className="mt-3 text-pd-muted">
             AI PDF Summarizer requires a free account. Sign up to get 1 free AI summary per day.
           </p>
           <div className="mt-6 flex gap-3 justify-center">
-            <a href="/login" className="rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700">
+            <a href="/login" className="rounded-xl bg-pd-brand px-6 py-3 text-sm font-semibold text-white hover:opacity-90">
               Login
             </a>
-            <a href="/signup" className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+            <a href="/signup" className="rounded-xl border border-pd-border px-6 py-3 text-sm font-semibold text-pd-foreground hover:bg-pd-background">
               Sign Up Free
             </a>
           </div>
         </div>
-      </div>
+      </ToolPageShell>
     );
   }
 
   return (
-    <div className="min-h-[70vh] bg-gray-50 py-12 px-4">
-      <div className="mx-auto max-w-5xl">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 mb-4">
-            <Sparkles className="h-3.5 w-3.5" /> AI-Powered
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">PRO</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">AI PDF Summarizer</h1>
-          <p className="mt-3 text-gray-600">Upload a PDF and get a clear summary, key points, and action items.</p>
-          <p className="mt-1 text-sm text-gray-500">Free users: 1 AI summary/day | Pro users: Unlimited</p>
-        </div>
-
+    <ToolPageShell
+      title="AI PDF Summarizer"
+      description="Upload a PDF and get a clear summary, key points, and action items. Free users: 1 AI summary/day | Pro users: Unlimited"
+    >
         {!result ? (
-          <div className="rounded-2xl bg-white p-8 shadow-sm">
+          <div>
             {!file ? (
               <div
                 className={`rounded-2xl border-2 border-dashed p-12 text-center transition-colors ${
@@ -290,7 +286,7 @@ export default function AIPDFSummarizerPage() {
                 )}
               </div>
             )}
-            <p className="mt-4 text-center text-xs text-gray-400">Your files are automatically deleted after 2 hours.</p>
+            <p className="mt-4 text-center text-xs text-pd-muted">Your files are automatically deleted after 2 hours.</p>
           </div>
         ) : (
           <SummaryReport
@@ -303,8 +299,7 @@ export default function AIPDFSummarizerPage() {
             onReset={reset}
           />
         )}
-      </div>
-    </div>
+    </ToolPageShell>
   );
 }
 

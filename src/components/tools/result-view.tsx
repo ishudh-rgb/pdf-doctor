@@ -52,7 +52,7 @@ export function ResultView({
 
       {/* Download button */}
       <a href={downloadUrl} download className="mt-6 w-full max-w-xs">
-        <Button variant="default" size="xl" className="w-full">
+        <Button variant="default" size="lg" className="w-full">
           <Download className="h-5 w-5" />
           Download
         </Button>

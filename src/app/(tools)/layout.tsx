@@ -1,7 +1,11 @@
+"use client";
+
+import { ToolLayoutChrome } from "@/components/layout/tool-layout-chrome";
+
 export default function ToolsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="flex min-h-screen flex-col">{children}</div>;
+  return <ToolLayoutChrome>{children}</ToolLayoutChrome>;
 }

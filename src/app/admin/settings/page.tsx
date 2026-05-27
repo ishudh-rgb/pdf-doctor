@@ -136,16 +136,16 @@ export default function AdminSettingsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+        <h2 className="text-2xl font-bold text-pd-foreground">Settings</h2>
         <div className="space-y-4">
           {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
+            <div key={i} className="animate-pulse rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                  <div className="h-4 w-40 rounded bg-gray-200" />
-                  <div className="h-3 w-64 rounded bg-gray-100" />
+                  <div className="h-4 w-40 rounded bg-pd-border" />
+                  <div className="h-3 w-64 rounded bg-pd-border/60" />
                 </div>
-                <div className="h-10 w-24 rounded-xl bg-gray-100" />
+                <div className="h-10 w-24 rounded-xl bg-pd-border/60" />
               </div>
             </div>
           ))}
@@ -169,11 +169,11 @@ export default function AdminSettingsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+        <h2 className="text-2xl font-bold text-pd-foreground">Settings</h2>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-blue-700 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-pd-brand px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-pd-brand-hover disabled:opacity-50"
         >
           {saving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -188,17 +188,17 @@ export default function AdminSettingsPage() {
         {settingsConfig.map((config) => (
           <div
             key={config.key}
-            className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6"
+            className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <label
                   htmlFor={config.key}
-                  className="text-sm font-semibold text-gray-900"
+                  className="text-sm font-semibold text-pd-foreground"
                 >
                   {config.label}
                 </label>
-                <p className="mt-0.5 text-xs text-gray-500">{config.description}</p>
+                <p className="mt-0.5 text-xs text-pd-muted">{config.description}</p>
               </div>
 
               {config.type === "toggle" ? (
@@ -211,11 +211,11 @@ export default function AdminSettingsPage() {
                     }))
                   }
                   className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                    settings[config.key] === "true" ? "bg-blue-600" : "bg-gray-200"
+                    settings[config.key] === "true" ? "bg-pd-brand" : "bg-pd-border"
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full bg-pd-surface shadow transition-transform ${
                       settings[config.key] === "true" ? "translate-x-6" : "translate-x-1"
                     }`}
                   />
@@ -228,7 +228,7 @@ export default function AdminSettingsPage() {
                   onChange={(e) =>
                     setSettings((prev) => ({ ...prev, [config.key]: e.target.value }))
                   }
-                  className="w-28 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="w-28 rounded-xl border border-pd-border px-3 py-2 text-sm text-pd-foreground focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
                 />
               )}
             </div>

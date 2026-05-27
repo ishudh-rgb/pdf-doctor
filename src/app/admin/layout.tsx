@@ -36,10 +36,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (checking) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex h-screen items-center justify-center bg-pd-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
-          <p className="text-sm text-gray-500">Verifying access...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-pd-brand border-t-transparent" />
+          <p className="text-sm text-pd-muted">Verifying access...</p>
         </div>
       </div>
     );
@@ -48,13 +48,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!authorized) return null;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="pd-admin flex h-screen overflow-hidden bg-pd-background">
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

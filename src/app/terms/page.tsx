@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LegalPageContent } from "@/components/marketing/legal-page-content";
+
 export const metadata: Metadata = {
   title: "Terms of Service | PDF Doctor",
   description:
@@ -8,16 +10,8 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="bg-white py-16 sm:py-24">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Terms of Service
-          </h1>
-          <p className="mt-4 text-sm text-gray-500">
-            Last updated: May 22, 2026
-          </p>
-
-          <div className="mt-10 space-y-10 text-gray-600">
+    <LegalPageContent title="Terms of Service" lastUpdated="May 22, 2026">
+          <div className="space-y-10">
             <section>
               <h2 className="text-xl font-semibold text-gray-900">
                 1. Acceptance of Terms
@@ -335,7 +329,6 @@ export default function TermsPage() {
               </div>
             </section>
           </div>
-      </div>
-    </div>
+    </LegalPageContent>
   );
 }

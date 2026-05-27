@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitch } from "@/components/common/language-switch";
+import { TrustStrip } from "@/components/marketing/trust-strip";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { useTranslation } from "@/i18n";
 
@@ -43,62 +44,64 @@ interface ToolCategory {
   tools: ToolLink[];
 }
 
+const toolIconClass = "text-pd-brand bg-pd-brand-muted";
+
 const megaMenuCategories: ToolCategory[] = [
   {
     title: "Organize PDF",
     tools: [
-      { name: "Merge PDF", href: "/merge-pdf", icon: <FileText className="h-4 w-4" />, color: "text-blue-600 bg-blue-50" },
-      { name: "Split PDF", href: "/split-pdf", icon: <Scissors className="h-4 w-4" />, color: "text-purple-600 bg-purple-50" },
+      { name: "Merge PDF", href: "/merge-pdf", icon: <FileText className="h-4 w-4" />, color: toolIconClass },
+      { name: "Split PDF", href: "/split-pdf", icon: <Scissors className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {
     title: "Optimize PDF",
     tools: [
-      { name: "Compress PDF", href: "/compress-pdf", icon: <Minimize2 className="h-4 w-4" />, color: "text-green-600 bg-green-50" },
+      { name: "Compress PDF", href: "/compress-pdf", icon: <Minimize2 className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {
     title: "Convert from PDF",
     tools: [
-      { name: "PDF to Word", href: "/pdf-to-word", icon: <FileDown className="h-4 w-4" />, color: "text-blue-600 bg-blue-50" },
-      { name: "PDF to Excel", href: "/pdf-to-excel", icon: <Table className="h-4 w-4" />, color: "text-green-700 bg-green-50" },
-      { name: "PDF to PowerPoint", href: "/pdf-to-ppt", icon: <Presentation className="h-4 w-4" />, color: "text-orange-700 bg-orange-50" },
+      { name: "PDF to Word", href: "/pdf-to-word", icon: <FileDown className="h-4 w-4" />, color: toolIconClass },
+      { name: "PDF to Excel", href: "/pdf-to-excel", icon: <Table className="h-4 w-4" />, color: toolIconClass },
+      { name: "PDF to PowerPoint", href: "/pdf-to-ppt", icon: <Presentation className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {
     title: "Convert to PDF",
     tools: [
-      { name: "Word to PDF", href: "/word-to-pdf", icon: <FileUp className="h-4 w-4" />, color: "text-red-600 bg-red-50" },
-      { name: "Excel to PDF", href: "/excel-to-pdf", icon: <FileSpreadsheet className="h-4 w-4" />, color: "text-green-700 bg-green-50" },
-      { name: "PowerPoint to PDF", href: "/ppt-to-pdf", icon: <Presentation className="h-4 w-4" />, color: "text-orange-700 bg-orange-50" },
-      { name: "JPG to PDF", href: "/jpg-to-pdf", icon: <ImageIcon className="h-4 w-4" />, color: "text-orange-600 bg-orange-50" },
+      { name: "Word to PDF", href: "/word-to-pdf", icon: <FileUp className="h-4 w-4" />, color: toolIconClass },
+      { name: "Excel to PDF", href: "/excel-to-pdf", icon: <FileSpreadsheet className="h-4 w-4" />, color: toolIconClass },
+      { name: "PowerPoint to PDF", href: "/ppt-to-pdf", icon: <Presentation className="h-4 w-4" />, color: toolIconClass },
+      { name: "JPG to PDF", href: "/jpg-to-pdf", icon: <ImageIcon className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {
     title: "Edit & Sign",
     tools: [
-      { name: "Edit PDF", href: "/edit-pdf", icon: <PenLine className="h-4 w-4" />, color: "text-indigo-600 bg-indigo-50" },
-      { name: "Sign PDF", href: "/sign-pdf", icon: <PenTool className="h-4 w-4" />, color: "text-pink-600 bg-pink-50" },
-      { name: "Add Watermark", href: "/add-watermark", icon: <Stamp className="h-4 w-4" />, color: "text-cyan-700 bg-cyan-50" },
+      { name: "Edit PDF", href: "/edit-pdf", icon: <PenLine className="h-4 w-4" />, color: toolIconClass },
+      { name: "Sign PDF", href: "/sign-pdf", icon: <PenTool className="h-4 w-4" />, color: toolIconClass },
+      { name: "Add Watermark", href: "/add-watermark", icon: <Stamp className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {
     title: "Security",
     tools: [
-      { name: "Protect PDF", href: "/protect-pdf", icon: <Lock className="h-4 w-4" />, color: "text-red-600 bg-red-50" },
-      { name: "Unlock PDF", href: "/unlock-pdf", icon: <Unlock className="h-4 w-4" />, color: "text-emerald-600 bg-emerald-50" },
+      { name: "Protect PDF", href: "/protect-pdf", icon: <Lock className="h-4 w-4" />, color: toolIconClass },
+      { name: "Unlock PDF", href: "/unlock-pdf", icon: <Unlock className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {
     title: "AI Tools",
     tools: [
-      { name: "AI PDF Summarizer", href: "/ai-pdf-summarizer", icon: <Sparkles className="h-4 w-4" />, color: "text-violet-600 bg-violet-50" },
+      { name: "AI PDF Summarizer", href: "/ai-pdf-summarizer", icon: <Sparkles className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {
     title: "Scan",
     tools: [
-      { name: "PDF Scanner", href: "/pdf-scanner", icon: <ScanLine className="h-4 w-4" />, color: "text-cyan-600 bg-cyan-50" },
+      { name: "PDF Scanner", href: "/pdf-scanner", icon: <ScanLine className="h-4 w-4" />, color: toolIconClass },
     ],
   },
 ];
@@ -144,39 +147,37 @@ export function Header() {
   }, [mobileOpen]);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/70 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
+    <header className="pd-site-header sticky top-0 z-40 w-full border-b border-pd-border bg-pd-surface/95 backdrop-blur-md">
+      <TrustStrip className="pd-trust-strip hidden sm:flex" />
+      <div className="pd-container flex h-[var(--pd-header-height)] items-center justify-between">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-500 shadow-md shadow-indigo-500/20">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[var(--pd-radius-lg)] bg-pd-brand shadow-sm">
             <FileText className="h-4 w-4 text-white" />
           </div>
-          <span className="text-xl font-bold text-slate-900">
-            PDF <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Doctor</span>
+          <span className="pd-logo-text text-xl font-bold text-pd-foreground">
+            PDF <span className="text-pd-brand">Doctor</span>
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="pd-nav-links hidden items-center gap-1 lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-pd-muted transition-colors hover:bg-pd-brand-muted hover:text-pd-brand"
             >
               {link.name}
             </Link>
           ))}
 
-          {/* All Tools Mega Menu */}
           <div ref={megaMenuRef} className="relative">
             <button
               onClick={() => setMegaMenuOpen((prev) => !prev)}
               className={cn(
-                "flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+                "flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 megaMenuOpen
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
+                  ? "bg-pd-brand-muted text-pd-brand"
+                  : "text-pd-muted hover:bg-pd-brand-muted hover:text-pd-brand"
               )}
             >
               All Tools
@@ -188,13 +189,12 @@ export function Header() {
               />
             </button>
 
-            {/* Mega Menu Dropdown */}
             {megaMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-[640px] rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-2xl shadow-indigo-500/10 backdrop-blur-xl animate-fade-in">
+              <div className="absolute right-0 top-full mt-2 w-[640px] animate-fade-in rounded-2xl border border-pd-border bg-pd-surface p-6 shadow-lg">
                 <div className="grid grid-cols-3 gap-6">
                   {megaMenuCategories.map((category) => (
                     <div key={category.title}>
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">
                         {category.title}
                       </h3>
                       <div className="space-y-1">
@@ -203,7 +203,7 @@ export function Header() {
                             key={tool.name}
                             href={tool.href}
                             onClick={() => setMegaMenuOpen(false)}
-                            className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                            className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-pd-foreground transition-colors hover:bg-pd-background"
                           >
                             <span
                               className={cn(
@@ -225,12 +225,11 @@ export function Header() {
           </div>
         </nav>
 
-        {/* Right Side Actions */}
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="pd-header-cta hidden items-center gap-3 lg:flex">
           <LanguageSwitch />
           <Link
             href="/pricing"
-            className="text-sm font-medium text-slate-600 transition-colors hover:text-indigo-700"
+            className="text-sm font-medium text-pd-muted transition-colors hover:text-pd-brand"
           >
             {t("nav.pricing")}
           </Link>
@@ -253,16 +252,13 @@ export function Header() {
             </Link>
           )}
           <Link href="/pricing">
-            <Button variant="gradient" size="sm">
-              Get Pro
-            </Button>
+            <Button size="sm">Get Pro</Button>
           </Link>
         </div>
 
-        {/* Mobile Hamburger */}
         <button
           onClick={() => setMobileOpen(true)}
-          className="cursor-pointer rounded-lg p-2 text-slate-600 hover:bg-indigo-50 lg:hidden"
+          className="cursor-pointer rounded-lg p-2 text-pd-muted hover:bg-pd-brand-muted lg:hidden"
           aria-label="Open menu"
         >
           <Menu className="h-6 w-6" />
@@ -271,34 +267,34 @@ export function Header() {
 
       {/* Mobile Full-screen Overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 bg-white lg:hidden">
-          <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
+        <div className="fixed inset-0 z-50 bg-pd-surface lg:hidden">
+          <div className="flex h-[var(--pd-header-height)] items-center justify-between border-b border-pd-border px-4">
             <Link
               href="/"
               className="flex items-center gap-2.5"
               onClick={() => setMobileOpen(false)}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-500">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[var(--pd-radius-lg)] bg-pd-brand">
                 <FileText className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold text-slate-900">
-                PDF <span className="text-indigo-600">Doctor</span>
+              <span className="text-xl font-bold text-pd-foreground">
+                PDF <span className="text-pd-brand">Doctor</span>
               </span>
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
-              className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 cursor-pointer"
+              className="cursor-pointer rounded-lg p-2 text-pd-muted hover:bg-pd-background"
               aria-label="Close menu"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
 
-          <div className="overflow-y-auto px-4 py-6 h-[calc(100vh-4rem)]">
+          <div className="h-[calc(100vh-var(--pd-header-height))] overflow-y-auto px-4 py-6">
             <div className="space-y-6">
               {megaMenuCategories.map((category) => (
                 <div key={category.title}>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">
                     {category.title}
                   </h3>
                   <div className="space-y-1">
@@ -307,7 +303,7 @@ export function Header() {
                         key={tool.name}
                         href={tool.href}
                         onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-pd-foreground transition-colors hover:bg-pd-background"
                       >
                         <span
                           className={cn(
@@ -325,11 +321,11 @@ export function Header() {
               ))}
             </div>
 
-            <div className="mt-8 space-y-3 border-t border-gray-200 pt-6">
+            <div className="mt-8 space-y-3 border-t border-pd-border pt-6">
               <Link
                 href="/pricing"
                 onClick={() => setMobileOpen(false)}
-                className="block rounded-xl px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="block rounded-xl px-3 py-3 text-sm font-medium text-pd-foreground hover:bg-pd-background"
               >
                 Pricing
               </Link>
@@ -363,9 +359,7 @@ export function Header() {
                       </Button>
                     </Link>
                     <Link href="/pricing" className="flex-1" onClick={() => setMobileOpen(false)}>
-                      <Button variant="gradient" className="w-full">
-                        Get Pro
-                      </Button>
+                      <Button className="w-full">Get Pro</Button>
                     </Link>
                   </>
                 )}

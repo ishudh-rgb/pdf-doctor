@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Lock, Eye, EyeOff, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { AuthShell } from "@/components/layout/auth-shell";
+import { Button, buttonVariants } from "@/components/ui/button";
+
+const inputClass =
+  "w-full rounded-xl border border-pd-border bg-pd-surface py-2.5 text-sm text-pd-foreground outline-none transition focus:border-pd-brand focus:ring-2 focus:ring-pd-brand/20";
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState("");
@@ -57,12 +62,10 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="space-y-4 text-center">
-        <p className="text-sm text-gray-600">
-          This reset link is invalid or has expired.
-        </p>
+        <p className="text-sm text-pd-muted">This reset link is invalid or has expired.</p>
         <Link
           href="/forgot-password"
-          className="inline-flex rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          className={cn(buttonVariants({ variant: "default", size: "md" }))}
         >
           Request a new reset link
         </Link>
@@ -73,21 +76,18 @@ function ResetPasswordForm() {
   return (
     <>
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label
-            htmlFor="password"
-            className="mb-1.5 block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-pd-foreground">
             New Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-muted" />
             <input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -95,12 +95,12 @@ function ResetPasswordForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-11 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className={cn(inputClass, "pl-10 pr-11")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-pd-muted hover:text-pd-foreground"
               tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -111,12 +111,12 @@ function ResetPasswordForm() {
         <div>
           <label
             htmlFor="confirmPassword"
-            className="mb-1.5 block text-sm font-medium text-gray-700"
+            className="mb-1.5 block text-sm font-medium text-pd-foreground"
           >
             Confirm New Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-muted" />
             <input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
@@ -124,34 +124,23 @@ function ResetPasswordForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-11 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              className={cn(inputClass, "pl-10 pr-11")}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-pd-muted hover:text-pd-foreground"
               tabIndex={-1}
             >
-              {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20",
-            loading && "cursor-not-allowed opacity-70"
-          )}
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           Update Password
-        </button>
+        </Button>
       </form>
     </>
   );
@@ -159,36 +148,28 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <section className="bg-gray-50 px-4 py-12">
-      <div className="mx-auto mt-8 max-w-md">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-          <div className="mb-8 flex flex-col items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-blue-600">
-                <FileText className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">
-                PDF <span className="text-red-600">Doctor</span>
-              </span>
-            </Link>
-            <h1 className="text-xl font-semibold text-gray-900">Choose a new password</h1>
-            <p className="text-center text-sm text-gray-500">
-              Enter and confirm your new password below
-            </p>
-          </div>
-
-          <Suspense fallback={<div className="text-sm text-gray-500">Loading...</div>}>
-            <ResetPasswordForm />
-          </Suspense>
-
-          <p className="mt-6 text-center text-sm text-gray-500">
-            Remember your password?{" "}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
-              Log in
-            </Link>
-          </p>
+    <AuthShell
+      title="Choose a new password"
+      subtitle="Enter and confirm your new password below"
+    >
+      <div className="mb-6 hidden flex-col items-center gap-2 lg:flex">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pd-brand">
+          <FileText className="h-5 w-5 text-white" />
         </div>
+        <h1 className="text-xl font-bold text-pd-foreground">Choose a new password</h1>
+        <p className="text-sm text-pd-muted">Enter and confirm your new password below</p>
       </div>
-    </section>
+
+      <Suspense fallback={<div className="text-sm text-pd-muted">Loading...</div>}>
+        <ResetPasswordForm />
+      </Suspense>
+
+      <p className="mt-6 text-center text-sm text-pd-muted">
+        Remember your password?{" "}
+        <Link href="/login" className="font-medium text-pd-brand hover:text-pd-brand-hover">
+          Log in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

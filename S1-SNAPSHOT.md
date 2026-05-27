@@ -5,7 +5,15 @@
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
 | **Commit** | `249e3e7` (run `git rev-parse S1` to verify) |
-| **Saved** | 2026-05-27 |
+| **Saved** | 2026-05-27 (Theme A + Layout B lock) |
+
+## Locked design
+
+| Setting | Value |
+|---------|--------|
+| **Brand theme** | A — Enterprise Navy |
+| **UX layout** | B — Split panel (Stripe-style) |
+| **Preview Lab** | Off (`DESIGN_LOCKED=true` in `src/config/design-system.ts`) |
 
 ## What's included (100% website)
 

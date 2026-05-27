@@ -53,39 +53,39 @@ export default function AdminCleanupPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-pd-muted" />
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">File Cleanup</h1>
+      <h1 className="text-2xl font-bold text-pd-foreground mb-8">File Cleanup</h1>
 
       <div className="grid gap-6 sm:grid-cols-3 mb-8">
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="rounded-2xl bg-pd-surface p-6 shadow-sm border border-pd-border">
           <FileX className="h-8 w-8 text-amber-600 mb-3" />
-          <p className="text-sm text-gray-500">Pending Deletion</p>
-          <p className="text-3xl font-bold text-gray-900">{stats?.pendingFiles ?? 0}</p>
-          <p className="text-xs text-gray-400 mt-1">Files with expired retention</p>
+          <p className="text-sm text-pd-muted">Pending Deletion</p>
+          <p className="text-3xl font-bold text-pd-foreground">{stats?.pendingFiles ?? 0}</p>
+          <p className="text-xs text-pd-muted mt-1">Files with expired retention</p>
         </div>
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <HardDrive className="h-8 w-8 text-blue-600 mb-3" />
-          <p className="text-sm text-gray-500">Storage Used</p>
-          <p className="text-3xl font-bold text-gray-900">{stats?.totalStorageUsed ?? "0 MB"}</p>
-          <p className="text-xs text-gray-400 mt-1">Total file storage</p>
+        <div className="rounded-2xl bg-pd-surface p-6 shadow-sm border border-pd-border">
+          <HardDrive className="h-8 w-8 text-pd-brand mb-3" />
+          <p className="text-sm text-pd-muted">Storage Used</p>
+          <p className="text-3xl font-bold text-pd-foreground">{stats?.totalStorageUsed ?? "0 MB"}</p>
+          <p className="text-xs text-pd-muted mt-1">Total file storage</p>
         </div>
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
+        <div className="rounded-2xl bg-pd-surface p-6 shadow-sm border border-pd-border">
           <Clock className="h-8 w-8 text-green-600 mb-3" />
-          <p className="text-sm text-gray-500">Last Cleanup</p>
-          <p className="text-lg font-bold text-gray-900">{stats?.lastCleanup ?? "Never"}</p>
-          <p className="text-xs text-gray-400 mt-1">Cron job runs every hour</p>
+          <p className="text-sm text-pd-muted">Last Cleanup</p>
+          <p className="text-lg font-bold text-pd-foreground">{stats?.lastCleanup ?? "Never"}</p>
+          <p className="text-xs text-pd-muted mt-1">Cron job runs every hour</p>
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-6 shadow-sm mb-6">
-        <h2 className="font-semibold text-gray-900 mb-4">Manual Cleanup</h2>
-        <p className="text-sm text-gray-600 mb-4">
+      <div className="rounded-2xl bg-pd-surface p-6 shadow-sm mb-6 border border-pd-border">
+        <h2 className="font-semibold text-pd-foreground mb-4">Manual Cleanup</h2>
+        <p className="text-sm text-pd-muted mb-4">
           Run cleanup now to delete all files that have exceeded the 2-hour retention period.
           This operation marks expired files as deleted in the database.
         </p>
@@ -106,15 +106,15 @@ export default function AdminCleanupPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="rounded-2xl bg-pd-surface p-6 shadow-sm border border-pd-border">
+        <h2 className="font-semibold text-pd-foreground mb-4 flex items-center gap-2">
           <RefreshCw className="h-5 w-5" /> Auto-Cleanup Status
         </h2>
-        <div className="space-y-3 text-sm text-gray-600">
-          <p><span className="font-medium text-gray-900">Schedule:</span> Every 1 hour via Vercel Cron</p>
-          <p><span className="font-medium text-gray-900">Retention:</span> Files auto-delete after 2 hours</p>
-          <p><span className="font-medium text-gray-900">Endpoint:</span> <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">/api/cron/cleanup</code></p>
-          <p className="text-xs text-gray-400 mt-4">
+        <div className="space-y-3 text-sm text-pd-muted">
+          <p><span className="font-medium text-pd-foreground">Schedule:</span> Every 1 hour via Vercel Cron</p>
+          <p><span className="font-medium text-pd-foreground">Retention:</span> Files auto-delete after 2 hours</p>
+          <p><span className="font-medium text-pd-foreground">Endpoint:</span> <code className="bg-pd-background px-2 py-0.5 rounded text-xs border border-pd-border">/api/cron/cleanup</code></p>
+          <p className="text-xs text-pd-muted mt-4">
             The cleanup job marks expired files as deleted in the database.
             Supabase Storage lifecycle policies can be configured separately for physical file removal.
           </p>

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ArrowRight, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 const plans = [
   {
     name: "Free",
@@ -71,137 +73,96 @@ export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
 
   return (
-    <>
-        <section className="bg-gradient-to-b from-white to-gray-50 py-20 sm:py-28">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-                Simple, Transparent Pricing
-              </h1>
-              <p className="mx-auto mt-4 max-w-xl text-lg text-gray-500">
-                Get started for free. Upgrade to Pro when you need more power.
+    <MarketingPageShell
+      title="Simple, Transparent Pricing"
+      description="Get started for free. Upgrade to Pro when you need more power."
+      eyebrow="Pricing"
+      breadcrumbs={[{ label: "Home", href: "/" }, { label: "Pricing" }]}
+    >
+      <div className="text-center">
+        <div className="inline-flex items-center rounded-full border border-pd-border bg-pd-background p-1">
+          <button
+            onClick={() => setIsYearly(false)}
+            className={cn(
+              "rounded-full px-5 py-2 text-sm font-medium transition",
+              !isYearly ? "bg-pd-surface text-pd-foreground shadow-sm" : "text-pd-muted"
+            )}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setIsYearly(true)}
+            className={cn(
+              "rounded-full px-5 py-2 text-sm font-medium transition",
+              isYearly ? "bg-pd-surface text-pd-foreground shadow-sm" : "text-pd-muted"
+            )}
+          >
+            Yearly
+            <span className="ml-1.5 rounded-full bg-pd-brand-muted px-2 py-0.5 text-xs font-semibold text-pd-brand">
+              Save 33%
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-10 grid gap-8 sm:grid-cols-2">
+        {plans.map((plan) => {
+          const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
+          const period = isYearly ? "/year" : "/month";
+          return (
+            <div
+              key={plan.tier}
+              className={cn(
+                "relative rounded-2xl p-8",
+                plan.highlighted
+                  ? "border-2 border-pd-brand bg-pd-surface shadow-lg"
+                  : "border border-pd-border bg-pd-surface"
+              )}
+            >
+              {plan.highlighted && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-pd-brand px-4 py-0.5 text-xs font-bold text-white">
+                  Popular
+                </span>
+              )}
+              <h3 className="text-lg font-semibold text-pd-foreground">{plan.name}</h3>
+              <p className="mt-4">
+                <span className="text-4xl font-extrabold text-pd-foreground">
+                  {price === 0 ? "₹0" : `₹${price.toLocaleString("en-IN")}`}
+                </span>
+                <span className="ml-1 text-pd-muted">{period}</span>
               </p>
-
-              <div className="mt-8 inline-flex items-center rounded-full bg-gray-100 p-1">
-                <button
-                  onClick={() => setIsYearly(false)}
-                  className={cn(
-                    "rounded-full px-5 py-2 text-sm font-medium transition",
-                    !isYearly
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  )}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setIsYearly(true)}
-                  className={cn(
-                    "rounded-full px-5 py-2 text-sm font-medium transition",
-                    isYearly
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  )}
-                >
-                  Yearly
-                  <span className="ml-1.5 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
-                    Save 33%
-                  </span>
-                </button>
-              </div>
+              <ul className="mt-8 space-y-3">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-pd-muted">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-pd-brand" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href={plan.ctaHref} className="mt-8 block">
+                <Button variant={plan.highlighted ? "default" : "outline"} className="w-full">
+                  {plan.cta}
+                </Button>
+              </Link>
             </div>
+          );
+        })}
+      </div>
 
-            <div className="mt-14 grid gap-8 sm:grid-cols-2">
-              {plans.map((plan) => {
-                const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
-                const period = isYearly ? "/year" : "/month";
-                return (
-                  <div
-                    key={plan.tier}
-                    className={cn(
-                      "relative rounded-2xl p-8",
-                      plan.highlighted
-                        ? "border-2 border-blue-600 bg-white shadow-xl"
-                        : "border border-gray-200 bg-white"
-                    )}
-                  >
-                    {plan.highlighted && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-0.5 text-xs font-bold text-white">
-                        Popular
-                      </span>
-                    )}
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {plan.name}
-                    </h3>
-                    <p className="mt-4">
-                      <span className="text-4xl font-extrabold text-gray-900">
-                        {price === 0 ? "₹0" : `₹${price.toLocaleString("en-IN")}`}
-                      </span>
-                      <span className="ml-1 text-gray-500">{period}</span>
-                    </p>
-                    {plan.highlighted && isYearly && (
-                      <p className="mt-1 text-sm text-green-600">
-                        ₹{Math.round(plan.yearlyPrice / 12)}/month billed yearly
-                      </p>
-                    )}
-
-                    <ul className="mt-8 space-y-3">
-                      {plan.features.map((f) => (
-                        <li
-                          key={f}
-                          className="flex items-start gap-2.5 text-sm text-gray-600"
-                        >
-                          <Check
-                            className={cn(
-                              "mt-0.5 h-4 w-4 shrink-0",
-                              plan.highlighted ? "text-blue-600" : "text-green-500"
-                            )}
-                          />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Link
-                      href={plan.ctaHref}
-                      className={cn(
-                        "mt-8 block rounded-xl py-3 text-center text-sm font-semibold transition",
-                        plan.highlighted
-                          ? "bg-blue-600 text-white shadow hover:bg-blue-700"
-                          : "border border-gray-200 text-gray-700 hover:bg-gray-50"
-                      )}
-                    >
-                      {plan.cta}
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-white py-20">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
-              Pricing FAQ
-            </h2>
-            <div className="mt-10 divide-y divide-gray-200">
-              {pricingFaqs.map((faq) => (
-                <details key={faq.q} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-gray-900 [&::-webkit-details-marker]:hidden">
-                    {faq.q}
-                    <span className="ml-4 shrink-0 text-gray-400 transition group-open:rotate-45">
-                      +
-                    </span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-gray-600">
-                    {faq.a}
-                  </p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-    </>
+      <section className="mt-16">
+        <h2 className="text-center text-2xl font-bold text-pd-foreground">Pricing FAQ</h2>
+        <div className="mt-8 divide-y divide-pd-border rounded-2xl border border-pd-border bg-pd-surface px-6">
+          {pricingFaqs.map((faq) => (
+            <details key={faq.q} className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-pd-foreground [&::-webkit-details-marker]:hidden">
+                {faq.q}
+                <span className="ml-4 shrink-0 text-pd-muted transition group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-pd-muted">{faq.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+    </MarketingPageShell>
   );
 }

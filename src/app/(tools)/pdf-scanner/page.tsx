@@ -10,9 +10,12 @@ import {
   X,
   ScanLine,
   ImageIcon,
-  AlertCircle,
 } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
+import { ToolPageShell } from "@/components/layout/tool-page-shell";
 import { ScanFilterPreview } from "@/components/tools/previews/scan-filter-preview";
+import { ToolErrorBanner, ToolPrimaryButton } from "@/components/tools/tool-ui";
+import { Button } from "@/components/ui/button";
 
 export default function PDFScannerPage() {
   const [images, setImages] = useState<{ id: string; file: File; preview: string }[]>([]);
@@ -143,158 +146,153 @@ export default function PDFScannerPage() {
   };
 
   return (
-    <div className="min-h-[70vh] bg-gray-50 py-12 px-4">
-      <div className="mx-auto max-w-3xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">PDF Scanner</h1>
-          <p className="mt-3 text-gray-600">Scan documents to PDF using your camera or upload images</p>
-          <p className="mt-1 text-sm text-gray-500">Works best on mobile devices</p>
-        </div>
-
-        {result ? (
-          <div className="rounded-2xl bg-white p-8 shadow-sm text-center">
-            <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
-            <h2 className="mt-4 text-xl font-bold text-gray-900">Document Scanned!</h2>
-            <p className="mt-2 text-gray-600">{images.length} page(s) converted to PDF</p>
-            <div className="mt-6 flex gap-3 justify-center">
-              <button onClick={handleDownload} className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 cursor-pointer">
-                <Download className="h-4 w-4" /> Download PDF
-              </button>
-              <button onClick={reset} className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer">
-                Scan Again
-              </button>
-            </div>
+    <ToolPageShell
+      title="PDF Scanner"
+      description="Scan documents to PDF using your camera or upload images. Works best on mobile devices."
+      preview={
+        images.length > 0 && !result ? (
+          <ScanFilterPreview filter={filter} imagePreviewUrl={images[0]?.preview ?? null} />
+        ) : undefined
+      }
+    >
+      {result ? (
+        <div className="text-center">
+          <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
+          <h2 className="mt-4 text-xl font-bold text-pd-foreground">Document Scanned!</h2>
+          <p className="mt-2 text-pd-muted">{images.length} page(s) converted to PDF</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button onClick={handleDownload}>
+              <Download className="h-4 w-4" />
+              Download PDF
+            </Button>
+            <Button variant="outline" onClick={reset}>
+              Scan Again
+            </Button>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Camera Section */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Camera className="h-5 w-5" /> Camera Scan
-              </h3>
-              {cameraActive ? (
-                <div>
-                  <video ref={videoRef} className="w-full rounded-xl bg-black" autoPlay playsInline />
-                  <canvas ref={canvasRef} className="hidden" />
-                  <div className="mt-4 flex gap-3 justify-center">
-                    <button onClick={capturePhoto} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 cursor-pointer">
-                      Capture
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div>
+            <h3 className="mb-4 flex items-center gap-2 font-semibold text-pd-foreground">
+              <Camera className="h-5 w-5" /> Camera Scan
+            </h3>
+            {cameraActive ? (
+              <div>
+                <video ref={videoRef} className="w-full rounded-xl bg-black" autoPlay playsInline />
+                <canvas ref={canvasRef} className="hidden" />
+                <div className="mt-4 flex justify-center gap-3">
+                  <Button onClick={capturePhoto}>Capture</Button>
+                  <Button variant="outline" onClick={stopCamera}>Close Camera</Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={startCamera}
+                className="w-full cursor-pointer rounded-xl border-2 border-dashed border-pd-border p-8 text-center transition-colors hover:border-pd-brand hover:bg-pd-brand-muted/30"
+              >
+                <Camera className="mx-auto h-10 w-10 text-pd-muted" />
+                <p className="mt-2 font-medium text-pd-foreground">Open Camera</p>
+                <p className="text-sm text-pd-muted">Use your device camera to scan documents</p>
+              </button>
+            )}
+          </div>
+
+          <div>
+            <h3 className="mb-4 flex items-center gap-2 font-semibold text-pd-foreground">
+              <ImageIcon className="h-5 w-5" /> Upload Images
+            </h3>
+            <div
+              className={cn(
+                "cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-colors",
+                isDragging ? "border-pd-brand bg-pd-brand-muted" : "border-pd-border hover:border-pd-brand"
+              )}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files.length) addImages(e.dataTransfer.files); }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="mx-auto h-8 w-8 text-pd-muted" />
+              <p className="mt-2 text-sm font-medium text-pd-foreground">Drag & drop images or click to browse</p>
+              <p className="text-xs text-pd-muted">JPG, PNG supported</p>
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => e.target.files && addImages(e.target.files)} className="hidden" />
+          </div>
+
+          {images.length > 0 && (
+            <div>
+              <h3 className="mb-4 font-semibold text-pd-foreground">Scanned Pages ({images.length})</h3>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {images.map((img, i) => (
+                  <div key={img.id} className="group relative">
+                    <img src={img.preview} alt={`Page ${i + 1}`} className="h-24 w-full rounded-lg border border-pd-border object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(img.id)}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
                     </button>
-                    <button onClick={stopCamera} className="rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium hover:bg-gray-50 cursor-pointer">
-                      Close Camera
+                    <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                      {i + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6">
+                <h4 className="mb-2 text-sm font-medium text-pd-foreground">Image Filter</h4>
+                <div className="flex gap-3">
+                  {[
+                    { value: "original" as const, label: "Original" },
+                    { value: "bw" as const, label: "Black & White" },
+                    { value: "enhanced" as const, label: "Enhanced" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setFilter(opt.value)}
+                      className={cn(
+                        "cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                        filter === opt.value
+                          ? "bg-pd-brand text-white"
+                          : "bg-pd-background text-pd-muted hover:bg-pd-border/50"
+                      )}
+                    >
+                      {opt.label}
                     </button>
+                  ))}
+                </div>
+              </div>
+
+              {error && <ToolErrorBanner message={error} />}
+
+              {processing ? (
+                <div className="py-6 text-center">
+                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-pd-brand" />
+                  <p className="mt-3 font-medium text-pd-foreground">Converting to PDF...</p>
+                  <div className="mx-auto mt-3 max-w-xs">
+                    <div className="h-2 rounded-full bg-pd-border">
+                      <div className="h-2 rounded-full bg-pd-brand transition-all" style={{ width: `${progress}%` }} />
+                    </div>
                   </div>
                 </div>
               ) : (
-                <button onClick={startCamera} className="w-full rounded-xl border-2 border-dashed border-gray-300 p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer">
-                  <Camera className="mx-auto h-10 w-10 text-gray-400" />
-                  <p className="mt-2 font-medium text-gray-700">Open Camera</p>
-                  <p className="text-sm text-gray-500">Use your device camera to scan documents</p>
-                </button>
+                <ToolPrimaryButton
+                  onClick={handleProcess}
+                  className="mt-6"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <ScanLine className="h-5 w-5" /> Convert to PDF
+                  </span>
+                </ToolPrimaryButton>
               )}
             </div>
+          )}
 
-            {/* Upload Section */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <ImageIcon className="h-5 w-5" /> Upload Images
-              </h3>
-              <div
-                className={`rounded-xl border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
-                  isDragging ? "border-blue-400 bg-blue-50" : "border-gray-300 hover:border-blue-400"
-                }`}
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-                onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files.length) addImages(e.dataTransfer.files); }}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                <p className="mt-2 text-sm font-medium text-gray-700">Drag & drop images or click to browse</p>
-                <p className="text-xs text-gray-500">JPG, PNG supported</p>
-              </div>
-              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => e.target.files && addImages(e.target.files)} className="hidden" />
-            </div>
-
-            {/* Image List */}
-            {images.length > 0 && (
-              <div className="rounded-2xl bg-white p-6 shadow-sm">
-                <h3 className="font-semibold text-gray-900 mb-4">Scanned Pages ({images.length})</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {images.map((img, i) => (
-                    <div key={img.id} className="relative group">
-                      <img src={img.preview} alt={`Page ${i + 1}`} className="w-full h-24 object-cover rounded-lg border border-gray-200" />
-                      <button
-                        onClick={() => removeImage(img.id)}
-                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                      <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
-                        {i + 1}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Filter Options */}
-                <div className="mt-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Image Filter</h4>
-                  <div className="flex gap-3">
-                    {[
-                      { value: "original" as const, label: "Original" },
-                      { value: "bw" as const, label: "Black & White" },
-                      { value: "enhanced" as const, label: "Enhanced" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setFilter(opt.value)}
-                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
-                          filter === opt.value
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <ScanFilterPreview filter={filter} imagePreviewUrl={images[0]?.preview ?? null} />
-                </div>
-
-                {error && (
-                  <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700">
-                    <AlertCircle className="h-4 w-4 shrink-0" /> {error}
-                  </div>
-                )}
-
-                {processing ? (
-                  <div className="mt-6 text-center py-6">
-                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-                    <p className="mt-3 font-medium text-gray-700">Converting to PDF...</p>
-                    <div className="mt-3 mx-auto max-w-xs">
-                      <div className="h-2 rounded-full bg-gray-200">
-                        <div className="h-2 rounded-full bg-blue-600 transition-all" style={{ width: `${progress}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleProcess}
-                    className="mt-6 w-full rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white hover:bg-blue-700 cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <ScanLine className="h-5 w-5" /> Convert to PDF
-                  </button>
-                )}
-              </div>
-            )}
-
-            <p className="text-center text-xs text-gray-400">Your files are automatically deleted after 2 hours.</p>
-          </div>
-        )}
-      </div>
-    </div>
+          <p className="text-center text-xs text-pd-muted">Your files are automatically deleted after 2 hours.</p>
+        </div>
+      )}
+    </ToolPageShell>
   );
 }

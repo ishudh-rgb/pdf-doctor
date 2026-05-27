@@ -19,7 +19,7 @@ if (Test-Path $envPath) {
 git add -A
 $status = git status --porcelain
 if ($status) {
-  $msg = "S1: Complete website snapshot - design, tools, previews, i18n, auth theme. Revert with scripts/revert-to-s1.ps1"
+  $msg = "S1: Complete website snapshot - Theme A + Layout B locked, tools, previews, i18n. Revert with scripts/revert-to-s1.ps1"
   git commit -m $msg
 }
 

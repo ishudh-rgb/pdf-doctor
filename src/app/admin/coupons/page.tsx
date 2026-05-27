@@ -115,16 +115,16 @@ export default function AdminCouponsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">Coupon Codes</h2>
-        <div className="animate-pulse rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
+        <h2 className="text-2xl font-bold text-pd-foreground">Coupon Codes</h2>
+        <div className="animate-pulse rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6">
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4">
-                <div className="h-4 w-24 rounded bg-gray-200" />
-                <div className="h-4 w-16 rounded bg-gray-100" />
-                <div className="h-4 w-20 rounded bg-gray-100" />
-                <div className="h-4 w-24 rounded bg-gray-100" />
-                <div className="h-4 w-16 rounded bg-gray-100" />
+                <div className="h-4 w-24 rounded bg-pd-border" />
+                <div className="h-4 w-16 rounded bg-pd-border/60" />
+                <div className="h-4 w-20 rounded bg-pd-border/60" />
+                <div className="h-4 w-24 rounded bg-pd-border/60" />
+                <div className="h-4 w-16 rounded bg-pd-border/60" />
               </div>
             ))}
           </div>
@@ -148,10 +148,10 @@ export default function AdminCouponsPage() {
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Coupon Codes</h2>
+        <h2 className="text-2xl font-bold text-pd-foreground">Coupon Codes</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-xl bg-pd-brand px-4 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-pd-brand-hover"
         >
           {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {showForm ? "Cancel" : "Create Coupon"}
@@ -161,12 +161,12 @@ export default function AdminCouponsPage() {
       {showForm && (
         <form
           onSubmit={handleCreate}
-          className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6"
+          className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6"
         >
-          <h3 className="text-base font-semibold text-gray-900 mb-4">New Coupon</h3>
+          <h3 className="text-base font-semibold text-pd-foreground mb-4">New Coupon</h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+              <label className="block text-xs font-medium text-pd-muted mb-1.5">
                 Coupon Code
               </label>
               <div className="flex gap-2">
@@ -175,19 +175,19 @@ export default function AdminCouponsPage() {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="e.g. SAVE20"
-                  className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm font-mono uppercase text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="flex-1 rounded-xl border border-pd-border px-3 py-2 text-sm font-mono uppercase text-pd-foreground placeholder:text-pd-muted focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
                 />
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, code: generateCode() })}
-                  className="shrink-0 rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+                  className="shrink-0 rounded-xl border border-pd-border px-3 py-2 text-xs font-medium text-pd-muted transition hover:bg-pd-background"
                 >
                   Auto
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+              <label className="block text-xs font-medium text-pd-muted mb-1.5">
                 Discount %
               </label>
               <input
@@ -196,11 +196,11 @@ export default function AdminCouponsPage() {
                 max={100}
                 value={formData.discount_percent}
                 onChange={(e) => setFormData({ ...formData, discount_percent: Number(e.target.value) })}
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-xl border border-pd-border px-3 py-2 text-sm text-pd-foreground focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+              <label className="block text-xs font-medium text-pd-muted mb-1.5">
                 Max Uses (-1 = unlimited)
               </label>
               <input
@@ -208,18 +208,18 @@ export default function AdminCouponsPage() {
                 min={-1}
                 value={formData.max_uses}
                 onChange={(e) => setFormData({ ...formData, max_uses: Number(e.target.value) })}
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-xl border border-pd-border px-3 py-2 text-sm text-pd-foreground focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+              <label className="block text-xs font-medium text-pd-muted mb-1.5">
                 Valid Until
               </label>
               <input
                 type="date"
                 value={formData.valid_until}
                 onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-xl border border-pd-border px-3 py-2 text-sm text-pd-foreground focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20"
               />
             </div>
           </div>
@@ -237,40 +237,40 @@ export default function AdminCouponsPage() {
       )}
 
       {coupons.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
-          <Ticket className="mx-auto h-10 w-10 text-gray-300" />
-          <h3 className="mt-4 text-lg font-semibold text-gray-900">No coupons yet</h3>
-          <p className="mt-1 text-sm text-gray-500">
+        <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-12 text-center">
+          <Ticket className="mx-auto h-10 w-10 text-pd-muted" />
+          <h3 className="mt-4 text-lg font-semibold text-pd-foreground">No coupons yet</h3>
+          <p className="mt-1 text-sm text-pd-muted">
             Create your first coupon code to offer discounts.
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="px-4 py-3 font-medium text-gray-500">Code</th>
-                  <th className="px-4 py-3 font-medium text-gray-500">Discount</th>
-                  <th className="px-4 py-3 font-medium text-gray-500">Uses / Max</th>
-                  <th className="hidden px-4 py-3 font-medium text-gray-500 sm:table-cell">Valid Until</th>
-                  <th className="px-4 py-3 font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-3 font-medium text-gray-500">Actions</th>
+                <tr className="border-b border-pd-border bg-pd-background/50">
+                  <th className="px-4 py-3 font-medium text-pd-muted">Code</th>
+                  <th className="px-4 py-3 font-medium text-pd-muted">Discount</th>
+                  <th className="px-4 py-3 font-medium text-pd-muted">Uses / Max</th>
+                  <th className="hidden px-4 py-3 font-medium text-pd-muted sm:table-cell">Valid Until</th>
+                  <th className="px-4 py-3 font-medium text-pd-muted">Status</th>
+                  <th className="px-4 py-3 font-medium text-pd-muted">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-pd-border">
                 {coupons.map((coupon) => (
-                  <tr key={coupon.id} className="transition-colors hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-sm font-semibold text-gray-900">
+                  <tr key={coupon.id} className="transition-colors hover:bg-pd-background">
+                    <td className="px-4 py-3 font-mono text-sm font-semibold text-pd-foreground">
                       {coupon.code}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-4 py-3 text-pd-muted">
                       {coupon.discount_percent}%
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="px-4 py-3 text-pd-muted">
                       {coupon.uses} / {coupon.max_uses === -1 ? "∞" : coupon.max_uses}
                     </td>
-                    <td className="hidden px-4 py-3 text-gray-500 sm:table-cell">
+                    <td className="hidden px-4 py-3 text-pd-muted sm:table-cell">
                       {coupon.valid_until
                         ? new Date(coupon.valid_until).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
                         : "No expiry"}
@@ -281,7 +281,7 @@ export default function AdminCouponsPage() {
                           "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
                           coupon.is_active
                             ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-600"
+                            : "bg-pd-border text-pd-muted"
                         )}
                       >
                         {coupon.is_active ? "Active" : "Inactive"}

@@ -6,28 +6,29 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
   {
     variants: {
       variant: {
         default:
-          "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 rounded-xl shadow-sm hover:shadow-md",
+          "bg-pd-brand text-white hover:bg-pd-brand-hover focus-visible:ring-pd-brand shadow-sm",
         secondary:
-          "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500 rounded-xl shadow-sm hover:shadow-md",
+          "bg-pd-surface text-pd-foreground border border-pd-border hover:bg-pd-background focus-visible:ring-pd-brand",
         outline:
-          "border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-400 rounded-xl",
+          "border-2 border-pd-border bg-pd-surface text-pd-foreground hover:border-pd-border-strong hover:bg-pd-background focus-visible:ring-pd-brand",
         ghost:
-          "text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-400 rounded-xl",
-        link: "text-red-600 underline-offset-4 hover:underline focus-visible:ring-red-500 p-0 h-auto",
+          "text-pd-foreground hover:bg-pd-brand-muted hover:text-pd-brand focus-visible:ring-pd-brand",
+        link: "text-pd-brand underline-offset-4 hover:underline focus-visible:ring-pd-brand p-0 h-auto font-medium",
+        destructive:
+          "bg-pd-danger text-white hover:bg-red-700 focus-visible:ring-pd-danger shadow-sm",
         gradient:
-          "bg-gradient-to-r from-red-600 to-blue-600 text-white hover:from-red-700 hover:to-blue-700 focus-visible:ring-red-500 rounded-xl shadow-sm hover:shadow-md",
+          "bg-gradient-to-r from-pd-brand to-violet-600 text-white hover:opacity-95 focus-visible:ring-pd-brand shadow-sm",
       },
       size: {
-        sm: "h-8 px-3 text-sm",
-        md: "h-10 px-4 text-sm",
-        lg: "h-12 px-6 text-base",
-        xl: "h-14 px-8 text-lg",
-        icon: "h-10 w-10",
+        sm: "h-9 min-h-9 px-4 text-sm rounded-[var(--pd-btn-radius)]",
+        md: "h-11 min-h-11 px-6 text-[15px] rounded-[var(--pd-btn-radius)]",
+        lg: "h-[52px] min-h-[52px] px-8 text-base rounded-[var(--pd-btn-radius)]",
+        icon: "h-11 w-11 min-h-11 min-w-11 rounded-[var(--pd-btn-radius)]",
       },
     },
     defaultVariants: {

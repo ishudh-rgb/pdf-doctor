@@ -1,0 +1,243 @@
+/* Layout styles A–E — full structural UX variants (not just colors) */
+
+html[data-layout-style="A"] {
+  --pd-section-y: 3rem;
+  --pd-density: 0.92;
+  --pd-container: 72rem;
+  --pd-header-height: 3.5rem;
+  --pd-btn-radius: 0.5rem;
+  --pd-radius-lg: 0.625rem;
+  --pd-radius-xl: 0.75rem;
+}
+
+html[data-layout-style="B"] {
+  --pd-section-y: 4.5rem;
+  --pd-density: 1;
+  --pd-container: 80rem;
+  --pd-header-height: 4rem;
+  --pd-btn-radius: 0.625rem;
+}
+
+html[data-layout-style="C"] {
+  --pd-section-y: 5rem;
+  --pd-density: 1.05;
+  --pd-container: 84rem;
+  --pd-header-height: 4.5rem;
+  --pd-btn-radius: 0.875rem;
+  --pd-radius-lg: 1rem;
+  --pd-radius-xl: 1.25rem;
+}
+
+html[data-layout-style="D"] {
+  --pd-section-y: 5.5rem;
+  --pd-density: 1.1;
+  --pd-container: 42rem;
+  --pd-header-height: 4rem;
+  --pd-btn-radius: 1rem;
+  --pd-radius-lg: 1rem;
+  --pd-radius-xl: 1.25rem;
+}
+
+html[data-layout-style="E"] {
+  --pd-section-y: 4rem;
+  --pd-density: 1;
+  --pd-container: 76rem;
+  --pd-header-height: 4rem;
+  --pd-btn-radius: 0.75rem;
+}
+
+/* ─── Header variants ─── */
+
+html[data-layout-style="A"] .pd-site-header .pd-nav-links {
+  display: none;
+}
+
+html[data-layout-style="A"] .pd-site-header .pd-header-cta {
+  display: none;
+}
+
+html[data-layout-style="C"] .pd-site-header {
+  box-shadow: var(--pd-shadow-md);
+}
+
+html[data-layout-style="D"] .pd-site-header .pd-trust-strip {
+  display: none;
+}
+
+html[data-layout-style="B"] .pd-site-header .pd-logo-text {
+  letter-spacing: -0.02em;
+}
+
+/* ─── Homepage layout hooks ─── */
+
+.layout-upload-first .pd-hero-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.layout-split-panel .pd-tool-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .layout-split-panel .pd-tool-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: stretch;
+  }
+}
+
+.layout-calm-cards .pd-card {
+  border-radius: var(--pd-radius-xl);
+  box-shadow: var(--pd-shadow-sm);
+}
+
+.layout-visual-wizard .pd-step-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .layout-visual-wizard .pd-step-bar {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.layout-expert-mix .pd-trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* ─── Tool page structural variants ─── */
+
+.pd-tool-layout-body > main {
+  transition: background 0.2s ease;
+}
+
+/* A: upload-first — full bleed, minimal padding */
+html[data-layout-style="A"] .pd-tool-layout-body > main {
+  background: var(--pd-surface) !important;
+  padding-top: 1rem !important;
+  padding-bottom: 2rem !important;
+}
+
+html[data-layout-style="A"] .pd-tool-layout-body > main > div {
+  max-width: var(--pd-container) !important;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+/* B: split panel — wider workspace */
+html[data-layout-style="B"] .pd-tool-layout-body > main {
+  background: var(--pd-background) !important;
+}
+
+html[data-layout-style="B"] .pd-tool-layout-body > main > div {
+  max-width: var(--pd-container) !important;
+}
+
+html[data-layout-style="B"] .pd-tool-layout-body .lg\:grid-cols-\[1\.1fr_0\.9fr\] {
+  gap: 2rem;
+}
+
+/* C: wizard — centered card with step feel */
+html[data-layout-style="C"] .pd-tool-layout-body > main {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pd-brand) 8%, var(--pd-background)) 0%,
+    var(--pd-background) 240px
+  ) !important;
+}
+
+html[data-layout-style="C"] .pd-tool-layout-body > main > div > div:first-child {
+  text-align: center;
+}
+
+/* D: calm — narrow centered column */
+html[data-layout-style="D"] .pd-tool-layout-body > main > div {
+  max-width: 36rem !important;
+  margin-inline: auto;
+}
+
+html[data-layout-style="D"] .pd-tool-layout-body > main {
+  background: var(--pd-background) !important;
+  padding-inline: 1rem !important;
+}
+
+/* E: expert mix — balanced with preview emphasis */
+html[data-layout-style="E"] .pd-tool-layout-body > main {
+  background: var(--pd-background) !important;
+}
+
+html[data-layout-style="E"] .pd-tool-layout-body > main > div {
+  max-width: 56rem !important;
+  margin-inline: auto;
+}
+
+/* Marketing pages */
+html[data-layout-style="A"] .pd-marketing-page .pd-container {
+  max-width: 72rem;
+}
+
+html[data-layout-style="D"] .pd-marketing-page .pd-container {
+  max-width: 42rem;
+}
+
+html[data-layout-style="C"] .pd-marketing-page h2 {
+  font-size: 1.5rem;
+}
+
+/* Auth shell variants */
+html[data-layout-style="A"] .pd-auth-shell {
+  grid-template-columns: 1fr;
+}
+
+html[data-layout-style="A"] .pd-auth-shell-promo {
+  display: none;
+}
+
+html[data-layout-style="D"] .pd-auth-shell {
+  place-items: center;
+}
+
+html[data-layout-style="D"] .pd-auth-shell-form {
+  max-width: 24rem;
+}
+
+html[data-layout-style="C"] .pd-auth-shell-promo {
+  background: var(--pd-brand);
+  color: white;
+}
+
+html[data-layout-style="C"] .pd-auth-shell-promo h2,
+html[data-layout-style="C"] .pd-auth-shell-promo p {
+  color: white;
+}
+
+html[data-layout-style="B"] .pd-auth-shell {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Footer density */
+html[data-layout-style="A"] .pd-site-footer {
+  padding-block: 2.5rem;
+}
+
+html[data-layout-style="D"] .pd-site-footer .pd-container {
+  max-width: 42rem;
+}
+
+html[data-layout-style="D"] .pd-site-footer .grid {
+  grid-template-columns: 1fr;
+  text-align: center;
+}
+
+/* Preview lab offset — avoid overlap on small screens */
+@media (min-width: 1280px) {
+  html[data-design-preview="true"] body {
+    padding-right: 0;
+  }
+}

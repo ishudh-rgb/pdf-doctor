@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  UserCircle,
   Crown,
   FileText,
   Layers,
@@ -15,14 +14,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTranslation } from "@/i18n";
+import { DashboardCard, DashboardShell } from "@/components/layout/dashboard-shell";
+import { Button } from "@/components/ui/button";
 
 const quickAccessTools = [
-  { slug: "merge-pdf", icon: Layers, color: "bg-emerald-100 text-emerald-600", nameKey: "tools.mergePdf.name" },
-  { slug: "split-pdf", icon: Scissors, color: "bg-blue-100 text-blue-600", nameKey: "tools.splitPdf.name" },
-  { slug: "compress-pdf", icon: Minimize2, color: "bg-orange-100 text-orange-600", nameKey: "tools.compressPdf.name" },
-  { slug: "pdf-to-word", icon: FileText, color: "bg-indigo-100 text-indigo-600", nameKey: "tools.pdfToWord.name" },
-  { slug: "word-to-pdf", icon: FileText, color: "bg-red-100 text-red-600", nameKey: "tools.wordToPdf.name" },
-  { slug: "ai-pdf-summarizer", icon: Sparkles, color: "bg-violet-100 text-violet-600", nameKey: "tools.aiPdfSummarizer.name" },
+  { slug: "merge-pdf", icon: Layers, nameKey: "tools.mergePdf.name" },
+  { slug: "split-pdf", icon: Scissors, nameKey: "tools.splitPdf.name" },
+  { slug: "compress-pdf", icon: Minimize2, nameKey: "tools.compressPdf.name" },
+  { slug: "pdf-to-word", icon: FileText, nameKey: "tools.pdfToWord.name" },
+  { slug: "word-to-pdf", icon: FileText, nameKey: "tools.wordToPdf.name" },
+  { slug: "ai-pdf-summarizer", icon: Sparkles, nameKey: "tools.aiPdfSummarizer.name" },
 ];
 
 type JobStatus = "completed" | "processing" | "failed";
@@ -46,150 +47,121 @@ export default function DashboardPage() {
   const { t } = useTranslation();
 
   const statusConfig: Record<JobStatus, { label: string; className: string }> = {
-    completed: { label: t("dashboard.completed"), className: "bg-emerald-100 text-emerald-700" },
+    completed: { label: t("dashboard.completed"), className: "bg-pd-brand-muted text-pd-brand" },
     processing: { label: t("dashboard.processing"), className: "bg-amber-100 text-amber-700" },
     failed: { label: t("dashboard.failed"), className: "bg-red-100 text-red-700" },
   };
 
   return (
-    <section className="relative min-h-screen mesh-hero">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-20 right-0 h-72 w-72 rounded-full bg-violet-200/30 blur-3xl"
-      />
+    <DashboardShell title={t("dashboard.title")} subtitle={t("dashboard.welcomeBackSimple")}>
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <DashboardCard>
+          <p className="text-sm font-medium text-pd-muted">{t("dashboard.currentPlan")}</p>
+          <div className="mt-2">
+            <span className="inline-flex rounded-full bg-pd-brand-muted px-2.5 py-0.5 text-xs font-semibold text-pd-brand">
+              {t("dashboard.freePlan")}
+            </span>
+          </div>
+          <Link
+            href="/pricing"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-pd-brand hover:text-pd-brand-hover"
+          >
+            <Crown className="h-3.5 w-3.5" />
+            {t("dashboard.upgradeToPro")}
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
+        </DashboardCard>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center gap-4 rounded-2xl border border-white/70 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md">
-            <UserCircle className="h-7 w-7" />
+        <DashboardCard>
+          <p className="text-sm font-medium text-pd-muted">{t("dashboard.todaysUsage")}</p>
+          <p className="mt-2 text-lg font-semibold text-pd-foreground">
+            {t("dashboard.filesProcessed", { used: "3", total: "5" })}
+          </p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-pd-border">
+            <div className="h-full w-[60%] rounded-full bg-pd-brand" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{t("dashboard.title")}</h1>
-            <p className="text-sm text-slate-500">{t("dashboard.welcomeBackSimple")}</p>
+        </DashboardCard>
+
+        <DashboardCard>
+          <p className="text-sm font-medium text-pd-muted">{t("dashboard.aiSummaries")}</p>
+          <p className="mt-2 text-lg font-semibold text-pd-foreground">
+            {t("dashboard.summariesUsed", { used: "1", total: "3" })}
+          </p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-pd-border">
+            <div className="h-full w-[33%] rounded-full bg-pd-brand" />
           </div>
+        </DashboardCard>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="mb-4 text-lg font-semibold text-pd-foreground">{t("dashboard.quickAccess")}</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {quickAccessTools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <Link
+                key={tool.slug}
+                href={`/${tool.slug}`}
+                className="group flex flex-col items-center gap-2 rounded-2xl border border-pd-border bg-pd-surface p-4 text-center shadow-sm transition hover:border-pd-brand/40 hover:shadow-md"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-pd-brand-muted text-pd-brand transition-transform group-hover:scale-110">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="text-xs font-medium text-pd-foreground">{t(tool.nameKey)}</span>
+              </Link>
+            );
+          })}
         </div>
+      </div>
 
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">{t("dashboard.currentPlan")}</p>
-            <div className="mt-2">
-              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                {t("dashboard.freePlan")}
-              </span>
-            </div>
-            <Link
-              href="/pricing"
-              className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-            >
-              <Crown className="h-3.5 w-3.5" />
-              {t("dashboard.upgradeToPro")}
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">{t("dashboard.todaysUsage")}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">
-              {t("dashboard.filesProcessed", { used: "3", total: "5" })}
-            </p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full w-[60%] rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">{t("dashboard.aiSummaries")}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">
-              {t("dashboard.summariesUsed", { used: "1", total: "3" })}
-            </p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full w-[33%] rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">{t("dashboard.quickAccess")}</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {quickAccessTools.map((tool) => {
-              const Icon = tool.icon;
-              return (
-                <Link
-                  key={tool.slug}
-                  href={`/${tool.slug}`}
-                  className="group flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-white p-4 text-center shadow-sm transition hover:border-indigo-200 hover:shadow-md"
-                >
-                  <span
-                    className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110",
-                      tool.color
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <span className="text-xs font-medium text-slate-700">{t(tool.nameKey)}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">{t("dashboard.recentJobs")}</h2>
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/80">
-                    <th className="px-4 py-3 font-medium text-slate-500">{t("dashboard.tool")}</th>
-                    <th className="px-4 py-3 font-medium text-slate-500">{t("dashboard.fileName")}</th>
-                    <th className="hidden px-4 py-3 font-medium text-slate-500 sm:table-cell">
-                      {t("dashboard.date")}
-                    </th>
-                    <th className="px-4 py-3 font-medium text-slate-500">{t("dashboard.status")}</th>
-                    <th className="px-4 py-3 font-medium text-slate-500">{t("dashboard.action")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {recentJobs.map((job) => {
-                    const status = statusConfig[job.status];
-                    return (
-                      <tr key={job.id} className="transition-colors hover:bg-slate-50/80">
-                        <td className="px-4 py-3 font-medium text-slate-900">{t(job.toolKey)}</td>
-                        <td className="max-w-[200px] truncate px-4 py-3 text-slate-600">{job.fileName}</td>
-                        <td className="hidden px-4 py-3 text-slate-500 sm:table-cell">{job.date}</td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={cn(
-                              "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                              status.className
-                            )}
-                          >
-                            {status.label}
+      <div>
+        <h2 className="mb-4 text-lg font-semibold text-pd-foreground">{t("dashboard.recentJobs")}</h2>
+        <div className="overflow-hidden rounded-2xl border border-pd-border bg-pd-surface shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-pd-border bg-pd-background">
+                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.tool")}</th>
+                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.fileName")}</th>
+                  <th className="hidden px-4 py-3 font-medium text-pd-muted sm:table-cell">{t("dashboard.date")}</th>
+                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.status")}</th>
+                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.action")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-pd-border">
+                {recentJobs.map((job) => {
+                  const status = statusConfig[job.status];
+                  return (
+                    <tr key={job.id} className="transition-colors hover:bg-pd-background/80">
+                      <td className="px-4 py-3 font-medium text-pd-foreground">{t(job.toolKey)}</td>
+                      <td className="max-w-[200px] truncate px-4 py-3 text-pd-muted">{job.fileName}</td>
+                      <td className="hidden px-4 py-3 text-pd-muted sm:table-cell">{job.date}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", status.className)}>
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {job.status === "completed" && job.downloadable ? (
+                          <Button variant="ghost" size="sm" className="h-8 px-3 text-xs">
+                            <Download className="h-3.5 w-3.5" />
+                            {t("dashboard.download")}
+                          </Button>
+                        ) : job.status === "completed" && !job.downloadable ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-pd-muted">
+                            <Clock className="h-3.5 w-3.5" />
+                            {t("dashboard.expired")}
                           </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {job.status === "completed" && job.downloadable ? (
-                            <button className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
-                              <Download className="h-3.5 w-3.5" />
-                              {t("dashboard.download")}
-                            </button>
-                          ) : job.status === "completed" && !job.downloadable ? (
-                            <span className="inline-flex items-center gap-1 text-xs text-slate-400">
-                              <Clock className="h-3.5 w-3.5" />
-                              {t("dashboard.expired")}
-                            </span>
-                          ) : null}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-    </section>
+    </DashboardShell>
   );
 }
