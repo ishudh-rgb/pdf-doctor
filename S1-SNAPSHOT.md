@@ -4,8 +4,8 @@
 |-------|-------|
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
-| **Commit** | Run `git rev-parse --short S1` after save |
-| **Saved** | Refresh via `.\scripts\save-s1.ps1` |
+| **Commit** | `7e3dee6` (full: `7e3dee66c25717ab7d08842213c736a64fc11fea`) |
+| **Saved** | 2026-06-01 21:33 — website + PDF-to-Word + CONFIDENTIAL watermarks |
 
 ## Locked design (100% — do not change without unlock)
 
