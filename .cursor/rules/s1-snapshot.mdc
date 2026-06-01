@@ -28,4 +28,5 @@ Restore the **entire** `pdf-doctor` website to tag **S1** — no partial fixes.
 ## S1 includes
 
 All source, styles, public images, tools, previews, i18n, auth/dashboard theme.
-**Locked design:** Theme A (Enterprise Navy) + Layout B (Split panel). See `S1-SNAPSHOT.md` for commit hash.
+**PDF-to-Word:** `scripts/pdf-to-docx.py`, `scripts/smallpdf_transform.py`, `scripts/templates/*` (watermark XML + logo PNG).
+**Locked design:** Theme A (Enterprise Navy) + Layout B (Split panel). See `S1-SNAPSHOT.md` for full manifest and commit hash.

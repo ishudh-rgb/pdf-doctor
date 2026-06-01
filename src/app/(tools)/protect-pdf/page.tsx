@@ -136,13 +136,15 @@ export default function ProtectPdfPage() {
       ) : (
         <>
           <ToolDropzone
-            hint="Drop a PDF file here or click to browse"
+            hint="or drop files here"
             subHint="Select a PDF to protect with a password"
             dragOver={dragOver}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
+            onChooseFiles={() => fileInputRef.current?.click()}
+            onCloudFiles={(incoming) => handleFiles(incoming)}
+            onCloudError={setError}
           />
           <input
             ref={fileInputRef}

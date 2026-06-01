@@ -242,7 +242,7 @@ export function AISection({ split = false }: { split?: boolean }) {
       <section className="bg-pd-brand-muted pd-section sm:py-28">
         <div className="pd-container">
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div className="order-2 lg:order-1">
+            <div className="order-2 overflow-visible lg:order-1">
               <AiSummaryVisual />
             </div>
             <div className="order-1 lg:order-2">{content}</div>
@@ -428,22 +428,51 @@ export function CTASection() {
 
 export function HeroCopy({ align = "center" }: { align?: "center" | "left" }) {
   const { t } = useTranslation();
+  const isLeft = align === "left";
+
   return (
-    <div className={align === "center" ? "text-center" : "text-center lg:text-left"}>
-      <span className="inline-flex items-center gap-2 rounded-full border border-pd-border bg-pd-surface px-4 py-1.5 text-xs font-semibold text-pd-brand shadow-sm">
-        <Sparkles className="h-3.5 w-3.5" />
-        {t("landing.heroBadge")}
+    <div
+      className={
+        isLeft
+          ? "pd-hero-copy mx-auto w-full max-w-xl text-center lg:mx-0 lg:max-w-[34rem] lg:text-left"
+          : "text-center"
+      }
+    >
+      <span
+        className={
+          isLeft
+            ? "pd-hero-badge inline-flex h-8 w-fit max-w-full items-center gap-1.5 self-center rounded-full border border-pd-border bg-pd-surface px-3.5 text-[11px] font-semibold leading-none text-pd-brand shadow-sm lg:self-start"
+            : "inline-flex h-8 items-center gap-1.5 rounded-full border border-pd-border bg-pd-surface px-3.5 text-[11px] font-semibold leading-none text-pd-brand shadow-sm"
+        }
+      >
+        <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
+        <span className="whitespace-nowrap">{t("landing.heroBadge")}</span>
       </span>
-      <h1 className="pd-display mt-6 text-4xl font-extrabold tracking-tight text-pd-foreground sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
-        {t("landing.heroTitle")}{" "}
-        <span className="text-pd-brand">{t("landing.heroTitleHighlight")}</span>
-      </h1>
-      <p className={`pd-prose mt-6 text-lg text-pd-muted ${align === "left" ? "lg:mx-0" : "mx-auto"}`}>
+      {isLeft ? (
+        <h1 className="pd-hero-headline pd-display mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl lg:mt-6 lg:text-[2.875rem] lg:leading-[1.2] xl:text-[3.125rem]">
+          <span className="pd-hero-line block text-pd-foreground lg:whitespace-nowrap">
+            {t("landing.heroTitle")}
+          </span>
+          <span className="pd-hero-line mt-1 block text-pd-brand lg:mt-1.5 lg:whitespace-nowrap">
+            {t("landing.heroTitleHighlight")}
+          </span>
+        </h1>
+      ) : (
+        <h1 className="pd-display mt-6 text-4xl font-extrabold tracking-tight text-pd-foreground sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+          {t("landing.heroTitle")}{" "}
+          <span className="text-pd-brand">{t("landing.heroTitleHighlight")}</span>
+        </h1>
+      )}
+      <p
+        className={`pd-prose mt-6 w-full text-lg leading-relaxed text-pd-muted ${
+          isLeft ? "lg:mx-0" : "mx-auto max-w-xl"
+        }`}
+      >
         {t("landing.heroSubtitle")}
       </p>
       <div
         className={`pd-hero-actions mt-10 flex flex-col items-center gap-4 sm:flex-row ${
-          align === "left" ? "lg:justify-start" : "justify-center"
+          isLeft ? "lg:justify-start" : "justify-center"
         }`}
       >
         <Link href="#tools">

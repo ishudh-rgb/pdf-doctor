@@ -275,6 +275,8 @@ export default function SignPdfPage() {
     <ToolPageShell
       title="Sign PDF"
       description="Add your signature to any PDF document"
+      splitWorkspace
+      previewPlaceholder="Add a signature to see placement preview"
       relatedTools={mapRelatedTools(RELATED_TOOLS)}
       faqs={mapFaqs(FAQS)}
       preview={
@@ -315,13 +317,15 @@ export default function SignPdfPage() {
           <div>
             <h2 className="mb-4 text-lg font-semibold text-pd-foreground">1. Upload PDF</h2>
             <ToolDropzone
-              hint="Drop a PDF file here or click to browse"
+              hint="or drop files here"
               subHint="Select a PDF to sign"
               dragOver={dragOver}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
+              onChooseFiles={() => fileInputRef.current?.click()}
+              onCloudFiles={(incoming) => handleFiles(incoming)}
+              onCloudError={setError}
             />
             <input
               ref={fileInputRef}

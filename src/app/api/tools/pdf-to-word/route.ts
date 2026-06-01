@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pdfToWord } from "@/lib/services/pdf-to-word.service";
-import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, logError } from "@/lib/db/queries";
+import { checkUsageLimit } from "@/lib/services/usage-limit.service";
+import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -17,10 +17,16 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id ?? null;
 
-    const isPro = user ? await checkFileSizeLimit(user.id) : false;
+    const isPro = user ? (await getUserProfile(user.id)).plan === "pro" : false;
     const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
 
-    await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    const usage = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    if (!usage.allowed) {
+      return NextResponse.json(
+        { error: usage.message || "Daily usage limit reached." },
+        { status: 429 }
+      );
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -42,7 +48,9 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const docxBuffer = await pdfToWord(buffer);
+    const { buffer: docxBuffer, engine } = await pdfToWord(buffer, {
+      fileName: file.name,
+    });
 
     const originalName = file.name.replace(/\.pdf$/i, "");
 
@@ -64,6 +72,7 @@ export async function POST(request: NextRequest) {
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "Content-Disposition": `attachment; filename="${originalName}.docx"`,
         "Content-Length": String(docxBuffer.length),
+        "X-Pdf-Engine": engine,
       },
     });
   } catch (error) {

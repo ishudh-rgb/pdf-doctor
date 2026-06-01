@@ -87,20 +87,20 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   "pdf-to-word": {
     title: "PDF to Word — Convert PDF to Editable DOCX Online | PDF Doctor",
     metaDescription:
-      "Convert PDF files to editable Word documents (.docx) online for free. Preserves formatting, tables, and images. No signup required.",
+      "Convert PDF files to editable Word documents (.docx) online for free. Real text, tables, headings, and bullet lists you can edit.",
     h1: "Convert PDF to Word — Free Online Converter",
     seoContent:
-      "Transform your PDF documents into fully editable Word files (.docx) while preserving the original formatting, tables, images, and layout. PDF Doctor's PDF to Word converter uses advanced parsing technology to ensure accurate conversions. Perfect for editing contracts, updating reports, or modifying any PDF content. The converted file opens seamlessly in Microsoft Word, Google Docs, or any compatible word processor.",
+      "Transform your PDF documents into fully editable Word files (.docx). PDF Doctor extracts real text, headings, bullet lists, and tables — so you can edit content in Microsoft Word, Google Docs, or LibreOffice. Layout and formatting are preserved as closely as possible.",
     faqs: [
       {
         question: "How accurate is the PDF to Word conversion?",
         answer:
-          "Our converter preserves most formatting including fonts, tables, images, and layout. Complex PDFs with unusual fonts or intricate layouts may have minor formatting differences.",
+          "We use the pdf2docx engine (same class as professional converters) when available — preserving tables, fonts, alignment, and layout like Smallpdf. Install Python + pdf2docx on the server for best results.",
       },
       {
         question: "Can I convert a scanned PDF to Word?",
         answer:
-          "Currently, our converter works best with text-based PDFs. For scanned documents, we recommend using the PDF Scanner tool first to create a clean PDF, then converting to Word.",
+          "Scanned PDFs (image-only pages) need OCR first. Use our PDF Scanner tool to create a searchable PDF, then convert to Word for editable text.",
       },
       {
         question: "What Word format does the converter output?",

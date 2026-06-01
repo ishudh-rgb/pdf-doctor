@@ -149,6 +149,8 @@ export default function PDFScannerPage() {
     <ToolPageShell
       title="PDF Scanner"
       description="Scan documents to PDF using your camera or upload images. Works best on mobile devices."
+      splitWorkspace
+      previewPlaceholder="Add pages to preview scan filters"
       preview={
         images.length > 0 && !result ? (
           <ScanFilterPreview filter={filter} imagePreviewUrl={images[0]?.preview ?? null} />

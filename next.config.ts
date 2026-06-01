@@ -29,7 +29,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: ["sharp", "pdf-parse", "archiver", "muhammara", "puppeteer", "docx", "exceljs", "pptxgenjs", "pdfjs-dist"],
+  serverExternalPackages: [
+    "sharp",
+    "pdf-parse",
+    "archiver",
+    "muhammara",
+    "puppeteer",
+    "docx",
+    "exceljs",
+    "pptxgenjs",
+    "pdfjs-dist",
+    "@napi-rs/canvas",
+  ],
 };
 
 export default nextConfig;

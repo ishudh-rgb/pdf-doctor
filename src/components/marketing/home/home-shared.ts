@@ -98,3 +98,24 @@ export const CATEGORY_FALLBACK_LABELS: Record<string, string> = {
   ai: "AI Tools",
   scan: "Scan",
 };
+
+/** iLovePDF-style colored icon tiles per tool */
+export const TOOL_ACCENT: Record<string, string> = {
+  "merge-pdf": "bg-[#E74C3C]",
+  "split-pdf": "bg-[#E67E22]",
+  "compress-pdf": "bg-[#27AE60]",
+  "pdf-to-word": "bg-[#2980B9]",
+  "pdf-to-excel": "bg-[#16A085]",
+  "pdf-to-ppt": "bg-[#D35400]",
+  "word-to-pdf": "bg-[#3498DB]",
+  "excel-to-pdf": "bg-[#2ECC71]",
+  "ppt-to-pdf": "bg-[#C0392B]",
+  "jpg-to-pdf": "bg-[#9B59B6]",
+  "edit-pdf": "bg-[#8E44AD]",
+  "sign-pdf": "bg-[#34495E]",
+  "add-watermark": "bg-[#7F8C8D]",
+  "ai-pdf-summarizer": "bg-[#6C5CE7]",
+  "pdf-scanner": "bg-[#00B894]",
+  "unlock-pdf": "bg-[#F39C12]",
+  "protect-pdf": "bg-[#E84393]",
+};

@@ -1,14 +1,21 @@
 import { PDFDocument } from "pdf-lib";
 import { logError } from "@/lib/db/queries";
+import {
+  extractPagesWithMuhammara,
+  splitAllPagesWithMuhammara,
+  splitPdfWithMuhammara,
+} from "@/lib/services/pdf-split-muhammara";
+
+async function loadWithPdfLib(fileBuffer: Buffer) {
+  return PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+}
 
 export async function splitPDF(
   fileBuffer: Buffer,
   ranges: { start: number; end: number }[]
 ): Promise<Buffer[]> {
   try {
-    const sourcePdf = await PDFDocument.load(fileBuffer, {
-      ignoreEncryption: true,
-    });
+    const sourcePdf = await loadWithPdfLib(fileBuffer);
     const totalPages = sourcePdf.getPageCount();
     const results: Buffer[] = [];
 
@@ -35,24 +42,26 @@ export async function splitPDF(
     }
 
     return results;
-  } catch (err) {
-    await logError({
-      tool_name: "split-pdf",
-      error_type: "SPLIT_FAILED",
-      error_message: err instanceof Error ? err.message : String(err),
-      stack_trace: err instanceof Error ? err.stack : undefined,
-    });
-    throw new Error(
-      `Failed to split PDF: ${err instanceof Error ? err.message : "Unknown error"}`
-    );
+  } catch {
+    try {
+      return await splitPdfWithMuhammara(fileBuffer, ranges);
+    } catch (fallbackErr) {
+      await logError({
+        tool_name: "split-pdf",
+        error_type: "SPLIT_FAILED",
+        error_message: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr),
+        stack_trace: fallbackErr instanceof Error ? fallbackErr.stack : undefined,
+      });
+      throw new Error(
+        `Failed to split PDF: ${fallbackErr instanceof Error ? fallbackErr.message : "Unknown error"}`
+      );
+    }
   }
 }
 
 export async function splitAllPages(fileBuffer: Buffer): Promise<Buffer[]> {
   try {
-    const sourcePdf = await PDFDocument.load(fileBuffer, {
-      ignoreEncryption: true,
-    });
+    const sourcePdf = await loadWithPdfLib(fileBuffer);
     const totalPages = sourcePdf.getPageCount();
     const results: Buffer[] = [];
 
@@ -65,16 +74,20 @@ export async function splitAllPages(fileBuffer: Buffer): Promise<Buffer[]> {
     }
 
     return results;
-  } catch (err) {
-    await logError({
-      tool_name: "split-pdf",
-      error_type: "SPLIT_ALL_FAILED",
-      error_message: err instanceof Error ? err.message : String(err),
-      stack_trace: err instanceof Error ? err.stack : undefined,
-    });
-    throw new Error(
-      `Failed to split all pages: ${err instanceof Error ? err.message : "Unknown error"}`
-    );
+  } catch {
+    try {
+      return await splitAllPagesWithMuhammara(fileBuffer);
+    } catch (fallbackErr) {
+      await logError({
+        tool_name: "split-pdf",
+        error_type: "SPLIT_ALL_FAILED",
+        error_message: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr),
+        stack_trace: fallbackErr instanceof Error ? fallbackErr.stack : undefined,
+      });
+      throw new Error(
+        `Failed to split all pages: ${fallbackErr instanceof Error ? fallbackErr.message : "Unknown error"}`
+      );
+    }
   }
 }
 
@@ -83,9 +96,7 @@ export async function extractPages(
   pageNumbers: number[]
 ): Promise<Buffer> {
   try {
-    const sourcePdf = await PDFDocument.load(fileBuffer, {
-      ignoreEncryption: true,
-    });
+    const sourcePdf = await loadWithPdfLib(fileBuffer);
     const totalPages = sourcePdf.getPageCount();
 
     for (const num of pageNumbers) {
@@ -106,15 +117,19 @@ export async function extractPages(
 
     const pdfBytes = await newPdf.save();
     return Buffer.from(pdfBytes);
-  } catch (err) {
-    await logError({
-      tool_name: "split-pdf",
-      error_type: "EXTRACT_PAGES_FAILED",
-      error_message: err instanceof Error ? err.message : String(err),
-      stack_trace: err instanceof Error ? err.stack : undefined,
-    });
-    throw new Error(
-      `Failed to extract pages: ${err instanceof Error ? err.message : "Unknown error"}`
-    );
+  } catch {
+    try {
+      return await extractPagesWithMuhammara(fileBuffer, pageNumbers);
+    } catch (fallbackErr) {
+      await logError({
+        tool_name: "split-pdf",
+        error_type: "EXTRACT_PAGES_FAILED",
+        error_message: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr),
+        stack_trace: fallbackErr instanceof Error ? fallbackErr.stack : undefined,
+      });
+      throw new Error(
+        `Failed to extract pages: ${fallbackErr instanceof Error ? fallbackErr.message : "Unknown error"}`
+      );
+    }
   }
 }

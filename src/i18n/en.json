@@ -58,7 +58,7 @@
     "pdfToWord": {
       "name": "PDF to Word",
       "description": "Convert PDF to editable Word",
-      "longDescription": "Convert your PDF documents to editable Word (.docx) files while preserving formatting."
+      "longDescription": "Convert PDF to editable Word (.docx) with real text, headings, bullet lists, and tables you can edit in Microsoft Word or Google Docs."
     },
     "wordToPdf": {
       "name": "Word to PDF",
@@ -472,6 +472,29 @@
     "direction": "ltr"
   },
 
+  "convertPage": {
+    "title": "Convert PDF Files",
+    "description": "Convert documents to and from PDF — free, fast, and secure. Pick a tool below to get started.",
+    "eyebrow": "Convert",
+    "breadcrumb": "Convert",
+    "footer": "{count} conversion tools available",
+    "ctaTitle": "Need more PDF tools?",
+    "ctaDesc": "Browse merge, compress, sign, AI, and more on our full tools directory."
+  },
+
+  "allTools": {
+    "pageTitle": "All PDF Tools",
+    "pageDesc": "Browse every PDF tool — merge, split, compress, convert, edit, sign, protect, and more. Filter by category and start in seconds.",
+    "eyebrow": "Tools directory",
+    "breadcrumb": "All Tools",
+    "totalLabel": "{count} tools available",
+    "showingCount": "Showing {count} tools",
+    "hint": "Use filters to find the right tool, or browse all at once.",
+    "ctaTitle": "Back to homepage",
+    "ctaDesc": "Explore featured tools and start your PDF workflow.",
+    "ctaButton": "Go to homepage"
+  },
+
   "landing": {
     "heroBadge": "Free PDF tools · No install needed",
     "heroTitle": "Every PDF tool you need,",
@@ -494,10 +517,33 @@
     "workflowDownload": "Download",
     "workflowDownloadDesc": "Get your result instantly — files auto-delete later",
     "toolsEyebrow": "Tool suite",
-    "toolsTitle": "Popular PDF Tools",
+    "toolsTitle": "All Popular Tools",
     "toolsDesc": "Everything you need to work with PDFs — fast, free, and secure.",
+    "toolsFilterAll": "All",
+    "toolsCategoryOrganize": "Organize PDF",
+    "toolsCategoryOptimize": "Optimize PDF",
+    "toolsCategoryConvertFrom": "Convert from PDF",
+    "toolsCategoryConvertTo": "Convert to PDF",
+    "toolsCategoryEdit": "Edit PDF",
+    "toolsCategorySecurity": "PDF Security",
+    "toolsCategoryAi": "PDF Intelligence",
+    "toolsCategoryScan": "Scan PDF",
     "toolsOpen": "Open tool",
     "toolsViewAll": "View all tools",
+    "whyChooseTitle": "Why Choose PDF Doctor?",
+    "whyChooseDesc": "Trusted by students, professionals, and teams across India — built for speed, privacy, and simplicity.",
+    "whyChoose_users_title": "People Trust Us",
+    "whyChoose_users_desc": "Thousands of users rely on PDF Doctor every day to merge, convert, compress, and manage documents without installing software.",
+    "whyChoose_business_title": "Teams & Businesses Trust Us",
+    "whyChoose_business_desc": "From freelancers to small businesses — fast processing, clear pricing, and reliable results for everyday document work.",
+    "whyChoose_everywhere_title": "Works Everywhere You Do",
+    "whyChoose_everywhere_desc": "Use PDF Doctor on desktop, tablet, or phone — any modern browser. No downloads, no plugins, no learning curve.",
+    "whyChoose_support_title": "Help When You Need It",
+    "whyChoose_support_desc": "Questions about a tool or your account? Reach our support team anytime — we're here to help you finish your PDF tasks.",
+    "whyChoose_encryption_title": "256-Bit TLS Encryption",
+    "whyChoose_encryption_desc": "Every upload travels over encrypted HTTPS. Your files are processed securely and never shared with third parties.",
+    "whyChoose_standards_title": "Privacy & Security Standards",
+    "whyChoose_standards_desc": "Auto-delete after 2 hours, no permanent storage, and privacy-first design. Your documents stay yours — always.",
     "aiBadge": "AI-Powered",
     "aiTitle": "AI-Powered PDF Summarizer",
     "aiDesc": "Drop any PDF and get an instant, intelligent summary. Our AI reads every page so you don't have to — extracting insights, action items, and key dates in a clean report layout.",

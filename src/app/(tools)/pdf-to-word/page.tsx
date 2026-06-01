@@ -17,6 +17,7 @@ export default function PdfToWordPage() {
       downloadLabel="Download DOCX"
       outputExtension="docx"
       apiPath="/api/tools/pdf-to-word"
+      showOutputSize
       buildFormData={(file, formData) => {
         formData.append('options', JSON.stringify({}));
         return formData;

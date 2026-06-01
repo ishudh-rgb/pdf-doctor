@@ -310,6 +310,8 @@ export default function EditPdfPage() {
     <ToolPageShell
       title="Edit PDF"
       description="Add text, images, and annotations to your PDF"
+      splitWorkspace
+      previewPlaceholder="Upload a PDF to preview placements"
       relatedTools={mapRelatedTools(relatedTools.map((t) => ({ name: t.name, href: `/${t.slug}` })))}
       faqs={FAQS}
       preview={

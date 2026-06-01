@@ -7,7 +7,7 @@ export function HeroVisual() {
   const { t } = useTranslation();
 
   return (
-    <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
+    <div className="pd-hero-visual relative mx-auto w-full max-w-lg lg:max-w-none">
       <div
         aria-hidden
         className="absolute -inset-4 rounded-[2rem] bg-pd-brand/15 blur-2xl"

@@ -52,7 +52,34 @@ export function isValidFileType(
   const allowedMimeTypes = allowedCategories.flatMap(
     (cat) => VALID_FILE_TYPES[cat] ?? []
   );
-  return allowedMimeTypes.includes(file.type);
+
+  if (file.type && allowedMimeTypes.includes(file.type)) {
+    return true;
+  }
+
+  const ext = getFileExtension(file.name);
+
+  if (allowedCategories.includes("pdf") && ext === "pdf") {
+    return true;
+  }
+
+  if (allowedCategories.includes("word") && (ext === "doc" || ext === "docx")) {
+    return true;
+  }
+
+  if (allowedCategories.includes("image") && ["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
+    return true;
+  }
+
+  if (allowedCategories.includes("excel") && (ext === "xls" || ext === "xlsx")) {
+    return true;
+  }
+
+  if (allowedCategories.includes("powerpoint") && (ext === "ppt" || ext === "pptx")) {
+    return true;
+  }
+
+  return false;
 }
 
 export function validateFileSize(

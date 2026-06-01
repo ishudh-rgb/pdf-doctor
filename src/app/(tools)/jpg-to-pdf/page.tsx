@@ -127,6 +127,8 @@ export default function JpgToPdfPage() {
     <ToolPageShell
       title="JPG to PDF"
       description="Convert images to PDF document"
+      splitWorkspace
+      previewPlaceholder="Add images to preview PDF layout"
       relatedTools={mapRelatedTools(RELATED_TOOLS)}
       faqs={mapFaqs(FAQS)}
       preview={
@@ -159,7 +161,7 @@ export default function JpgToPdfPage() {
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
+            onChooseFiles={() => fileInputRef.current?.click()}
           />
           <input
             ref={fileInputRef}

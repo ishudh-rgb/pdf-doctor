@@ -61,9 +61,9 @@ export function ToolLayoutChrome({ children }: { children: React.ReactNode }) {
   const toolLabel = TOOL_SLUG_LABELS[slug];
 
   return (
-    <div className="pd-tool-layout-root flex min-h-screen flex-col">
+    <div className="pd-tool-layout-root flex flex-col">
       {toolLabel && (
-        <nav aria-label="Breadcrumb" className="border-b border-pd-border bg-pd-surface/80 py-2.5">
+        <nav aria-label="Breadcrumb" className="border-b border-pd-border bg-pd-surface/80 py-2">
           <div className="pd-container">
             <ol className="flex flex-wrap items-center gap-1 text-xs text-pd-muted sm:text-sm">
               <li>

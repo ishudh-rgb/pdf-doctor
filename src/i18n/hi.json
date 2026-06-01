@@ -57,8 +57,8 @@
     },
     "pdfToWord": {
       "name": "PDF से Word",
-      "description": "PDF को एडिट करने योग्य Word में बदलें",
-      "longDescription": "अपने PDF डॉक्यूमेंट को एडिट करने योग्य Word (.docx) फ़ाइल में बदलें, फ़ॉर्मेटिंग बनी रहेगी।"
+      "description": "PDF ko editable Word mein badlein",
+      "longDescription": "PDF ko editable Word (.docx) mein badlein — asli text, headings, bullets aur tables jo aap Word ya Google Docs mein edit kar saken."
     },
     "wordToPdf": {
       "name": "Word से PDF",
@@ -472,6 +472,29 @@
     "direction": "ltr"
   },
 
+  "convertPage": {
+    "title": "PDF फ़ाइलें कन्वर्ट करें",
+    "description": "PDF से और PDF में डॉक्यूमेंट कन्वर्ट करें — फ्री, तेज़ और सुरक्षित। नीचे टूल चुनकर शुरू करें।",
+    "eyebrow": "कन्वर्ट",
+    "breadcrumb": "कन्वर्ट",
+    "footer": "{count} कन्वर्शन टूल उपलब्ध",
+    "ctaTitle": "और PDF टूल्स चाहिए?",
+    "ctaDesc": "मर्ज, कम्प्रेस, साइन, AI और बाकी सभी टूल्स देखें।"
+  },
+
+  "allTools": {
+    "pageTitle": "सभी PDF टूल्स",
+    "pageDesc": "हर PDF टूल देखें — मर्ज, स्प्लिट, कम्प्रेस, कन्वर्ट, एडिट, साइन, प्रोटेक्ट और भी। कैटेगरी से फ़िल्टर करें और तुरंत शुरू करें।",
+    "eyebrow": "टूल डायरेक्टरी",
+    "breadcrumb": "सभी टूल्स",
+    "totalLabel": "{count} टूल उपलब्ध",
+    "showingCount": "{count} टूल दिख रहे हैं",
+    "hint": "सही टूल के लिए फ़िल्टर चुनें, या सभी एक साथ देखें।",
+    "ctaTitle": "होमपेज पर वापस",
+    "ctaDesc": "फ़ीचर्ड टूल्स देखें और PDF वर्कफ़्लो शुरू करें।",
+    "ctaButton": "होमपेज पर जाएँ"
+  },
+
   "landing": {
     "heroBadge": "फ्री PDF टूल्स · इंस्टॉल की जरूरत नहीं",
     "heroTitle": "आपको जो भी PDF टूल चाहिए,",
@@ -494,10 +517,33 @@
     "workflowDownload": "डाउनलोड",
     "workflowDownloadDesc": "तुरंत रिज़ल्ट पाएँ — फ़ाइलें बाद में ऑटो-डिलीट",
     "toolsEyebrow": "टूल सूट",
-    "toolsTitle": "लोकप्रिय PDF टूल्स",
+    "toolsTitle": "सभी लोकप्रिय टूल्स",
     "toolsDesc": "PDF के साथ काम करने के लिए सब कुछ — तेज़, फ्री और सुरक्षित।",
+    "toolsFilterAll": "सभी",
+    "toolsCategoryOrganize": "PDF व्यवस्थित करें",
+    "toolsCategoryOptimize": "PDF ऑप्टिमाइज़",
+    "toolsCategoryConvertFrom": "PDF से कन्वर्ट",
+    "toolsCategoryConvertTo": "PDF में कन्वर्ट",
+    "toolsCategoryEdit": "PDF संपादन",
+    "toolsCategorySecurity": "PDF सुरक्षा",
+    "toolsCategoryAi": "PDF इंटेलिजेंस",
+    "toolsCategoryScan": "PDF स्कैन",
     "toolsOpen": "टूल खोलें",
     "toolsViewAll": "सभी टूल्स देखें",
+    "whyChooseTitle": "PDF Doctor क्यों चुनें?",
+    "whyChooseDesc": "भारत भर के छात्र, प्रोफेशनल और टीमों का भरोसा — गति, प्राइवेसी और सरलता के लिए बना।",
+    "whyChoose_users_title": "लोग हम पर भरोसा करते हैं",
+    "whyChoose_users_desc": "हज़ारों यूज़र्स रोज़ PDF Doctor से मर्ज, कन्वर्ट, कम्प्रेस और डॉक्यूमेंट मैनेज करते हैं — बिना सॉफ़्टवेयर इंस्टॉल किए।",
+    "whyChoose_business_title": "टीम और बिज़नेस का भरोसा",
+    "whyChoose_business_desc": "फ्रीलांसर से छोटे बिज़नेस तक — तेज़ प्रोसेसिंग, साफ़ प्राइसिंग और रोज़ के काम के लिए भरोसेमंद नतीजे।",
+    "whyChoose_everywhere_title": "जहाँ काम करें, वहाँ चले",
+    "whyChoose_everywhere_desc": "डेस्कटॉप, टैबलेट या फोन — किसी भी आधुनिक ब्राउज़र में। डाउनलोड, प्लगइन या सीखने की जरूरत नहीं।",
+    "whyChoose_support_title": "जब चाहिए, मदद मिले",
+    "whyChoose_support_desc": "टूल या अकाउंट से जुड़ा सवाल? सपोर्ट टीम से कभी भी संपर्क करें — आपका PDF काम पूरा करवाने के लिए।",
+    "whyChoose_encryption_title": "256-बिट TLS एन्क्रिप्शन",
+    "whyChoose_encryption_desc": "हर अपलोड एन्क्रिप्टेड HTTPS पर जाता है। फ़ाइलें सुरक्षित प्रोसेस होती हैं — तीसरे पक्ष के साथ शेयर नहीं।",
+    "whyChoose_standards_title": "प्राइवेसी और सुरक्षा मानक",
+    "whyChoose_standards_desc": "2 घंटे बाद ऑटो-डिलीट, कोई स्थायी स्टोरेज नहीं, प्राइवेसी-फर्स्ट डिज़ाइन। आपके डॉक्यूमेंट हमेशा आपके।",
     "aiBadge": "AI से चलित",
     "aiTitle": "AI PDF सारांश",
     "aiDesc": "कोई भी PDF डालें और तुरंत स्मार्ट सारांश पाएँ। हमारा AI हर पेज पढ़ता है — मुख्य बिंदु, एक्शन आइटम और महत्वपूर्ण तारीखें साफ़ रिपोर्ट लेआउट में।",

@@ -1,56 +1,94 @@
 "use client";
 
-import { Upload, Loader2, Download, AlertCircle } from "lucide-react";
+import { Loader2, Download, AlertCircle, Upload, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { CircularProgress } from "@/components/ui/circular-progress";
+import { CloudSourceButtons } from "@/components/upload/cloud-source-buttons";
 
 interface ToolDropzoneProps {
-  hint: string;
+  hint?: string;
   subHint?: string;
   dragOver: boolean;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
-  onClick: () => void;
+  onChooseFiles: () => void;
+  onCloudFiles?: (files: File[]) => void;
+  onCloudError?: (message: string) => void;
+  acceptExtensions?: string[];
+  mimeTypes?: string;
+  multiple?: boolean;
+  chooseLabel?: string;
   className?: string;
 }
 
 export function ToolDropzone({
-  hint,
+  hint = "or drag and drop your file here",
   subHint,
   dragOver,
   onDragOver,
   onDragLeave,
   onDrop,
-  onClick,
+  onChooseFiles,
+  onCloudFiles,
+  onCloudError,
+  acceptExtensions = [".pdf"],
+  mimeTypes = "application/pdf",
+  multiple = false,
+  chooseLabel = "Select file",
   className,
 }: ToolDropzoneProps) {
   return (
-    <div
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      onClick={onClick}
-      className={cn(
-        "cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition-all duration-200",
-        dragOver
-          ? "border-pd-brand bg-pd-brand-muted"
-          : "border-pd-border hover:border-pd-brand/50 hover:bg-pd-background",
-        className
+    <div className={cn("w-full space-y-2.5", className)}>
+      <div
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        className={cn(
+          "rounded-xl border-2 border-dashed px-4 py-5 text-center transition-all duration-200",
+          dragOver
+            ? "border-pd-brand bg-pd-brand-muted/80"
+            : "border-pd-border bg-pd-background hover:border-pd-brand/40 hover:bg-pd-brand-muted/30"
+        )}
+      >
+        <div
+          className={cn(
+            "mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+            dragOver ? "bg-pd-brand text-white" : "bg-pd-brand-muted text-pd-brand"
+          )}
+        >
+          <Upload className="h-5 w-5" strokeWidth={2} />
+        </div>
+
+        <Button type="button" size="md" className="gap-2" onClick={onChooseFiles}>
+          <FileUp className="h-4 w-4" />
+          {chooseLabel}
+        </Button>
+
+        <p className="mt-2 text-sm text-pd-muted">{hint}</p>
+        {subHint && <p className="mt-1 text-xs text-pd-muted/90">{subHint}</p>}
+      </div>
+
+      {onCloudFiles && (
+        <CloudSourceButtons
+          variant="inline"
+          onFilesSelected={onCloudFiles}
+          onError={onCloudError}
+          acceptExtensions={acceptExtensions}
+          mimeTypes={mimeTypes}
+          multiple={multiple}
+        />
       )}
-    >
-      <Upload className="mx-auto mb-3 h-10 w-10 text-pd-muted" />
-      <p className="font-medium text-pd-foreground">{hint}</p>
-      {subHint && <p className="mt-1 text-sm text-pd-muted">{subHint}</p>}
     </div>
   );
 }
 
 export function ToolErrorBanner({ message }: { message: string }) {
   return (
-    <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-      <AlertCircle className="h-4 w-4 shrink-0" />
-      {message}
+    <div className="mt-3 flex w-full items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>{message}</span>
     </div>
   );
 }
@@ -78,22 +116,19 @@ export function ToolSuccessPanel({
 }: ToolSuccessPanelProps) {
   return (
     <div className="text-center">
-      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pd-brand-muted">
-        <Download className="h-8 w-8 text-pd-brand" />
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
+        <Download className="h-7 w-7 text-pd-brand" />
       </div>
-      <h2 className="text-xl font-bold text-pd-foreground">{title}</h2>
-      {description && <p className="mt-2 text-pd-muted">{description}</p>}
+      <h2 className="text-lg font-bold text-pd-foreground">{title}</h2>
+      {description && <p className="mt-2 text-sm text-pd-muted">{description}</p>}
       {children}
-      <a href={downloadUrl} download={downloadFilename} className="mt-6 inline-block">
-        <Button size="lg">
-          <Download className="h-5 w-5" />
-          {downloadLabel}
-        </Button>
+      <a href={downloadUrl} download={downloadFilename} className="mt-5 inline-block">
+        <Button size="md">{downloadLabel}</Button>
       </a>
       <button
         type="button"
         onClick={onReset}
-        className="mx-auto mt-4 block text-sm text-pd-muted transition hover:text-pd-foreground"
+        className="mx-auto mt-3 block text-sm text-pd-muted transition hover:text-pd-foreground"
       >
         {resetLabel}
       </button>
@@ -106,6 +141,7 @@ interface ToolPrimaryButtonProps {
   disabled?: boolean;
   loading?: boolean;
   loadingLabel?: string;
+  loadingProgress?: number;
   children: React.ReactNode;
   className?: string;
 }
@@ -115,6 +151,7 @@ export function ToolPrimaryButton({
   disabled,
   loading,
   loadingLabel,
+  loadingProgress,
   children,
   className,
 }: ToolPrimaryButtonProps) {
@@ -122,14 +159,18 @@ export function ToolPrimaryButton({
     <Button
       onClick={onClick}
       disabled={disabled || loading}
-      size="lg"
-      className={cn("mt-6 w-full", className)}
+      size="md"
+      className={cn("mt-4 h-10 w-full font-semibold", className)}
     >
       {loading ? (
-        <>
-          <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="inline-flex items-center gap-2.5">
+          {typeof loadingProgress === "number" ? (
+            <CircularProgress value={loadingProgress} size={30} strokeWidth={2.5} />
+          ) : (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          )}
           {loadingLabel}
-        </>
+        </span>
       ) : (
         children
       )}

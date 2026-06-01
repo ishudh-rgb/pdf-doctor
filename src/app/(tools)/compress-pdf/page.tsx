@@ -95,6 +95,8 @@ export default function CompressPdfPage() {
     <ToolPageShell
       title="Compress PDF"
       description="Reduce your PDF file size without losing quality"
+      splitWorkspace
+      previewPlaceholder="Select a PDF to see estimated compression"
       relatedTools={mapRelatedTools(RELATED_TOOLS)}
       faqs={mapFaqs(FAQS)}
       preview={
@@ -142,15 +144,6 @@ export default function CompressPdfPage() {
         </ToolSuccessPanel>
       ) : (
         <>
-          <ToolDropzone
-            hint="Drop a PDF file here or click to browse"
-            subHint="Select a PDF file to compress"
-            dragOver={dragOver}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          />
           <input
             ref={fileInputRef}
             type="file"
@@ -159,46 +152,64 @@ export default function CompressPdfPage() {
             onChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
 
-          {files.length > 0 && (
+          {files.length === 0 ? (
+            <ToolDropzone
+              chooseLabel="Select PDF"
+              hint="or drag and drop your PDF here"
+              subHint="Max 50 MB · PDF only"
+              dragOver={dragOver}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onChooseFiles={() => fileInputRef.current?.click()}
+              onCloudFiles={(incoming) => handleFiles(incoming)}
+              onCloudError={setError}
+            />
+          ) : (
             <>
-              <div className="mt-4 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">
+              <div className="flex items-center gap-2 rounded-lg border border-pd-border bg-pd-brand-muted px-3 py-2">
                 <Minimize2 className="h-4 w-4 shrink-0 text-pd-brand" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-pd-foreground">{files[0].name}</p>
-                  <p className="text-xs text-pd-muted">Original size: {formatFileSize(files[0].size)}</p>
+                  <p className="text-xs text-pd-muted">{formatFileSize(files[0].size)}</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="shrink-0 text-xs font-medium text-pd-brand hover:underline"
+                >
+                  Change
+                </button>
               </div>
 
-              <div className="mt-6">
-                <h3 className="mb-3 text-sm font-semibold text-pd-foreground">Compression Level</h3>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-semibold text-pd-foreground">Compression level</p>
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setCompressionLevel('basic')}
                     className={cn(
-                      'rounded-xl border-2 p-4 text-left transition-all duration-200',
+                      'flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition-colors',
                       compressionLevel === 'basic'
-                        ? 'border-pd-brand bg-pd-brand-muted'
-                        : 'border-pd-border hover:border-pd-muted'
+                        ? 'border-pd-brand bg-pd-brand-muted text-pd-foreground'
+                        : 'border-pd-border text-pd-muted hover:border-pd-brand/40'
                     )}
                   >
-                    <Shield className="mb-2 h-5 w-5 text-pd-brand" />
-                    <p className="text-sm font-semibold text-pd-foreground">Basic</p>
-                    <p className="mt-0.5 text-xs text-pd-muted">Recommended &middot; Good quality</p>
+                    <Shield className="h-3.5 w-3.5 text-pd-brand" />
+                    Basic
                   </button>
                   <button
                     type="button"
                     onClick={() => setCompressionLevel('strong')}
                     className={cn(
-                      'rounded-xl border-2 p-4 text-left transition-all duration-200',
+                      'flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition-colors',
                       compressionLevel === 'strong'
-                        ? 'border-pd-brand bg-pd-brand-muted'
-                        : 'border-pd-border hover:border-pd-muted'
+                        ? 'border-pd-brand bg-pd-brand-muted text-pd-foreground'
+                        : 'border-pd-border text-pd-muted hover:border-pd-brand/40'
                     )}
                   >
-                    <Zap className="mb-2 h-5 w-5 text-pd-brand" />
-                    <p className="text-sm font-semibold text-pd-foreground">Strong</p>
-                    <p className="mt-0.5 text-xs text-pd-muted">Smaller file &middot; Lower quality</p>
+                    <Zap className="h-3.5 w-3.5 text-pd-brand" />
+                    Strong
                   </button>
                 </div>
               </div>

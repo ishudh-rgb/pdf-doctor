@@ -25,30 +25,35 @@ export function SplitRangePreview({
       : Array.from({ length: end - start + 1 }, (_, i) => start + i);
 
   return (
-    <ToolPreviewShell hint="Highlighted pages will be included in the output">
-      <PreviewInnerFrame>
-        <p className="mb-3 shrink-0 text-center text-sm font-medium text-gray-800">
+    <ToolPreviewShell
+      className="h-full"
+      hint="Highlighted pages will be included in the output"
+    >
+      <PreviewInnerFrame className="min-h-0 flex-1 justify-start p-3">
+        <p className="mb-2 shrink-0 text-center text-xs font-medium text-pd-foreground">
           {splitMode === "all"
             ? `All ${total} pages → separate PDFs (ZIP)`
             : `Pages ${start}–${end} → one PDF`}
         </p>
-        <div className="grid flex-1 grid-cols-4 content-center gap-2">
-          {Array.from({ length: total }, (_, i) => i + 1).map((page) => {
-            const selected = selectedPages.includes(page);
-            return (
-              <div
-                key={page}
-                className={cn(
-                  "flex aspect-[3/4] items-center justify-center rounded-md border text-xs font-semibold",
-                  selected
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-gray-200 bg-gray-50 text-gray-400"
-                )}
-              >
-                {page}
-              </div>
-            );
-          })}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-5">
+            {Array.from({ length: total }, (_, i) => i + 1).map((page) => {
+              const selected = selectedPages.includes(page);
+              return (
+                <div
+                  key={page}
+                  className={cn(
+                    "flex h-9 items-center justify-center rounded border text-[10px] font-semibold sm:h-10 sm:text-xs",
+                    selected
+                      ? "border-pd-brand bg-pd-brand-muted text-pd-brand"
+                      : "border-pd-border bg-pd-background text-pd-muted"
+                  )}
+                >
+                  {page}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </PreviewInnerFrame>
     </ToolPreviewShell>

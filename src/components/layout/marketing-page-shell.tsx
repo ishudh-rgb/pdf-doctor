@@ -13,6 +13,8 @@ interface MarketingPageShellProps {
   children: React.ReactNode;
   breadcrumbs?: { label: string; href?: string }[];
   className?: string;
+  /** Centered hero without side panel — better for directory pages */
+  heroStyle?: "default" | "centered";
 }
 
 function PageHero({
@@ -20,12 +22,30 @@ function PageHero({
   title,
   description,
   eyebrow,
+  heroStyle = "default",
 }: {
   layout: LayoutStyleId;
   title: string;
   description?: string;
   eyebrow?: string;
+  heroStyle?: "default" | "centered";
 }) {
+  if (heroStyle === "centered") {
+    return (
+      <section className="border-b border-pd-border bg-pd-background py-8 sm:py-10">
+        <div className="pd-container text-center">
+          {eyebrow && (
+            <p className="text-xs font-bold uppercase tracking-wider text-pd-brand">{eyebrow}</p>
+          )}
+          <h1 className="mt-2 text-2xl font-bold text-pd-foreground sm:text-3xl">{title}</h1>
+          {description && (
+            <p className="mx-auto mt-2 max-w-2xl text-base text-pd-muted">{description}</p>
+          )}
+        </div>
+      </section>
+    );
+  }
+
   if (layout === "A") {
     return (
       <section className="border-b border-pd-border bg-pd-surface py-10">
@@ -74,15 +94,15 @@ function PageHero({
 
   if (layout === "B") {
     return (
-      <section className="mesh-section border-b border-pd-border py-14 sm:py-20">
+      <section className="mesh-section border-b border-pd-border py-8 sm:py-10">
         <div className="pd-container">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
             <div>
               {eyebrow && (
                 <p className="text-xs font-bold uppercase tracking-wider text-pd-brand">{eyebrow}</p>
               )}
-              <h1 className="mt-3 text-3xl font-bold text-pd-foreground sm:text-4xl">{title}</h1>
-              {description && <p className="mt-4 max-w-xl text-lg text-pd-muted">{description}</p>}
+              <h1 className="mt-2 text-2xl font-bold text-pd-foreground sm:text-3xl">{title}</h1>
+              {description && <p className="mt-2 max-w-xl text-base text-pd-muted">{description}</p>}
             </div>
             <div className="hidden rounded-2xl border border-pd-border bg-pd-surface p-6 lg:block">
               <p className="text-sm font-semibold text-pd-foreground">Quick access</p>
@@ -121,16 +141,21 @@ export function MarketingPageShell({
   children,
   breadcrumbs,
   className,
+  heroStyle = "default",
 }: MarketingPageShellProps) {
   const { layoutStyle } = useDesignPreview();
 
   const contentWidth =
-    layoutStyle === "D" ? "max-w-2xl" : layoutStyle === "A" ? "max-w-6xl" : "max-w-6xl";
+    heroStyle === "centered"
+      ? "max-w-7xl"
+      : layoutStyle === "D"
+        ? "max-w-2xl"
+        : "max-w-6xl";
 
   return (
     <article className={cn("pd-marketing-page bg-pd-background", className)}>
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav aria-label="Breadcrumb" className="border-b border-pd-border bg-pd-surface py-3">
+        <nav aria-label="Breadcrumb" className="border-b border-pd-border bg-pd-surface py-2">
           <div className="pd-container">
             <ol className="flex flex-wrap items-center gap-1 text-sm text-pd-muted">
               {breadcrumbs.map((crumb, i) => (
@@ -150,9 +175,15 @@ export function MarketingPageShell({
         </nav>
       )}
 
-      <PageHero layout={layoutStyle} title={title} description={description} eyebrow={eyebrow} />
+      <PageHero
+        layout={layoutStyle}
+        title={title}
+        description={description}
+        eyebrow={eyebrow}
+        heroStyle={heroStyle}
+      />
 
-      <div className={`pd-container pb-20 pt-10 ${contentWidth}`}>{children}</div>
+      <div className={`pd-container pb-12 pt-6 ${contentWidth}`}>{children}</div>
     </article>
   );
 }

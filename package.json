@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@napi-rs/canvas": "^1.0.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
     "@types/archiver": "^7.0.0",
@@ -27,6 +28,7 @@
     "next": "16.2.6",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.296",
     "pptxgenjs": "^4.0.1",
     "puppeteer": "^25.0.4",
     "razorpay": "^2.9.6",

@@ -11,7 +11,7 @@ html[data-layout-style="A"] {
 }
 
 html[data-layout-style="B"] {
-  --pd-section-y: 4.5rem;
+  --pd-section-y: 3rem;
   --pd-density: 1;
   --pd-container: 80rem;
   --pd-header-height: 4rem;
@@ -82,8 +82,41 @@ html[data-layout-style="B"] .pd-site-header .pd-logo-text {
 
 @media (min-width: 1024px) {
   .layout-split-panel .pd-tool-grid {
-    grid-template-columns: 1.1fr 0.9fr;
-    align-items: stretch;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 3rem;
+  }
+
+  .layout-split-panel .pd-hero-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-self: start;
+    width: 100%;
+    max-width: 34rem;
+  }
+
+  .layout-split-panel .pd-hero-copy .pd-hero-actions {
+    width: 100%;
+  }
+
+  .layout-split-panel .pd-hero-badge {
+    height: 2rem;
+    min-height: 2rem;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+    font-size: 0.6875rem;
+    line-height: 1;
+  }
+
+  .layout-split-panel .pd-hero-headline .pd-hero-line {
+    display: block;
+  }
+
+  /* Hero product image +10% on split-panel homepage */
+  .layout-split-panel .pd-hero-visual {
+    transform: scale(1.1);
+    transform-origin: center center;
   }
 }
 
@@ -133,6 +166,10 @@ html[data-layout-style="A"] .pd-tool-layout-body > main > div {
 /* B: split panel — wider workspace */
 html[data-layout-style="B"] .pd-tool-layout-body > main {
   background: var(--pd-background) !important;
+}
+
+html[data-layout-style="B"] .pd-tool-layout-root {
+  padding-bottom: 0.5rem;
 }
 
 html[data-layout-style="B"] .pd-tool-layout-body > main > div {

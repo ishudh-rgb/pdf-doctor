@@ -99,8 +99,14 @@ export async function POST(request: NextRequest) {
     if (Array.isArray(result)) {
       const { buildZip } = await import("@/lib/services/zip-builder");
       const filesMap: Record<string, Buffer> = {};
+      const rangeParts =
+        mode === "range" && ranges
+          ? ranges.split(",").map((r) => r.trim())
+          : [];
       result.forEach((pdfBuffer, index) => {
-        filesMap[`page-${index + 1}.pdf`] = pdfBuffer;
+        const label = rangeParts[index] ?? String(index + 1);
+        const safeName = label.replace(/[^0-9,-]/g, "") || String(index + 1);
+        filesMap[`page-${safeName}.pdf`] = pdfBuffer;
       });
       const zipBuffer = await buildZip(filesMap);
 

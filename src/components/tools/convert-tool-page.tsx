@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, type ReactNode } from "react";
+import { useState, useRef, useCallback, useEffect, type ReactNode } from "react";
 import { FileText } from "lucide-react";
 import { formatFileSize } from "@/lib/utils/file";
 import { ToolPageShell } from "@/components/layout/tool-page-shell";
@@ -34,6 +34,7 @@ interface ConvertToolPageProps {
   relatedTools?: RelatedTool[];
   extraFields?: ReactNode;
   buildFormData?: (file: File, formData: FormData) => FormData;
+  showOutputSize?: boolean;
 }
 
 export function ConvertToolPage({
@@ -51,20 +52,35 @@ export function ConvertToolPage({
   relatedTools = [],
   extraFields,
   buildFormData,
+  showOutputSize = false,
 }: ConvertToolPageProps) {
   const [file, setFile] = useState<File | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultFilename, setResultFilename] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopProgressTimer = useCallback(() => {
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => stopProgressTimer(), [stopProgressTimer]);
 
   const resetResult = useCallback(() => {
     setCompleted(false);
     setResultUrl(null);
     setResultFilename(null);
+    setResultSize(null);
+    setProgress(0);
     setError(null);
   }, []);
 
@@ -82,7 +98,16 @@ export function ConvertToolPage({
   const handleProcess = async () => {
     if (!file) return;
     setProcessing(true);
+    setProgress(0);
     setError(null);
+    stopProgressTimer();
+    progressTimerRef.current = setInterval(() => {
+      setProgress((current) => {
+        if (current >= 92) return current;
+        const step = current < 40 ? 4 : current < 75 ? 2 : 1;
+        return Math.min(92, current + step);
+      });
+    }, 450);
 
     try {
       let formData = new FormData();
@@ -98,13 +123,22 @@ export function ConvertToolPage({
       }
 
       const blob = await res.blob();
+      setProgress(100);
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
       setResultFilename(file.name.replace(/\.[^.]+$/, `.${outputExtension}`));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      const message =
+        err instanceof TypeError && /failed to fetch/i.test(err.message)
+          ? "Server not reachable. Make sure `npm run dev` is running, wait ~30s for conversion, then retry."
+          : err instanceof Error
+            ? err.message
+            : "An unexpected error occurred.";
+      setError(message);
     } finally {
+      stopProgressTimer();
       setProcessing(false);
     }
   };
@@ -126,7 +160,17 @@ export function ConvertToolPage({
             resetResult();
             setFile(null);
           }}
-        />
+        >
+          {showOutputSize && resultSize !== null ? (
+            <p className="mt-3 text-xs text-pd-muted">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-pd-border bg-pd-background px-3 py-1 font-medium text-pd-foreground">
+                <span className="uppercase tracking-wide text-pd-muted">{outputExtension}</span>
+                <span className="text-pd-border">·</span>
+                <span>{formatFileSize(resultSize)}</span>
+              </span>
+            </p>
+          ) : null}
+        </ToolSuccessPanel>
       ) : (
         <>
           <ToolDropzone
@@ -143,7 +187,9 @@ export function ConvertToolPage({
               setDragOver(false);
               handleFiles(e.dataTransfer.files);
             }}
-            onClick={() => fileInputRef.current?.click()}
+            onChooseFiles={() => fileInputRef.current?.click()}
+            onCloudFiles={(incoming) => handleFiles(incoming)}
+            onCloudError={setError}
           />
           <input
             ref={fileInputRef}
@@ -171,6 +217,7 @@ export function ConvertToolPage({
             disabled={!file}
             loading={processing}
             loadingLabel={processingLabel}
+            loadingProgress={processing ? progress : undefined}
           >
             {processLabel}
           </ToolPrimaryButton>

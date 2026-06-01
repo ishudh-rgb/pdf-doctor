@@ -87,6 +87,8 @@ export default function AddWatermarkPage() {
     <ToolPageShell
       title="Add Watermark to PDF"
       description="Stamp text or image watermarks on every page"
+      splitWorkspace
+      previewPlaceholder="Upload a PDF to preview watermark placement"
       preview={
         !completed ? (
           <WatermarkPreview
@@ -117,7 +119,7 @@ export default function AddWatermarkPage() {
       ) : (
         <>
           <ToolDropzone
-            hint="Upload PDF file"
+            hint="or drop files here"
             subHint={file ? `${file.name} · ${formatFileSize(file.size)}` : "Drop or click to select a PDF"}
             dragOver={dragOver}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -131,7 +133,16 @@ export default function AddWatermarkPage() {
                 setCompleted(false);
               }
             }}
-            onClick={() => fileInputRef.current?.click()}
+            onChooseFiles={() => fileInputRef.current?.click()}
+            onCloudFiles={(incoming) => {
+              const f = incoming[0];
+              if (f) {
+                setFile(f);
+                setCompleted(false);
+                setError(null);
+              }
+            }}
+            onCloudError={setError}
           />
           <input
             ref={fileInputRef}

@@ -1,148 +1,67 @@
-import {
-  AlignmentType,
-  BorderStyle,
-  Document,
-  HeadingLevel,
-  Packer,
-  Paragraph,
-  Table,
-  TableCell,
-  TableRow,
-  TextRun,
-  WidthType,
-} from "docx";
-import { PDFParse } from "pdf-parse";
 import { logError } from "@/lib/db/queries";
-import { extractPdfTables, isHeaderRow, parseTabularFallback } from "@/lib/services/pdf-table-extract.service";
+import {
+  isConvertApiAvailable,
+  pdfToWordConvertApi,
+} from "@/lib/services/pdf-to-word-convertapi.service";
+import {
+  isPdf2docxAvailable,
+  pdfToWordPdf2docx,
+} from "@/lib/services/pdf-to-word-pdf2docx.service";
+import { pdfToWordNode } from "@/lib/services/pdf-to-word-node.service";
 
-function tableFromRows(rows: string[][]): Table {
-  const columnCount = rows[0]?.length ?? 1;
-  const cellWidth = Math.floor(9000 / columnCount);
+export type PdfToWordEngine = "convertapi" | "pdf2docx" | "node";
 
-  return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: rows.map((row, rowIndex) =>
-      new TableRow({
-        children: row.map(
-          (cell) =>
-            new TableCell({
-              width: { size: cellWidth, type: WidthType.DXA },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 1, color: "CBD5E1" },
-                bottom: { style: BorderStyle.SINGLE, size: 1, color: "CBD5E1" },
-                left: { style: BorderStyle.SINGLE, size: 1, color: "CBD5E1" },
-                right: { style: BorderStyle.SINGLE, size: 1, color: "CBD5E1" },
-              },
-              shading:
-                rowIndex === 0
-                  ? { fill: "E2E8F0" }
-                  : undefined,
-              children: [
-                new Paragraph({
-                  alignment:
-                    rowIndex > 0 && /^\d[\d,]*(?:\.\d+)?$/.test(cell.trim())
-                      ? AlignmentType.RIGHT
-                      : AlignmentType.LEFT,
-                  children: [
-                    new TextRun({
-                      text: cell || " ",
-                      bold: rowIndex === 0,
-                      size: rowIndex === 0 ? 20 : 18,
-                    }),
-                  ],
-                }),
-              ],
-            })
-        ),
-      })
-    ),
-  });
+function estimateTimeoutMs(fileBuffer: Buffer): number {
+  const pageCountEstimate = Math.max(1, Math.ceil(fileBuffer.length / 50_000));
+  return Math.min(300_000, 45_000 + pageCountEstimate * 10_000);
 }
 
-async function fallbackTextTable(fileBuffer: Buffer): Promise<string[][]> {
-  const parser = new PDFParse({ data: fileBuffer });
-  try {
-    const parsed = await parser.getText({
-      lineEnforce: true,
-      cellSeparator: "\t",
-      cellThreshold: 5,
-      lineThreshold: 6,
-    });
-    return parseTabularFallback(parsed.text);
-  } finally {
-    await parser.destroy();
+/**
+ * PDF → Word with engine priority:
+ * 1. ConvertAPI (commercial Smallpdf-class, if CONVERTAPI_SECRET set)
+ * 2. pdf2docx raw layout + Smallpdf transform (tables/images preserved)
+ * 3. Node extractor (fallback only)
+ */
+export async function pdfToWord(
+  fileBuffer: Buffer,
+  options: { fileName?: string } = {}
+): Promise<{ buffer: Buffer; engine: PdfToWordEngine }> {
+  const fileName = options.fileName ?? "document.pdf";
+  const timeoutMs = estimateTimeoutMs(fileBuffer);
+  const pdf2docxReady = await isPdf2docxAvailable();
+
+  if (isConvertApiAvailable()) {
+    try {
+      const buffer = await pdfToWordConvertApi(fileBuffer, fileName);
+      return { buffer, engine: "convertapi" };
+    } catch (err) {
+      console.warn("[pdf-to-word] ConvertAPI failed, trying pdf2docx:", err);
+    }
   }
-}
 
-export async function pdfToWord(fileBuffer: Buffer): Promise<Buffer> {
-  try {
-    const extracted = await extractPdfTables(fileBuffer);
-    const children: (Paragraph | Table)[] = [];
-
-    if (extracted.infoLines.length > 0) {
-      children.push(
-        new Paragraph({
-          alignment: AlignmentType.CENTER,
-          heading: HeadingLevel.TITLE,
-          spacing: { after: 120 },
-          children: [
-            new TextRun({
-              text: extracted.infoLines[0],
-              bold: true,
-              size: 36,
-            }),
-          ],
-        })
-      );
-
-      extracted.infoLines.slice(1).forEach((line) => {
-        children.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 80 },
-            children: [new TextRun({ text: line, size: 22, color: "475569" })],
-          })
-        );
+  if (pdf2docxReady) {
+    try {
+      const buffer = await pdfToWordPdf2docx(fileBuffer, { timeoutMs });
+      return { buffer, engine: "pdf2docx" };
+    } catch (err) {
+      await logError({
+        tool_name: "pdf-to-word",
+        error_type: "PDF2DOCX_FAILED",
+        error_message: err instanceof Error ? err.message : String(err),
+        stack_trace: err instanceof Error ? err.stack : undefined,
       });
-
-      children.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
+      throw new Error(
+        `High-quality conversion failed. Please retry or contact support. (${
+          err instanceof Error ? err.message : "pdf2docx error"
+        })`
+      );
     }
+  }
 
-    const table =
-      extracted.primaryTable ??
-      extracted.pages.find((page) => page.table)?.table ??
-      null;
-
-    if (table) {
-      const cleaned = table.filter((row, index) => index === 0 || !isHeaderRow(row));
-      children.push(tableFromRows(cleaned.length > 1 ? cleaned : table));
-    } else {
-      const fallback = await fallbackTextTable(fileBuffer);
-      if (fallback.length > 0) {
-        children.push(tableFromRows(fallback));
-      } else {
-        children.push(
-          new Paragraph({
-            children: [new TextRun({ text: "No extractable text found in this PDF.", size: 22 })],
-          })
-        );
-      }
-    }
-
-    const doc = new Document({
-      sections: [
-        {
-          properties: {
-            page: {
-              margin: { top: 720, right: 720, bottom: 720, left: 720 },
-            },
-          },
-          children,
-        },
-      ],
-    });
-
-    return await Packer.toBuffer(doc);
+  try {
+    console.warn("[pdf-to-word] pdf2docx unavailable — using basic Node extractor");
+    const buffer = await pdfToWordNode(fileBuffer);
+    return { buffer, engine: "node" };
   } catch (err) {
     await logError({
       tool_name: "pdf-to-word",
@@ -151,7 +70,9 @@ export async function pdfToWord(fileBuffer: Buffer): Promise<Buffer> {
       stack_trace: err instanceof Error ? err.stack : undefined,
     });
     throw new Error(
-      `Failed to convert PDF to Word: ${err instanceof Error ? err.message : "Unknown error"}`
+      `Failed to convert PDF to Word. Install pdf2docx for best quality: run scripts/setup-pdf2docx.ps1 (${
+        err instanceof Error ? err.message : "Unknown error"
+      })`
     );
   }
 }

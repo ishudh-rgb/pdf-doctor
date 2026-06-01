@@ -14,9 +14,10 @@ import {
   HeroCopy,
   PricingSection,
   SecuritySection,
-  ToolsByCategory,
   WorkflowSection,
 } from "@/components/marketing/home/home-sections";
+import { PopularToolsGrid } from "@/components/marketing/popular-tools-grid";
+import { WhyChooseSection } from "@/components/marketing/why-choose-section";
 
 /** Layout B — Stripe-style: split hero, category rows, live preview feel */
 export function HomeLayoutB() {
@@ -24,17 +25,16 @@ export function HomeLayoutB() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-pd-background pd-section lg:pb-8">
+      <section className="relative overflow-hidden bg-pd-background pd-section pb-6 lg:pb-8">
         <div className="pd-container">
-          <div className="pd-tool-grid grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <div className="pd-tool-grid grid items-center gap-12">
             <HeroCopy align="left" />
             <HeroVisual />
           </div>
         </div>
-        <StatsBar />
       </section>
 
-      <section id="tools" className="border-y border-pd-border bg-pd-surface pd-section">
+      <section id="tools" className="border-t border-pd-border bg-pd-surface pd-section">
         <div className="pd-container">
           <SectionHeading
             eyebrow={t("landing.toolsEyebrow")}
@@ -42,7 +42,7 @@ export function HomeLayoutB() {
             description={t("landing.toolsDesc")}
           />
           <div className="mt-12">
-            <ToolsByCategory />
+            <PopularToolsGrid />
           </div>
           <div className="mt-10 text-center">
             <Link href="/all-tools">
@@ -54,6 +54,10 @@ export function HomeLayoutB() {
           </div>
         </div>
       </section>
+
+      <WhyChooseSection />
+
+      <StatsBar />
 
       <WorkflowSection />
       <AISection split />

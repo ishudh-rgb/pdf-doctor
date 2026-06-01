@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils/cn";
 
 /** Full-height preview card — stretches to match the left tool panel in 2-column layouts */
 export const PREVIEW_SHELL_CLASS =
-  "flex h-full w-full flex-col rounded-2xl border border-gray-200 bg-slate-50 p-5 shadow-sm";
+  "flex h-full min-h-0 w-full flex-col rounded-xl border border-pd-border bg-pd-brand-muted/50 p-3 shadow-sm";
 
 export function ToolPreviewShell({
   title = "Live Preview",
@@ -24,19 +24,19 @@ export function ToolPreviewShell({
   return (
     <div
       className={cn(
-        stretch ? PREVIEW_SHELL_CLASS : "h-fit w-full self-start rounded-2xl border border-gray-200 bg-slate-50 p-5 shadow-sm",
+        stretch ? PREVIEW_SHELL_CLASS : "h-fit w-full self-start rounded-xl border border-pd-border bg-pd-brand-muted/50 p-4 shadow-sm",
         className
       )}
     >
-      <div className="mb-4 flex shrink-0 items-center gap-2">
-        <Eye className="h-4 w-4 text-cyan-700" />
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <div className="mb-2 flex shrink-0 items-center gap-2">
+        <Eye className="h-4 w-4 text-pd-brand" />
+        <h3 className="text-sm font-semibold text-pd-foreground">{title}</h3>
       </div>
       <div className={cn("flex flex-col", stretch ? "min-h-0 flex-1 justify-center" : "min-h-[260px] justify-center")}>
         {children}
       </div>
       {footer}
-      {hint ? <p className="mt-3 shrink-0 text-center text-xs text-gray-500">{hint}</p> : null}
+      {hint ? <p className="mt-3 shrink-0 text-center text-xs text-pd-muted">{hint}</p> : null}
     </div>
   );
 }
@@ -64,7 +64,7 @@ export function PreviewInnerFrame({
   return (
     <div
       className={cn(
-        "flex h-full min-h-[200px] w-full flex-col justify-center rounded-xl border border-gray-200 bg-white p-4",
+        "flex h-full min-h-[180px] w-full flex-col justify-center rounded-lg border border-pd-border bg-pd-surface p-4",
         className
       )}
     >

@@ -55,3 +55,18 @@ next-env.d.ts
 /test-pdf-to-word-output.docx
 /test-pdf-to-word-output.zip
 /test-docx-unpack/
+/test-output/
+/test-*.docx
+/test-*.pdf
+/test-founder-summary.pdf
+/test-merged-*.docx
+/test-pdf2docx*.docx
+/test-swot-*.docx
+/pages-*.json
+
+# Python cache
+scripts/__pycache__/
+*.pyc
+
+# PDF-to-Word dev logs (scripts stay in git)
+/scripts/*.txt
