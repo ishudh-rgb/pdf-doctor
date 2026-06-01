@@ -4,7 +4,7 @@
 |-------|-------|
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
-| **Commit** | `7e3dee6` (full: `7e3dee66c25717ab7d08842213c736a64fc11fea`) |
+| **Commit** | `ca6d826` (snapshot body `7e3dee6` + manifest doc) |
 | **Saved** | 2026-06-01 21:33 — website + PDF-to-Word + CONFIDENTIAL watermarks |
 
 ## Locked design (100% — do not change without unlock)
