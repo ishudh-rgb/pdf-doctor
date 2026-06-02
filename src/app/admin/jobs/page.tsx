@@ -38,6 +38,7 @@ const toolOptions = [
   "pdf-scanner",
   "unlock-pdf",
   "protect-pdf",
+  "rotate-pdf",
 ];
 
 function formatFileSize(bytes: number): string {

@@ -451,6 +451,36 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       },
     ],
   },
+  "rotate-pdf": {
+    title: "Rotate PDF — Rotate Pages Online Free | PDF Doctor",
+    metaDescription:
+      "Rotate PDF pages online for free. Rotate individual pages or all pages at once — 90°, 180°, or 270°. Add pages from other PDFs. No signup required.",
+    h1: "Rotate PDF Pages Online — Free & Visual",
+    seoContent:
+      "Rotate PDF pages with a visual drag-and-drop workspace. PDF Doctor's Rotate PDF tool lets you preview every page, rotate individual pages or select multiple pages to rotate at once. Add blank pages or insert pages from other PDFs between existing pages. Download the result instantly — no signup, no watermarks, no quality loss.",
+    faqs: [
+      {
+        question: "How do I rotate a single page in a PDF?",
+        answer:
+          "Upload your PDF, hover over the page you want to rotate, and click the rotate button. You can rotate left (counter-clockwise) or right (clockwise) by 90° each click.",
+      },
+      {
+        question: "Can I rotate multiple pages at once?",
+        answer:
+          "Yes! Select multiple pages using the checkboxes, then use the bulk rotate buttons in the toolbar to rotate all selected pages simultaneously.",
+      },
+      {
+        question: "Does rotating affect PDF quality?",
+        answer:
+          "No, rotation only changes page orientation metadata. Your content, images, and text remain pixel-perfect with zero quality loss.",
+      },
+      {
+        question: "Can I add pages from another PDF?",
+        answer:
+          "Yes! Click the + button between any two pages to add documents from another PDF or insert a blank page.",
+      },
+    ],
+  },
 };
 
 export function getToolSEO(slug: string): ToolSEO | undefined {

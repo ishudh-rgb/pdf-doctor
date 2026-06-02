@@ -9,6 +9,7 @@ import type { LayoutStyleId } from "@/config/design-system";
 const TOOL_SLUG_LABELS: Record<string, string> = {
   "merge-pdf": "Merge PDF",
   "split-pdf": "Split PDF",
+  "rotate-pdf": "Rotate PDF",
   "compress-pdf": "Compress PDF",
   "edit-pdf": "Edit PDF",
   "sign-pdf": "Sign PDF",

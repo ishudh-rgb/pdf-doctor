@@ -24,6 +24,7 @@ import {
   Presentation,
   FileSpreadsheet,
   Stamp,
+  RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const megaMenuCategories: ToolCategory[] = [
     tools: [
       { name: "Merge PDF", href: "/merge-pdf", icon: <FileText className="h-4 w-4" />, color: toolIconClass },
       { name: "Split PDF", href: "/split-pdf", icon: <Scissors className="h-4 w-4" />, color: toolIconClass },
+      { name: "Rotate PDF", href: "/rotate-pdf", icon: <RotateCw className="h-4 w-4" />, color: toolIconClass },
     ],
   },
   {

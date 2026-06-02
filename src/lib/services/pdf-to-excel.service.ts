@@ -1,19 +1,124 @@
 import ExcelJS from "exceljs";
-import { PDFParse } from "pdf-parse";
+import { execFile } from "node:child_process";
+import fsSync from "node:fs";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
 import { logError } from "@/lib/db/queries";
-import {
-  detectAmountColumns,
-  extractPdfTables,
-  isNumericCell,
-  parseTabularFallback,
-} from "@/lib/services/pdf-table-extract.service";
+
+const execFileAsync = promisify(execFile);
+const EXTRACT_SCRIPT = path.join(process.cwd(), "scripts", "pdf-extract-tables.py");
+
+interface TableData {
+  rows: string[][];
+  row_count: number;
+  col_count: number;
+}
+
+interface PageData {
+  page: number;
+  tables: TableData[];
+  width: number;
+  height: number;
+}
+
+interface ExtractResult {
+  pageCount: number;
+  pages: PageData[];
+  mergedTables: TableData[];
+  pagesText: string[];
+}
+
+/* ─── helpers ─── */
+
+function isNumericValue(value: string): boolean {
+  const cleaned = value.replace(/[$,\s%]/g, "");
+  return /^-?\d+(\.\d+)?$/.test(cleaned);
+}
+
+function parseNumeric(value: string): number | null {
+  const cleaned = value.replace(/[$,\s]/g, "");
+  if (/^-?\d+(\.\d+)?%?$/.test(cleaned)) {
+    if (value.includes("%")) {
+      return parseFloat(cleaned.replace("%", "")) / 100;
+    }
+    return parseFloat(cleaned);
+  }
+  return null;
+}
+
+function isDateValue(value: string): boolean {
+  return /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(value.trim());
+}
+
+function parseDate(value: string): Date | null {
+  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!match) return null;
+  const month = parseInt(match[1], 10);
+  const day = parseInt(match[2], 10);
+  let year = parseInt(match[3], 10);
+  if (year < 100) year += year < 50 ? 2000 : 1900;
+  // Use UTC to avoid timezone offset issues
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (isNaN(date.getTime())) return null;
+  return date;
+}
+
+function detectColumnTypes(table: TableData): Map<number, "number" | "percent" | "currency" | "date" | "text"> {
+  const types = new Map<number, "number" | "percent" | "currency" | "date" | "text">();
+  if (table.rows.length < 2) return types;
+
+  const header = table.rows[0];
+  const dataRows = table.rows.slice(1, Math.min(21, table.rows.length));
+
+  for (let col = 0; col < (header?.length ?? 0); col++) {
+    const headerText = (header[col] ?? "").toLowerCase();
+    const values = dataRows
+      .map((r) => (r[col] ?? "").trim())
+      .filter(Boolean);
+
+    if (values.length === 0) {
+      types.set(col, "text");
+      continue;
+    }
+
+    const dateCount = values.filter(isDateValue).length;
+    if (dateCount > values.length * 0.6 || /\bdate\b/i.test(headerText)) {
+      types.set(col, "date");
+      continue;
+    }
+
+    const percentCount = values.filter((v) => v.includes("%")).length;
+    if (percentCount > values.length * 0.5 || /bonus\s*%|percent|rate/i.test(headerText)) {
+      types.set(col, "percent");
+      continue;
+    }
+
+    const currencyCount = values.filter((v) => /^\$/.test(v.trim())).length;
+    if (currencyCount > values.length * 0.5 || /salary|amount|price|cost|total|pay/i.test(headerText)) {
+      types.set(col, "currency");
+      continue;
+    }
+
+    const numCount = values.filter(isNumericValue).length;
+    if (numCount > values.length * 0.7 || /\bage\b|count|qty|quantity|num/i.test(headerText)) {
+      types.set(col, "number");
+      continue;
+    }
+
+    types.set(col, "text");
+  }
+
+  return types;
+}
 
 function autoFitColumns(sheet: ExcelJS.Worksheet, maxWidth = 48) {
   sheet.columns.forEach((column) => {
-    let longest = 10;
+    let longest = 8;
     column.eachCell?.({ includeEmpty: false }, (cell) => {
       const value = cell.value?.toString() ?? "";
-      longest = Math.max(longest, Math.min(value.length + 2, maxWidth));
+      longest = Math.max(longest, Math.min(value.length + 3, maxWidth));
     });
     column.width = longest;
   });
@@ -21,168 +126,223 @@ function autoFitColumns(sheet: ExcelJS.Worksheet, maxWidth = 48) {
 
 function styleHeaderRow(sheet: ExcelJS.Worksheet, rowNumber: number, columnCount: number) {
   const row = sheet.getRow(rowNumber);
-  row.font = { bold: true, color: { argb: "FF1E293B" } };
+  row.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
   row.fill = {
     type: "pattern",
     pattern: "solid",
-    fgColor: { argb: "FFE2E8F0" },
+    fgColor: { argb: "FF4472C4" },
   };
   row.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-  row.height = 22;
+  row.height = 24;
 
-  for (let col = 1; col <= columnCount; col += 1) {
+  for (let col = 1; col <= columnCount; col++) {
     sheet.getCell(rowNumber, col).border = {
-      bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+      top: { style: "thin", color: { argb: "FF4472C4" } },
+      bottom: { style: "thin", color: { argb: "FF4472C4" } },
+      left: { style: "thin", color: { argb: "FFD9E2F3" } },
+      right: { style: "thin", color: { argb: "FFD9E2F3" } },
     };
   }
 }
 
-function writeTableToSheet(
+function addAlternatingRowStyle(
   sheet: ExcelJS.Worksheet,
-  infoLines: string[],
-  table: string[][],
-  startRow = 1
-): number {
-  let rowPointer = startRow;
-
-  const uniqueInfo = infoLines.filter((line, index, arr) => index === 0 || line !== arr[index - 1]);
-  for (const line of uniqueInfo) {
-    const row = sheet.getRow(rowPointer);
-    row.getCell(1).value = line;
-    if (rowPointer === startRow) {
-      row.getCell(1).font = { bold: true, size: 13 };
-    }
-    rowPointer += 1;
-  }
-
-  if (uniqueInfo.length > 0) {
-    rowPointer += 1;
-  }
-
-  const headerRowNumber = rowPointer;
-  const amountColumns = detectAmountColumns(table[0] ?? []);
-
-  table.forEach((tableRow, rowIndex) => {
-    const excelRow = sheet.getRow(rowPointer);
-    tableRow.forEach((value, colIndex) => {
-      const cell = excelRow.getCell(colIndex + 1);
-      if (rowIndex > 0 && amountColumns.includes(colIndex) && isNumericCell(value)) {
-        cell.value = Number(value.replace(/,/g, ""));
-        cell.numFmt = "#,##0.00";
-        cell.alignment = { horizontal: "right" };
-      } else {
-        cell.value = value;
-        cell.alignment = {
-          vertical: "top",
-          wrapText: colIndex === 2 || value.length > 28,
+  startRow: number,
+  endRow: number,
+  columnCount: number
+) {
+  for (let r = startRow; r <= endRow; r++) {
+    const isEven = (r - startRow) % 2 === 0;
+    for (let c = 1; c <= columnCount; c++) {
+      const cell = sheet.getCell(r, c);
+      if (isEven) {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFD9E2F3" },
         };
       }
-    });
-    rowPointer += 1;
-  });
-
-  styleHeaderRow(sheet, headerRowNumber, table[0]?.length ?? 1);
-  sheet.views = [{ state: "frozen", ySplit: headerRowNumber }];
-  autoFitColumns(sheet);
-
-  return rowPointer;
+      cell.border = {
+        bottom: { style: "hair", color: { argb: "FFBDD0EB" } },
+        left: { style: "hair", color: { argb: "FFBDD0EB" } },
+        right: { style: "hair", color: { argb: "FFBDD0EB" } },
+      };
+    }
+  }
 }
 
-function pickBestTable(candidates: Array<string[][] | null | undefined>): string[][] | null {
-  const valid = candidates.filter((table): table is string[][] => !!table && table.length > 1);
-  if (valid.length === 0) return null;
-  return valid.reduce((best, current) => (current.length > best.length ? current : best));
-}
+/* ─── main extraction via Python ─── */
 
-async function tryBorderedTables(fileBuffer: Buffer): Promise<string[][] | null> {
-  const parser = new PDFParse({ data: fileBuffer });
+async function extractTablesFromPdf(fileBuffer: Buffer): Promise<ExtractResult> {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pdf-doctor-excel-"));
+  const pdfPath = path.join(tmpDir, "input.pdf");
+  const outputDir = path.join(tmpDir, "output");
+
   try {
-    const result = await parser.getTable();
-    const tables = result.pages.flatMap((page) => page.tables).filter((table) => table.length > 1);
-    if (tables.length === 0) return null;
+    await fs.writeFile(pdfPath, fileBuffer);
+    await fs.mkdir(outputDir, { recursive: true });
 
-    const best = tables.reduce((current, candidate) =>
-      candidate.length * (candidate[0]?.length ?? 0) > current.length * (current[0]?.length ?? 0)
-        ? candidate
-        : current
+    const { stdout } = await execFileAsync(
+      "python",
+      [EXTRACT_SCRIPT, pdfPath, outputDir],
+      { timeout: 180_000, maxBuffer: 50 * 1024 * 1024 }
     );
 
-    return best.every((row) => row.length === best[0].length) ? best : null;
-  } catch {
-    return null;
+    // PyMuPDF may emit warnings to stdout; find the last JSON line
+    const lines = stdout.trim().split("\n");
+    let jsonLine = "";
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const trimmed = lines[i].trim();
+      if (trimmed.startsWith("{")) {
+        jsonLine = trimmed;
+        break;
+      }
+    }
+    if (!jsonLine) throw new Error("No JSON output from table extraction script");
+
+    const meta = JSON.parse(jsonLine);
+    if (meta.error) throw new Error(meta.error);
+
+    const jsonData = fsSync.readFileSync(meta.outputPath, "utf-8");
+    return JSON.parse(jsonData) as ExtractResult;
   } finally {
-    await parser.destroy();
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
 }
 
-async function fallbackTextTable(fileBuffer: Buffer): Promise<string[][]> {
-  const parser = new PDFParse({ data: fileBuffer });
-  try {
-    const parsed = await parser.getText({
-      lineEnforce: true,
-      cellSeparator: "\t",
-      cellThreshold: 5,
-      lineThreshold: 6,
+/* ─── text fallback for PDFs with no tables ─── */
+
+function textToRows(text: string): string[][] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      if (line.includes("\t")) return line.split("\t").map((c) => c.trim());
+      return [line];
     });
-    return parseTabularFallback(parsed.text);
-  } finally {
-    await parser.destroy();
-  }
 }
+
+/* ─── main export ─── */
 
 export async function pdfToExcel(fileBuffer: Buffer): Promise<Buffer> {
   try {
-    const borderedTable = await tryBorderedTables(fileBuffer);
-    const extracted = await extractPdfTables(fileBuffer);
+    const extracted = await extractTablesFromPdf(fileBuffer);
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "PDF Doctor";
     workbook.created = new Date();
 
-    const mainTable = pickBestTable([
-      extracted.primaryTable,
-      borderedTable,
-      extracted.pages.find((page) => page.table)?.table,
-    ]);
+    if (extracted.mergedTables.length > 0) {
+      for (let tIdx = 0; tIdx < extracted.mergedTables.length; tIdx++) {
+        const table = extracted.mergedTables[tIdx];
+        if (table.row_count === 0) continue;
 
-    const mainInfo = extracted.infoLines;
+        const sheetName =
+          extracted.mergedTables.length === 1
+            ? "Table 1"
+            : `Table ${tIdx + 1}`;
+        const sheet = workbook.addWorksheet(sheetName);
 
-    if (mainTable) {
-      const sheet = workbook.addWorksheet("Statement");
-      writeTableToSheet(sheet, mainInfo, mainTable);
+        const colTypes = detectColumnTypes(table);
 
-      const expectedRows = extracted.pages.reduce(
-        (sum, page) => sum + Math.max((page.table?.length ?? 1) - 1, 0),
-        0
-      );
-      const actualRows = mainTable.length - 1;
+        for (let rowIdx = 0; rowIdx < table.rows.length; rowIdx++) {
+          const rowData = table.rows[rowIdx];
+          const excelRow = sheet.getRow(rowIdx + 1);
 
-      if (actualRows < expectedRows * 0.7 && extracted.pages.length > 1) {
-        extracted.pages.forEach((page) => {
-          if (!page.table || page.table.length <= 1) return;
-          const sheetName = `Page ${page.pageNum}`.slice(0, 31);
-          if (workbook.getWorksheet(sheetName)) return;
-          const pageSheet = workbook.addWorksheet(sheetName);
-          writeTableToSheet(pageSheet, page.infoLines, page.table);
-        });
+          for (let colIdx = 0; colIdx < rowData.length; colIdx++) {
+            const cell = excelRow.getCell(colIdx + 1);
+            const raw = rowData[colIdx] ?? "";
+            const colType = colTypes.get(colIdx) ?? "text";
+
+            if (rowIdx === 0) {
+              cell.value = raw;
+              continue;
+            }
+
+            if (!raw) {
+              cell.value = "";
+              continue;
+            }
+
+            switch (colType) {
+              case "date": {
+                const date = parseDate(raw);
+                if (date) {
+                  cell.value = date;
+                  cell.numFmt = "YYYY-MM-DD";
+                } else {
+                  cell.value = raw;
+                }
+                break;
+              }
+              case "currency": {
+                const num = parseNumeric(raw);
+                if (num !== null) {
+                  cell.value = num;
+                  cell.numFmt = "$#,##0";
+                } else {
+                  cell.value = raw;
+                }
+                break;
+              }
+              case "percent": {
+                const num = parseNumeric(raw);
+                if (num !== null) {
+                  cell.value = num;
+                  cell.numFmt = "0%";
+                } else {
+                  cell.value = raw;
+                }
+                break;
+              }
+              case "number": {
+                const num = parseNumeric(raw);
+                if (num !== null) {
+                  cell.value = num;
+                  cell.numFmt = Number.isInteger(num) ? "#,##0" : "#,##0.00";
+                } else {
+                  cell.value = raw;
+                }
+                break;
+              }
+              default:
+                cell.value = raw;
+                cell.alignment = { vertical: "top", wrapText: raw.length > 40 };
+            }
+          }
+        }
+
+        styleHeaderRow(sheet, 1, table.col_count);
+        if (table.row_count > 2) {
+          addAlternatingRowStyle(sheet, 2, table.row_count, table.col_count);
+        }
+        sheet.views = [{ state: "frozen", ySplit: 1 }];
+        autoFitColumns(sheet);
+        sheet.autoFilter = {
+          from: { row: 1, column: 1 },
+          to: { row: 1, column: table.col_count },
+        };
       }
     } else {
-      const fallback = await fallbackTextTable(fileBuffer);
       const sheet = workbook.addWorksheet("Extracted Content");
-      fallback.forEach((row) => sheet.addRow(row));
-      autoFitColumns(sheet);
-    }
+      const allText = extracted.pagesText.join("\n");
+      const rows = textToRows(allText);
 
-    if (!mainTable) {
-      extracted.pages.forEach((page) => {
-        if (!page.table) return;
-        const sheet = workbook.addWorksheet(`Page ${page.pageNum}`.slice(0, 31));
-        writeTableToSheet(sheet, page.infoLines, page.table);
-      });
+      if (rows.length > 0) {
+        const maxCols = rows.reduce((max, r) => Math.max(max, r.length), 1);
+        for (const row of rows) {
+          while (row.length < maxCols) row.push("");
+          sheet.addRow(row);
+        }
+        autoFitColumns(sheet);
+      } else {
+        sheet.addRow(["No extractable text found in this PDF."]);
+      }
     }
 
     if (workbook.worksheets.length === 0) {
       const sheet = workbook.addWorksheet("Extracted Content");
-      sheet.addRow(["No extractable text found in this PDF."]);
+      sheet.addRow(["No extractable content found in this PDF."]);
     }
 
     const buffer = await workbook.xlsx.writeBuffer();

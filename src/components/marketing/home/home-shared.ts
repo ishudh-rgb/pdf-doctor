@@ -40,6 +40,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
 export const TOOL_KEYS = [
   { slug: "merge-pdf", icon: "Layers", nameKey: "tools.mergePdf.name", descKey: "tools.mergePdf.description", category: "organize" },
   { slug: "split-pdf", icon: "Scissors", nameKey: "tools.splitPdf.name", descKey: "tools.splitPdf.description", category: "organize" },
+  { slug: "rotate-pdf", icon: "RotateCw", nameKey: "tools.rotatePdf.name", descKey: "tools.rotatePdf.description", category: "organize" },
   { slug: "compress-pdf", icon: "Minimize2", nameKey: "tools.compressPdf.name", descKey: "tools.compressPdf.description", category: "optimize" },
   { slug: "pdf-to-word", icon: "FileText", nameKey: "tools.pdfToWord.name", descKey: "tools.pdfToWord.description", category: "convert-from" },
   { slug: "pdf-to-excel", icon: "Table", nameKey: "tools.pdfToExcel.name", descKey: "tools.pdfToExcel.description", category: "convert-from" },
@@ -103,6 +104,7 @@ export const CATEGORY_FALLBACK_LABELS: Record<string, string> = {
 export const TOOL_ACCENT: Record<string, string> = {
   "merge-pdf": "bg-[#E74C3C]",
   "split-pdf": "bg-[#E67E22]",
+  "rotate-pdf": "bg-[#9B59B6]",
   "compress-pdf": "bg-[#27AE60]",
   "pdf-to-word": "bg-[#2980B9]",
   "pdf-to-excel": "bg-[#16A085]",

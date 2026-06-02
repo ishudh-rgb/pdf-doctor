@@ -50,6 +50,11 @@
       "description": "Split PDF into separate pages",
       "longDescription": "Extract specific pages or split your PDF into individual files. Choose custom page ranges."
     },
+    "rotatePdf": {
+      "name": "Rotate PDF",
+      "description": "Rotate PDF pages visually",
+      "longDescription": "Rotate individual pages or all pages at once. Add pages from other PDFs. Visual workspace with instant preview."
+    },
     "compressPdf": {
       "name": "Compress PDF",
       "description": "Reduce PDF file size",

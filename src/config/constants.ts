@@ -104,6 +104,18 @@ export const TOOLS: Tool[] = [
     maxFiles: 1,
   },
   {
+    name: "Rotate PDF",
+    slug: "rotate-pdf",
+    description: "Rotate PDF pages visually",
+    icon: "RotateCw",
+    category: "organize",
+    color: "#9C27B0",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
     name: "Compress PDF",
     slug: "compress-pdf",
     description: "Reduce PDF file size",
@@ -291,6 +303,7 @@ export const MEGA_MENU_CATEGORIES: MegaMenuCategory[] = [
     tools: [
       { name: "Merge PDF", slug: "merge-pdf", icon: "Layers", color: "#4CAF50" },
       { name: "Split PDF", slug: "split-pdf", icon: "Scissors", color: "#2196F3" },
+      { name: "Rotate PDF", slug: "rotate-pdf", icon: "RotateCw", color: "#9C27B0" },
     ],
   },
   {
