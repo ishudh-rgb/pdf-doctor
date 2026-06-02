@@ -2,25 +2,38 @@ import { NextRequest, NextResponse } from "next/server";
 import { protectPDF } from "@/lib/services/pdf-security.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   let userId: string | null = null;
 
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    userId = user?.id ?? null;
+    if (isSupabaseConfigured()) {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      userId = user?.id ?? null;
+    }
 
-    const isPro = user ? await checkFileSizeLimit(user.id) : false;
-    const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+    const sizeResult = userId
+      ? await checkFileSizeLimit(userId, 0)
+      : { allowed: true, maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
+    const maxSizeMB = sizeResult.maxSizeMB;
 
-    await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    const usageResult = await checkUsageLimit(
+      userId,
+      request.headers.get("x-forwarded-for"),
+      "protect-pdf"
+    );
+    if (!usageResult.allowed) {
+      return NextResponse.json({ error: usageResult.message }, { status: 429 });
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -53,7 +66,7 @@ export async function POST(request: NextRequest) {
     const protectedPdf = await protectPDF(buffer, password);
 
     const processingTime = Date.now() - startTime;
-    await logToolUsage({
+    void logToolUsage({
       userId,
       sessionId: request.headers.get("x-session-id") || "anonymous",
       toolSlug: "protect-pdf",
@@ -74,13 +87,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to protect PDF";
 
-    await logError({
+    void logError({
       user_id: userId,
       tool_name: "protect-pdf",
       error_type: "PROTECT_ERROR",
       error_message: message,
       stack_trace: error instanceof Error ? error.stack : undefined,
-    }).catch(() => {});
+    });
 
     if (message.includes("usage limit") || message.includes("limit reached")) {
       return NextResponse.json({ error: message }, { status: 429 });

@@ -1,11 +1,15 @@
 import { logError } from "@/lib/db/queries";
-import { renderPresentationToPdf } from "@/lib/services/html-to-pdf.service";
+import { renderPresentationToPdf, renderSlideImagesToPdf } from "@/lib/services/html-to-pdf.service";
+import { tryConvertWithLibreOffice } from "@/lib/services/libreoffice-convert.service";
+import { tryExportSlidesWithPowerPoint } from "@/lib/services/powerpoint-slide-export.service";
 import {
   isLikelyNumericCell,
-  parsePptx,
+  parsePresentation,
   type ParsedSlide,
+  type ParsedStyledTable,
+  type ParsedTableCell,
+  type ParsedTextBlock,
 } from "@/lib/services/pptx-parse.service";
-
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -14,14 +18,41 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function renderTable(table: string[][]): string {
+function renderStyledTable(table: ParsedStyledTable): string {
+  if (table.rows.length === 0) return "";
+
+  const headerRow = table.rows[0];
+  const bodyRows = table.rows.slice(1);
+
+  const renderCell = (cell: ParsedTableCell, tag: "th" | "td") => {
+    const styleParts: string[] = [];
+    if (cell.background && cell.background.toLowerCase() !== "#ffffff") {
+      styleParts.push(`background:${cell.background}`);
+    }
+    if (cell.color) styleParts.push(`color:${cell.color}`);
+    if (cell.bold) styleParts.push("font-weight:700");
+    const style = styleParts.length > 0 ? ` style="${styleParts.join(";")}"` : "";
+    const className =
+      tag === "td" && isLikelyNumericCell(cell.text) ? ' class="num"' : "";
+    return `<${tag}${className}${style}>${escapeHtml(cell.text || " ")}</${tag}>`;
+  };
+
+  const headerHtml = headerRow.map((cell) => renderCell(cell, "th")).join("");
+  const bodyHtml = bodyRows
+    .map((row) => {
+      const cells = row.map((cell) => renderCell(cell, "td")).join("");
+      return `<tr>${cells}</tr>`;
+    })
+    .join("");
+
+  return `<table class="slide-table"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+}
+
+function renderPlainTable(table: string[][]): string {
   if (table.length === 0) return "";
 
   const headerRow = table[0];
   const bodyRows = table.slice(1);
-  const amountStartIndex = headerRow.findIndex((cell) =>
-    /debit|credit|balance|amount|total|dr|cr/i.test(cell)
-  );
 
   const headerHtml = headerRow
     .map((cell) => `<th>${escapeHtml(cell || " ")}</th>`)
@@ -31,11 +62,8 @@ function renderTable(table: string[][]): string {
     .map((row) => {
       const cells = row
         .map((cell, index) => {
-          const numeric =
-            amountStartIndex >= 0
-              ? index >= amountStartIndex && isLikelyNumericCell(cell)
-              : isLikelyNumericCell(cell);
-          const className = numeric ? ' class="num"' : index === 0 ? ' class="center"' : "";
+          const numeric = isLikelyNumericCell(cell);
+          const className = numeric ? ' class="num"' : "";
           return `<td${className}>${escapeHtml(cell || " ")}</td>`;
         })
         .join("");
@@ -46,45 +74,50 @@ function renderTable(table: string[][]): string {
   return `<table class="slide-table"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
 }
 
+function renderPositionedText(block: ParsedTextBlock): string {
+  const style = [
+    `left:${block.x}in`,
+    `top:${block.y}in`,
+    `width:${block.w}in`,
+    `min-height:${block.h}in`,
+    `font-size:${block.fontSize}pt`,
+    `color:${block.color}`,
+    block.bold ? "font-weight:700" : "font-weight:400",
+  ].join(";");
+
+  return `<div class="slide-text-block" style="${style}">${escapeHtml(block.text)}</div>`;
+}
+
 function renderImages(slide: ParsedSlide): string {
   return slide.images
     .map((image) => {
-      const left = Math.max(0.2, Math.min(image.x, 8.5));
-      const top = Math.max(0.15, Math.min(image.y, 4.5));
-      const width = Math.max(0.5, Math.min(image.w, 2.5));
-      const height = Math.max(0.4, Math.min(image.h, 1.5));
+      const style = [
+        `left:${image.x}in`,
+        `top:${image.y}in`,
+        `width:${image.w}in`,
+        `height:${image.h}in`,
+      ].join(";");
 
-      return `<img class="slide-image" src="${image.dataUrl}" alt="" style="left:${left}in;top:${top}in;width:${width}in;height:${height}in;" />`;
+      return `<img class="slide-image" src="${image.dataUrl}" alt="" style="${style}" />`;
     })
     .join("");
 }
 
 function renderSlide(slide: ParsedSlide): string {
-  const tablesHtml = slide.tables.map(renderTable).join("");
+  const tablesHtml =
+    slide.styledTables.length > 0
+      ? slide.styledTables.map(renderStyledTable).join("")
+      : slide.tables.map(renderPlainTable).join("");
   const imagesHtml = renderImages(slide);
+  const textHtml = slide.textBlocks.map(renderPositionedText).join("");
 
-  const extraText = slide.textBlocks
-    .filter((block) => block.text !== slide.title && block.text !== slide.subtitle)
-    .sort((a, b) => a.y - b.y)
-    .map((block) => `<p class="slide-text">${escapeHtml(block.text)}</p>`)
-    .join("");
-
-  const subtitleHtml = slide.subtitle
-    ? `<p class="slide-subtitle">${escapeHtml(slide.subtitle)}</p>`
-    : "";
+  const contentSlide = slide.images.length > 0 && slide.textBlocks.length <= 1;
 
   return `
-    <section class="slide">
-      <div class="slide-header">
-        <h1 class="slide-title">${escapeHtml(slide.title)}</h1>
-        ${subtitleHtml}
-      </div>
+    <section class="slide${contentSlide ? " slide-content" : ""}">
+      ${textHtml}
       ${imagesHtml}
-      <div class="slide-content">
-        ${tablesHtml}
-        ${extraText}
-      </div>
-      <div class="slide-footer">Slide ${slide.index + 1}</div>
+      ${tablesHtml ? `<div class="slide-table-wrap">${tablesHtml}</div>` : ""}
     </section>
   `;
 }
@@ -98,92 +131,74 @@ function buildPresentationHtml(slides: ParsedSlide[]): string {
   <meta charset="utf-8" />
   <title>Presentation</title>
   <style>
-    @page { size: 10in 5.625in; margin: 0; }
+    @page { size: A4 landscape; margin: 0.55in; }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
       background: #ffffff;
       font-family: Calibri, "Segoe UI", Arial, sans-serif;
-      color: #111827;
+      color: #000000;
     }
     .slide {
       width: 10in;
-      height: 5.625in;
+      height: 7.15in;
       page-break-after: always;
       position: relative;
       overflow: hidden;
-      padding: 0.32in 0.38in 0.42in;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      background: #ffffff;
     }
     .slide:last-child { page-break-after: auto; }
-    .slide-header {
-      margin-bottom: 0.14in;
-      padding-bottom: 0.08in;
-      border-bottom: 2px solid #dbeafe;
+    .slide-text-block {
+      position: absolute;
+      line-height: 1.25;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
-    .slide-title {
-      margin: 0;
-      font-size: 20pt;
-      line-height: 1.15;
-      font-weight: 700;
-      color: #1e3a8a;
+    .slide-image {
+      position: absolute;
+      object-fit: contain;
     }
-    .slide-subtitle {
-      margin: 0.06in 0 0;
-      font-size: 10.5pt;
-      color: #64748b;
-    }
-    .slide-content {
-      position: relative;
-      z-index: 1;
+    .slide-table-wrap {
+      position: absolute;
+      left: 0.55in;
+      top: 1.35in;
+      width: 9.5in;
     }
     .slide-table {
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      font-size: 8.6pt;
-      margin-top: 0.08in;
+      font-size: 15pt;
+    }
+    .slide-table th,
+    .slide-table td {
+      border: 1px solid #ffffff;
+      padding: 10px 12px;
+      vertical-align: middle;
+      text-align: left;
+      font-weight: 400;
+      background: #ffffff;
+      color: #000000;
+      font-size: 15pt;
     }
     .slide-table th {
-      background: #e2e8f0;
-      color: #1e293b;
-      font-weight: 700;
-      text-align: center;
-      padding: 5px 6px;
-      border: 1px solid #cbd5e1;
-      word-wrap: break-word;
-    }
-    .slide-table td {
-      padding: 4px 6px;
-      border: 1px solid #cbd5e1;
-      vertical-align: top;
-      word-wrap: break-word;
-      background: rgba(255, 255, 255, 0.92);
+      background: #b3b3b3;
+      font-weight: 400;
     }
     .slide-table tbody tr:nth-child(even) td {
-      background: #f8fafc;
+      background: #e6e6e6;
+    }
+    .slide-table tbody tr:nth-child(odd) td {
+      background: #ffffff;
+    }
+    .slide-content .slide-image {
+      left: 0.55in;
+      top: 1.2in;
+      width: 9.5in;
+      height: 5.8in;
     }
     .slide-table td.num { text-align: right; white-space: nowrap; }
-    .slide-table td.center { text-align: center; }
-    .slide-text {
-      margin: 0.08in 0 0;
-      font-size: 11pt;
-      line-height: 1.35;
-      white-space: pre-wrap;
-    }
-    .slide-image {
-      position: absolute;
-      object-fit: contain;
-      z-index: 2;
-    }
-    .slide-footer {
-      position: absolute;
-      right: 0.38in;
-      bottom: 0.16in;
-      font-size: 8pt;
-      color: #94a3b8;
-    }
   </style>
 </head>
 <body>${body}</body>
@@ -192,9 +207,20 @@ function buildPresentationHtml(slides: ParsedSlide[]): string {
 
 export async function pptToPdf(fileBuffer: Buffer): Promise<Buffer> {
   try {
-    const slides = await parsePptx(fileBuffer);
+    if (process.platform === "win32") {
+      const slideImages = await tryExportSlidesWithPowerPoint(fileBuffer);
+      if (slideImages && slideImages.length > 0) {
+        return await renderSlideImagesToPdf(slideImages);
+      }
+    }
 
-    if (slides.every((slide) => slide.tables.length === 0 && slide.textBlocks.length === 0)) {
+    const libreOfficePdf = await tryConvertWithLibreOffice(fileBuffer);
+    if (libreOfficePdf) {
+      return libreOfficePdf;
+    }
+
+    const slides = await parsePresentation(fileBuffer);
+    if (slides.every((slide) => slide.tables.length === 0 && slide.styledTables.length === 0 && slide.textBlocks.length === 0 && slide.images.length === 0)) {
       throw new Error("No readable slide content found in the PowerPoint file.");
     }
 
@@ -207,8 +233,14 @@ export async function pptToPdf(fileBuffer: Buffer): Promise<Buffer> {
       error_message: err instanceof Error ? err.message : String(err),
       stack_trace: err instanceof Error ? err.stack : undefined,
     });
-    throw new Error(
-      `Failed to convert PowerPoint to PDF: ${err instanceof Error ? err.message : "Unknown error"}`
-    );
+
+    const message = err instanceof Error ? err.message : "Unknown error";
+    if (message.toLowerCase().includes("central directory") || message.toLowerCase().includes("zip")) {
+      throw new Error(
+        "Failed to convert PowerPoint to PDF: This .ppt file could not be read. Try opening it in PowerPoint and saving as .pptx, then convert again."
+      );
+    }
+
+    throw new Error(`Failed to convert PowerPoint to PDF: ${message}`);
   }
 }

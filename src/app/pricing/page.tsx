@@ -14,7 +14,7 @@ const plans = [
     yearlyPrice: 0,
     features: [
       "5 tool uses per day",
-      "Max 25 MB file size",
+      "No file size limit",
       "Basic PDF tools",
       "Standard processing speed",
       "Files deleted after 2 hours",
@@ -31,7 +31,7 @@ const plans = [
     yearlyPrice: 2399,
     features: [
       "100 tool uses per day",
-      "Max 200 MB file size",
+      "No file size limit",
       "All PDF tools including Edit & Sign",
       "AI PDF Summarizer",
       "Priority processing speed",
@@ -49,7 +49,7 @@ const plans = [
 const pricingFaqs = [
   {
     q: "What's included in the Free plan?",
-    a: "The Free plan gives you access to basic PDF tools like merge, split, compress, and convert — up to 5 uses per day with a 25 MB file size limit.",
+    a: "The Free plan gives you access to basic PDF tools like merge, split, compress, and convert — up to 5 uses per day with no file size limit.",
   },
   {
     q: "Can I switch from monthly to yearly billing?",

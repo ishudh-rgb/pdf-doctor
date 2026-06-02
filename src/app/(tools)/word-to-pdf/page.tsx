@@ -23,7 +23,7 @@ const RELATED_TOOLS = [
 const FAQS = [
   { q: 'What Word formats are supported?', a: 'We support both .doc and .docx formats. For best results, use the newer .docx format.' },
   { q: 'Will the formatting be preserved?', a: 'Yes, most formatting including fonts, images, tables, and styles are preserved during conversion.' },
-  { q: 'Is there a file size limit?', a: 'You can convert Word documents up to 50MB in size.' },
+  { q: 'Is there a file size limit?', a: 'No — convert Word documents of any size.' },
   { q: 'Can I convert multiple files at once?', a: 'Currently, conversion works one file at a time. You can use our Merge tool to combine the resulting PDFs.' },
 ];
 

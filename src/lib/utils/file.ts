@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 
 const FILE_SIZE_UNITS = ["B", "KB", "MB", "GB"] as const;
 
+import { isUnlimitedFileSizeMB } from "@/config/constants";
+
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
 
@@ -86,6 +88,14 @@ export function validateFileSize(
   file: File,
   maxSizeMB: number
 ): { valid: boolean; message: string } {
+  if (file.size === 0) {
+    return { valid: false, message: "File is empty." };
+  }
+
+  if (isUnlimitedFileSizeMB(maxSizeMB)) {
+    return { valid: true, message: "" };
+  }
+
   const maxBytes = maxSizeMB * 1024 * 1024;
 
   if (file.size > maxBytes) {
@@ -93,10 +103,6 @@ export function validateFileSize(
       valid: false,
       message: `File size (${formatFileSize(file.size)}) exceeds the maximum allowed size of ${maxSizeMB} MB.`,
     };
-  }
-
-  if (file.size === 0) {
-    return { valid: false, message: "File is empty." };
   }
 
   return { valid: true, message: "" };

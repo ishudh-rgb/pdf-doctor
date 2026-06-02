@@ -6,6 +6,11 @@ import {
 } from "@/lib/db/queries";
 import { logError } from "@/lib/db/queries";
 import { isLocalDevAuthEnabled } from "@/lib/auth/auth-config";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
+import {
+  FILE_LIMITS,
+  isUnlimitedFileSizeMB,
+} from "@/config/constants";
 
 export interface UsageLimitResult {
   allowed: boolean;
@@ -19,6 +24,10 @@ export async function checkUsageLimit(
   guestIpHash: string | null,
   tool: string = "general"
 ): Promise<UsageLimitResult> {
+  if (!isSupabaseConfigured()) {
+    return { allowed: true, remaining: -1, limit: -1 };
+  }
+
   try {
     const settings = await getAdminSettings();
 
@@ -134,19 +143,23 @@ export async function checkFileSizeLimit(
   fileSizeBytes?: number
 ): Promise<{ allowed: boolean; maxSizeMB: number }> {
   try {
-    const settings = await getAdminSettings();
-    let maxSizeMB = Number(settings.free_max_file_size_mb) || 25;
+    let maxSizeMB = FILE_LIMITS.maxFreeFileSizeMB;
 
     if (userId) {
       const profile = await getUserProfile(userId);
       if (profile.plan === "pro") {
-        maxSizeMB = Number(settings.pro_max_file_size_mb) || 200;
+        maxSizeMB = FILE_LIMITS.maxProFileSizeMB;
       }
+    }
+
+    if (isUnlimitedFileSizeMB(maxSizeMB)) {
+      return { allowed: true, maxSizeMB: 0 };
     }
 
     if (fileSizeBytes === undefined) {
       return { allowed: true, maxSizeMB };
     }
+
     const maxBytes = maxSizeMB * 1024 * 1024;
     return {
       allowed: fileSizeBytes <= maxBytes,
@@ -158,6 +171,6 @@ export async function checkFileSizeLimit(
       error_type: "FILE_SIZE_CHECK_FAILED",
       error_message: err instanceof Error ? err.message : String(err),
     });
-    return { allowed: true, maxSizeMB: 25 };
+    return { allowed: true, maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
   }
 }

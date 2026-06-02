@@ -21,13 +21,13 @@ const settingsConfig: Omit<Setting, "value">[] = [
   {
     key: "free_max_file_size_mb",
     label: "Free Max File Size (MB)",
-    description: "Maximum file size in MB for free tier users",
+    description: "Maximum file size in MB for free tier users (0 = no limit)",
     type: "number",
   },
   {
     key: "pro_max_file_size_mb",
     label: "Pro Max File Size (MB)",
-    description: "Maximum file size in MB for Pro tier users",
+    description: "Maximum file size in MB for Pro tier users (0 = no limit)",
     type: "number",
   },
   {
@@ -58,8 +58,8 @@ const settingsConfig: Omit<Setting, "value">[] = [
 
 const defaultValues: Record<string, string> = {
   free_daily_file_limit: "5",
-  free_max_file_size_mb: "25",
-  pro_max_file_size_mb: "200",
+  free_max_file_size_mb: "0",
+  pro_max_file_size_mb: "0",
   free_daily_ai_limit: "1",
   ads_enabled: "true",
   maintenance_mode: "false",

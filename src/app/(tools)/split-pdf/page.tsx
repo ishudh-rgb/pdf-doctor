@@ -55,7 +55,7 @@ export default function SplitPdfPage() {
           <ToolDropzone
             chooseLabel="Select PDF"
             hint="or drag and drop your PDF here"
-            subHint="Max 50 MB · PDF only"
+            subHint="Any file size · PDF only"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();

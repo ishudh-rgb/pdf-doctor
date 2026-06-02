@@ -57,8 +57,12 @@ async function createPdfSession(
   }
 }
 
-function thumbUrl(sessionId: string, pageNum: number): string {
-  return `/api/tools/pdf-thumb?session=${encodeURIComponent(sessionId)}&page=${pageNum}`;
+function thumbUrl(sessionId: string, pageNum: number, width?: number): string {
+  const base = `/api/tools/pdf-thumb?session=${encodeURIComponent(sessionId)}&page=${pageNum}`;
+  if (width && width !== 140) {
+    return `${base}&width=${width}`;
+  }
+  return base;
 }
 
 export async function loadPdfThumbnailsBatched(
@@ -116,8 +120,8 @@ export async function loadPdfDocumentPreview(file: File): Promise<{
   };
 }
 
-export function pageThumbFromSession(sessionId: string, pageNum: number): string {
-  return thumbUrl(sessionId, pageNum);
+export function pageThumbFromSession(sessionId: string, pageNum: number, width?: number): string {
+  return thumbUrl(sessionId, pageNum, width);
 }
 
 export function buildRangesEveryN(totalPages: number, every: number): { start: number; end: number }[] {

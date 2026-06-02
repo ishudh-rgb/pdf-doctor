@@ -246,7 +246,7 @@ export default function AIPDFSummarizerPage() {
                   Select PDF File
                 </button>
                 <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
-                <p className="mt-4 text-xs text-gray-400">Max 25MB for free users | 200MB for Pro</p>
+                <p className="mt-4 text-xs text-gray-400">Any file size accepted</p>
               </div>
             ) : (
               <div>

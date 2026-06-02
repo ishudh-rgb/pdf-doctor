@@ -24,7 +24,7 @@ const RELATED_TOOLS = [
 const FAQS = [
   { q: 'How much can a PDF be compressed?', a: 'Compression results vary depending on the content. Files with images typically see 40-80% reduction, while text-heavy PDFs may see 10-30% reduction.' },
   { q: 'Will compression reduce the quality of my PDF?', a: 'Basic compression preserves quality while reducing size. Strong compression may slightly reduce image quality but keeps text crisp.' },
-  { q: 'Is there a file size limit?', a: 'You can compress PDF files up to 50MB. For larger files, consider splitting them first.' },
+  { q: 'Is there a file size limit?', a: 'No — compress PDF files of any size.' },
   { q: 'Can I compress multiple files at once?', a: 'Currently, compression works on one file at a time. Use our Merge tool to combine files after compressing them individually.' },
 ];
 
@@ -156,7 +156,7 @@ export default function CompressPdfPage() {
             <ToolDropzone
               chooseLabel="Select PDF"
               hint="or drag and drop your PDF here"
-              subHint="Max 50 MB · PDF only"
+              subHint="Any file size · PDF only"
               dragOver={dragOver}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}

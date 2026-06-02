@@ -5,6 +5,7 @@ import { getPdfjsAssetDirs } from "@/lib/pdf/pdfjs-paths";
 
 const THUMBNAIL_SCALE = 0.52;
 const THUMBNAIL_WIDTH = 140;
+const MAX_RENDER_WIDTH = 1200;
 const JPEG_QUALITY = 82;
 
 type PdfDoc = Awaited<ReturnType<typeof loadPdfDocument>>;
@@ -55,13 +56,15 @@ async function renderPageWithPdfJs(doc: PdfDoc, pageNum: number): Promise<string
 /** Primary renderer — same engine as compress-pdf, works on most real-world PDFs. */
 export async function renderPageThumb(
   buffer: Buffer,
-  pageNum: number
+  pageNum: number,
+  desiredWidth = THUMBNAIL_WIDTH
 ): Promise<string> {
+  const width = Math.min(Math.max(40, desiredWidth), MAX_RENDER_WIDTH);
   const parser = new PDFParse({ data: buffer });
   try {
     const result = await parser.getScreenshot({
       partial: [pageNum],
-      desiredWidth: THUMBNAIL_WIDTH,
+      desiredWidth: width,
       imageDataUrl: true,
       imageBuffer: false,
     });

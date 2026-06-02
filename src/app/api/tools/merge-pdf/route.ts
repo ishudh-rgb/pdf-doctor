@@ -4,7 +4,7 @@ import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.
 import { logUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
-import { FILE_LIMITS } from "@/config/constants";
+import { FILE_LIMITS, isUnlimitedFileSizeMB } from "@/config/constants";
 
 export const maxDuration = 60;
 
@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
       ? await checkFileSizeLimit(userId, 0)
       : { allowed: true, maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
     const maxSizeMB = sizeResult.maxSizeMB;
-    const maxFiles = sizeResult.maxSizeMB > 25 ? FILE_LIMITS.maxFilesPerMergePro : FILE_LIMITS.maxFilesPerMerge;
+    const maxFiles =
+      isUnlimitedFileSizeMB(maxSizeMB) || maxSizeMB > 25
+        ? FILE_LIMITS.maxFilesPerMergePro
+        : FILE_LIMITS.maxFilesPerMerge;
 
     const usageResult = await checkUsageLimit(userId, ipHash, "merge-pdf");
     if (!usageResult.allowed) {

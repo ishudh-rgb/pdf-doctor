@@ -8,7 +8,7 @@ export default function PptToPdfPage() {
       title="PowerPoint to PDF"
       description="Convert PowerPoint to professional landscape PDF with tables, images, and slide layout preserved"
       accept=".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-      uploadHint="Select a .pptx file — each slide exports as a polished 16:9 PDF page"
+      uploadHint="Select a .ppt or .pptx file — each slide exports as a polished 16:9 PDF page"
       processLabel="Convert to PDF"
       processingLabel="Converting to PDF..."
       successTitle="PDF ready!"

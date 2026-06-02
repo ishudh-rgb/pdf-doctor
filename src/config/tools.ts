@@ -7,7 +7,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       "Merge multiple PDF files into a single document online for free. Drag and drop to reorder pages. No signup required. Fast, secure, and easy to use.",
     h1: "Merge PDF Files Online — Free & Fast",
     seoContent:
-      "Combine two or more PDF files into a single document in seconds. PDF Doctor's Merge PDF tool lets you drag and drop multiple files, reorder pages as needed, and download a perfectly combined PDF — all from your browser. No software to install, no registration required. Whether you're merging reports, contracts, or study notes, our tool handles files up to 25 MB for free users and 200 MB for Pro users with zero quality loss.",
+      "Combine two or more PDF files into a single document in seconds. PDF Doctor's Merge PDF tool lets you drag and drop multiple files, reorder pages as needed, and download a perfectly combined PDF — all from your browser. No software to install, no registration required. Whether you're merging reports, contracts, or study notes, our tool accepts files of any size with zero quality loss.",
     faqs: [
       {
         question: "How do I merge PDF files?",
@@ -79,7 +79,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "What is the maximum file size I can compress?",
         answer:
-          "Free users can compress PDFs up to 25 MB, while Pro users can handle files up to 200 MB.",
+          "There is no file size limit — compress PDFs of any size.",
       },
     ],
   },
@@ -110,7 +110,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "Is there a page limit for conversion?",
         answer:
-          "There's no specific page limit, but the file must be within the size limits — 25 MB for free users and 200 MB for Pro users.",
+          "There is no specific page limit and no file size limit.",
       },
     ],
   },
@@ -136,7 +136,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "Is there a file size limit?",
         answer:
-          "Free users can convert files up to 25 MB, while Pro users can convert files up to 200 MB.",
+          "There is no file size limit — convert PDFs of any size.",
       },
     ],
   },
@@ -428,7 +428,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       },
       {
         question: "How many slides can I convert?",
-        answer: "There is no slide count limit within the file size limits — 25 MB for free users and 200 MB for Pro users.",
+        answer: "There is no slide count limit and no file size limit.",
       },
     ],
   },

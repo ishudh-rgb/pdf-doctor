@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   experimental: {
-    proxyClientMaxBodySize: "250mb",
+    proxyClientMaxBodySize: "2gb",
   },
   images: {
     remotePatterns: [

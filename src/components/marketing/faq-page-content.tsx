@@ -28,7 +28,7 @@ const faqData: FaqCategory[] = [
       {
         question: "Is PDF Doctor free to use?",
         answer:
-          "Yes! PDF Doctor offers a generous free tier with 5 tool uses per day and support for files up to 25 MB. For power users who need more, our Pro plan offers 100 daily uses, 200 MB file size limits, AI tools, and more.",
+          "Yes! PDF Doctor offers a generous free tier with 5 tool uses per day and no file size limit. For power users who need more, our Pro plan offers 100 daily uses, AI tools, priority processing, and more.",
       },
       {
         question: "Do I need to create an account?",
@@ -53,7 +53,7 @@ const faqData: FaqCategory[] = [
       {
         question: "What is the maximum file size I can upload?",
         answer:
-          "Free users can upload files up to 25 MB per file. Pro users enjoy an increased limit of 200 MB per file, making it suitable for large documents, presentations, and scanned PDFs.",
+          "There is no file size limit — upload PDFs and documents of any size on every tool.",
       },
       {
         question: "How accurate is PDF to Word conversion?",
@@ -103,7 +103,7 @@ const faqData: FaqCategory[] = [
       {
         question: "What is included in the Pro plan?",
         answer:
-          "The Pro plan includes 100 tool uses per day, 200 MB file size limit, all tools including Edit PDF, Sign PDF, and AI Summarizer, priority processing, no ads, and priority email support.",
+          "The Pro plan includes 100 tool uses per day, no file size limit, all tools including Edit PDF, Sign PDF, and AI Summarizer, priority processing, no ads, and priority email support.",
       },
       {
         question: "How do I upgrade to Pro?",

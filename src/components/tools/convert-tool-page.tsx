@@ -35,6 +35,10 @@ interface ConvertToolPageProps {
   extraFields?: ReactNode;
   buildFormData?: (file: File, formData: FormData) => FormData;
   showOutputSize?: boolean;
+  /** Client fetch timeout in ms (default 120s). */
+  fetchTimeoutMs?: number;
+  /** Cap for fake progress bar while waiting on server (default 92). */
+  progressCap?: number;
 }
 
 export function ConvertToolPage({
@@ -53,6 +57,8 @@ export function ConvertToolPage({
   extraFields,
   buildFormData,
   showOutputSize = false,
+  fetchTimeoutMs = 120_000,
+  progressCap = 92,
 }: ConvertToolPageProps) {
   const [file, setFile] = useState<File | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -103,11 +109,14 @@ export function ConvertToolPage({
     stopProgressTimer();
     progressTimerRef.current = setInterval(() => {
       setProgress((current) => {
-        if (current >= 92) return current;
+        if (current >= progressCap) return current;
         const step = current < 40 ? 4 : current < 75 ? 2 : 1;
-        return Math.min(92, current + step);
+        return Math.min(progressCap, current + step);
       });
     }, 450);
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), fetchTimeoutMs);
 
     try {
       let formData = new FormData();
@@ -116,7 +125,11 @@ export function ConvertToolPage({
         formData = buildFormData(file, formData);
       }
 
-      const res = await fetch(apiPath, { method: "POST", body: formData });
+      const res = await fetch(apiPath, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Processing failed. Please try again.");
@@ -131,13 +144,16 @@ export function ConvertToolPage({
       setCompleted(true);
     } catch (err) {
       const message =
-        err instanceof TypeError && /failed to fetch/i.test(err.message)
-          ? "Server not reachable. Make sure `npm run dev` is running, wait ~30s for conversion, then retry."
-          : err instanceof Error
-            ? err.message
-            : "An unexpected error occurred.";
+        err instanceof DOMException && err.name === "AbortError"
+          ? "Conversion timed out. Large spreadsheets can take 2–3 minutes — please try again."
+          : err instanceof TypeError && /failed to fetch/i.test(err.message)
+            ? "Server not reachable. Make sure `npm run dev` is running, wait for conversion, then retry."
+            : err instanceof Error
+              ? err.message
+              : "An unexpected error occurred.";
       setError(message);
     } finally {
+      window.clearTimeout(timeoutId);
       stopProgressTimer();
       setProcessing(false);
     }

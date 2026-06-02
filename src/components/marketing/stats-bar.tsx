@@ -8,7 +8,7 @@ export function StatsBar() {
   const stats = [
     { value: "12+", label: t("landing.statTools") },
     { value: "2 hrs", label: t("landing.statDelete") },
-    { value: "25 MB", label: t("landing.statLimit") },
+    { value: "∞", label: t("landing.statLimit") },
     { value: "100%", label: t("landing.statBrowser") },
   ];
 

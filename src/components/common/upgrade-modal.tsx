@@ -12,7 +12,7 @@ interface UpgradeModalProps {
 
 const freeFeatures = [
   { text: "2 files per day", included: true },
-  { text: "Max 15MB file size", included: true },
+  { text: "No file size limit", included: true },
   { text: "Basic tools only", included: true },
   { text: "Ads shown", included: false },
   { text: "No AI tools", included: false },
@@ -21,7 +21,7 @@ const freeFeatures = [
 
 const proFeatures = [
   { text: "Unlimited files", included: true },
-  { text: "Max 100MB file size", included: true },
+  { text: "No file size limit", included: true },
   { text: "All tools unlocked", included: true },
   { text: "Ad-free experience", included: true },
   { text: "AI PDF tools", included: true },

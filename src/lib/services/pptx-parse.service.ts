@@ -1,4 +1,7 @@
 import JSZip from "jszip";
+import { convertEmfToPngDataUrl } from "@/lib/services/emf-to-png.service";
+import { parseLegacyPptRich } from "@/lib/services/legacy-ppt-parse.service";
+import { tryConvertLegacyPptToPptx } from "@/lib/services/powerpoint-pptx-convert.service";
 
 const EMU_PER_INCH = 914400;
 
@@ -21,12 +24,24 @@ export interface ParsedImage {
   h: number;
 }
 
+export interface ParsedTableCell {
+  text: string;
+  background?: string;
+  color?: string;
+  bold?: boolean;
+}
+
+export interface ParsedStyledTable {
+  rows: ParsedTableCell[][];
+}
+
 export interface ParsedSlide {
   index: number;
   title: string;
   subtitle?: string;
   textBlocks: ParsedTextBlock[];
   tables: string[][][];
+  styledTables: ParsedStyledTable[];
   images: ParsedImage[];
 }
 
@@ -114,38 +129,99 @@ function extractTextBlocks(txBodyXml: string, position: { x: number; y: number; 
   return blocks;
 }
 
-function extractTables(xml: string): string[][][] {
-  const tables: string[][][] = [];
+function parseCellFill(cellXml: string): string | undefined {
+  const tcPr = cellXml.match(/<a:tcPr[\s\S]*?<\/a:tcPr>/)?.[0];
+  if (!tcPr) return undefined;
+
+  const withoutBorders = tcPr
+    .replace(/<a:ln[A-Z][\s\S]*?<\/a:ln[A-Z]>/g, "")
+    .replace(/<a:ln[A-Z][^/]*\/>/g, "");
+
+  const rgb = withoutBorders.match(/<a:solidFill>\s*<a:srgbClr val="([0-9A-Fa-f]{6})"/);
+  if (rgb) return `#${rgb[1]}`;
+
+  const theme = withoutBorders.match(/<a:solidFill>\s*<a:schemeClr val="([^"]+)"/);
+  if (theme) {
+    const map: Record<string, string> = {
+      bg1: "#FFFFFF",
+      bg2: "#E6E6E6",
+      tx1: "#000000",
+      accent1: "#4472C4",
+    };
+    return map[theme[1]];
+  }
+
+  return undefined;
+}
+
+function normalizeTableRows(rows: ParsedTableCell[][]): ParsedTableCell[][] {
+  if (rows.length <= 5) return rows;
+
+  const trailing = rows.slice(5);
+  if (trailing.every((row) => row.every((cell) => !cell.text.trim()))) {
+    return rows.slice(0, 5);
+  }
+
+  return rows;
+}
+
+function parseCellText(cellXml: string): { text: string; bold: boolean; color?: string } {
+  const txBody = cellXml.match(/<a:txBody>([\s\S]*?)<\/a:txBody>/);
+  if (!txBody) return { text: "", bold: false };
+
+  let text = "";
+  let bold = false;
+  let color: string | undefined;
+
+  for (const run of txBody[1].matchAll(/<a:r[\s\S]*?<\/a:r>/g)) {
+    const rPr = run[0];
+    if (/b="1"/.test(rPr)) bold = true;
+    color = parseColor(rPr);
+    const textMatch = rPr.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/);
+    if (textMatch) text += decodeXml(textMatch[1]);
+  }
+
+  return {
+    text: text.replace(/\s+/g, " ").trim(),
+    bold,
+    color,
+  };
+}
+
+function extractStyledTables(xml: string): ParsedStyledTable[] {
+  const tables: ParsedStyledTable[] = [];
 
   for (const tableMatch of xml.matchAll(/<a:tbl>([\s\S]*?)<\/a:tbl>/g)) {
-    const rows: string[][] = [];
+    const rows: ParsedTableCell[][] = [];
 
     for (const rowMatch of tableMatch[1].matchAll(/<a:tr[\s\S]*?<\/a:tr>/g)) {
-      const cells: string[] = [];
+      const cells: ParsedTableCell[] = [];
 
       for (const cellMatch of rowMatch[0].matchAll(/<a:tc[\s\S]*?<\/a:tc>/g)) {
-        const txBody = cellMatch[0].match(/<a:txBody>([\s\S]*?)<\/a:txBody>/);
-        if (!txBody) {
-          cells.push("");
-          continue;
-        }
-
-        const cellText = [...txBody[1].matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)]
-          .map((match) => decodeXml(match[1]))
-          .join(" ")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        cells.push(cellText);
+        const cellXml = cellMatch[0];
+        const { text, bold, color } = parseCellText(cellXml);
+        cells.push({
+          text,
+          bold,
+          color,
+          background: parseCellFill(cellXml),
+        });
       }
 
-      if (cells.some(Boolean)) rows.push(cells);
+      if (cells.some((cell) => cell.text)) rows.push(cells);
+      else if (cells.length > 0) rows.push(cells);
     }
 
-    if (rows.length > 0) tables.push(rows);
+    if (rows.length > 0) tables.push({ rows: normalizeTableRows(rows) });
   }
 
   return tables;
+}
+
+function extractTables(xml: string): string[][][] {
+  return extractStyledTables(xml).map((table) =>
+    table.rows.map((row) => row.map((cell) => cell.text))
+  );
 }
 
 function slideNumber(path: string): number {
@@ -172,13 +248,18 @@ async function loadRelationships(zip: JSZip, slidePath: string): Promise<Map<str
   return map;
 }
 
-async function imageToDataUrl(zip: JSZip, path: string): Promise<string | null> {
-  const normalized = path.replace(/\\/g, "/");
+async function imageToDataUrl(zip: JSZip, mediaPath: string): Promise<string | null> {
+  const normalized = mediaPath.replace(/\\/g, "/");
   const file = zip.file(normalized) ?? zip.file(normalized.replace(/^\//, ""));
   if (!file) return null;
 
   const buffer = await file.async("nodebuffer");
   const ext = normalized.split(".").pop()?.toLowerCase();
+
+  if (ext === "emf" || ext === "wmf") {
+    return await convertEmfToPngDataUrl(buffer);
+  }
+
   const mime =
     ext === "jpg" || ext === "jpeg"
       ? "image/jpeg"
@@ -196,10 +277,11 @@ function pickTitleAndSubtitle(blocks: ParsedTextBlock[]): { title: string; subti
     return { title: "Slide" };
   }
 
-  const sorted = [...blocks].sort((a, b) => a.y - b.y || b.fontSize - a.fontSize);
+  const sorted = [...blocks].sort((a, b) => a.y - b.y || a.fontSize - b.fontSize);
   const titleCandidate =
-    sorted.find((block) => block.bold && block.fontSize >= 14) ??
-    sorted.find((block) => block.fontSize >= 14) ??
+    sorted.find((block) => block.y < 1.2 && block.text.length <= 120) ??
+    sorted.find((block) => block.bold && block.fontSize >= 14 && block.text.length <= 120) ??
+    sorted.find((block) => block.fontSize >= 14 && block.text.length <= 120) ??
     sorted[0];
 
   const subtitleCandidate = sorted.find(
@@ -229,9 +311,17 @@ async function parseSlideXml(
     const txBody = shapeMatch[0].match(/<p:txBody>([\s\S]*?)<\/p:txBody>/);
     if (!txBody) continue;
 
+    const isTitle = /<p:ph type="title"/.test(shapeMatch[0]);
     const spPr = shapeMatch[0].match(/<p:spPr>([\s\S]*?)<\/p:spPr>/);
     const position = parseTransform(spPr?.[1] ?? shapeMatch[0]);
-    textBlocks.push(...extractTextBlocks(txBody[1], position));
+    const blocks = extractTextBlocks(txBody[1], position);
+    if (isTitle) {
+      for (const block of blocks) {
+        block.bold = true;
+        if (block.fontSize < 24) block.fontSize = 36;
+      }
+    }
+    textBlocks.push(...blocks);
   }
 
   for (const picMatch of xml.matchAll(/<p:pic\b[\s\S]*?<\/p:pic>/g)) {
@@ -249,7 +339,10 @@ async function parseSlideXml(
     images.push({ dataUrl, ...position });
   }
 
-  const tables = extractTables(xml);
+  const styledTables = extractStyledTables(xml);
+  const tables = styledTables.map((table) =>
+    table.rows.map((row) => row.map((cell) => cell.text))
+  );
   const { title, subtitle } = pickTitleAndSubtitle(textBlocks);
 
   return {
@@ -258,6 +351,7 @@ async function parseSlideXml(
     subtitle,
     textBlocks,
     tables,
+    styledTables,
     images,
   };
 }
@@ -280,6 +374,58 @@ export async function parsePptx(fileBuffer: Buffer): Promise<ParsedSlide[]> {
   }
 
   return slides;
+}
+
+export function isLegacyPptBuffer(fileBuffer: Buffer): boolean {
+  return (
+    fileBuffer.length >= 4 &&
+    fileBuffer[0] === 0xd0 &&
+    fileBuffer[1] === 0xcf &&
+    fileBuffer[2] === 0x11 &&
+    fileBuffer[3] === 0xe0
+  );
+}
+
+export function isPptxBuffer(fileBuffer: Buffer): boolean {
+  return fileBuffer.length >= 2 && fileBuffer[0] === 0x50 && fileBuffer[1] === 0x4b;
+}
+
+export function parseLegacyPpt(fileBuffer: Buffer): ParsedSlide[] {
+  return parseLegacyPptRich(fileBuffer);
+}
+
+export async function parsePresentation(fileBuffer: Buffer): Promise<ParsedSlide[]> {
+  if (isLegacyPptBuffer(fileBuffer)) {
+    const pptxBuffer = await tryConvertLegacyPptToPptx(fileBuffer);
+    if (pptxBuffer) {
+      try {
+        return await parsePptx(pptxBuffer);
+      } catch {
+        // Fall back to legacy text/image extraction below.
+      }
+    }
+    return parseLegacyPpt(fileBuffer);
+  }
+
+  if (!isPptxBuffer(fileBuffer)) {
+    throw new Error(
+      "Unsupported PowerPoint format. Please upload a valid .ppt or .pptx file."
+    );
+  }
+
+  try {
+    return await parsePptx(fileBuffer);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (
+      isLegacyPptBuffer(fileBuffer) ||
+      message.toLowerCase().includes("central directory") ||
+      message.toLowerCase().includes("zip")
+    ) {
+      return parseLegacyPpt(fileBuffer);
+    }
+    throw err;
+  }
 }
 
 export function isLikelyNumericCell(value: string): boolean {

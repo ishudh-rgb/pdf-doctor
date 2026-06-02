@@ -1,10 +1,19 @@
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
+
+const DEFAULT_ADMIN_SETTINGS: Record<string, unknown> = {
+  free_daily_limit: 5,
+  free_daily_ai_limit: 1,
+};
 
 // ---------------------------------------------------------------------------
 // User Profiles
 // ---------------------------------------------------------------------------
 
 export async function getUserProfile(userId: string) {
+  if (!isSupabaseConfigured()) {
+    return { id: userId, plan: "free" as const };
+  }
+
   const supabase = await createServiceClient();
   const { data, error } = await supabase
     .from("user_profiles")
@@ -186,6 +195,8 @@ export async function logUsage(data: {
   processing_time_ms?: number | null;
   status: "success" | "failed";
 }) {
+  if (!isSupabaseConfigured()) return;
+
   const supabase = await createServiceClient();
   const { error } = await supabase.from("usage_logs").insert({
     user_id: data.user_id ?? null,
@@ -225,6 +236,8 @@ export async function logAIUsage(data: {
 }
 
 export async function getUserDailyUsage(userId: string, toolName?: string) {
+  if (!isSupabaseConfigured()) return 0;
+
   const supabase = await createServiceClient();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -246,6 +259,8 @@ export async function getUserDailyUsage(userId: string, toolName?: string) {
 }
 
 export async function getGuestDailyUsage(ipHash: string) {
+  if (!isSupabaseConfigured()) return 0;
+
   const supabase = await createServiceClient();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -266,6 +281,10 @@ export async function getGuestDailyUsage(ipHash: string) {
 // ---------------------------------------------------------------------------
 
 export async function getAdminSettings() {
+  if (!isSupabaseConfigured()) {
+    return { ...DEFAULT_ADMIN_SETTINGS };
+  }
+
   const supabase = await createServiceClient();
   const { data, error } = await supabase.from("admin_settings").select("*");
 
@@ -504,6 +523,11 @@ export async function logError(data: {
   stack_trace?: string | null;
   metadata?: Record<string, unknown>;
 }) {
+  if (!isSupabaseConfigured()) {
+    console.error("[pdf-doctor]", data.error_type, data.error_message);
+    return;
+  }
+
   try {
     const supabase = await createServiceClient();
     await supabase.from("error_logs").insert({

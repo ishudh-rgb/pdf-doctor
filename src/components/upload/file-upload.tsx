@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils/cn";
 import { Progress } from "@/components/ui/progress";
 import { FileCard, type FileCardFile } from "@/components/upload/file-card";
 import { PrivacyBadge } from "@/components/common/privacy-badge";
+import { UNLIMITED_FILE_SIZE_MB, isUnlimitedFileSizeMB } from "@/config/constants";
 
 type UploadState = "idle" | "dragging" | "uploading" | "uploaded" | "error";
 
@@ -28,7 +29,7 @@ function formatFileSize(bytes: number): string {
 
 export function FileUpload({
   accept = ".pdf",
-  maxSizeMB = 50,
+  maxSizeMB = UNLIMITED_FILE_SIZE_MB,
   multiple = false,
   onFilesSelected,
   uploadProgress,
@@ -40,17 +41,16 @@ export function FileUpload({
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+  const unlimited = isUnlimitedFileSizeMB(maxSizeMB);
+  const maxSizeBytes = unlimited ? Number.MAX_SAFE_INTEGER : maxSizeMB * 1024 * 1024;
 
   function validateAndSetFiles(incoming: File[]) {
     const validFiles: File[] = [];
     const cards: FileCardFile[] = [];
 
     for (const f of incoming) {
-      if (f.size > maxSizeBytes) {
-        setErrorMsg(
-          `"${f.name}" exceeds the ${maxSizeMB}MB limit.`
-        );
+      if (!unlimited && f.size > maxSizeBytes) {
+        setErrorMsg(`"${f.name}" exceeds the ${maxSizeMB}MB limit.`);
         continue;
       }
       validFiles.push(f);
@@ -155,7 +155,7 @@ export function FileUpload({
             or click to select files
           </p>
           <p className="mt-3 text-xs text-gray-400">
-            Max file size: {maxSizeMB}MB
+            {unlimited ? "Any file size accepted" : `Max file size: ${maxSizeMB}MB`}
           </p>
         </div>
       ) : (

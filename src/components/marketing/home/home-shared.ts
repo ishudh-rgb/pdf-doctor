@@ -61,7 +61,7 @@ export const FAQ_KEYS = ["faq1", "faq2", "faq3", "faq4", "faq5", "faq6", "faq7"]
 
 export const FREE_FEATURES = [
   "5 tool uses per day",
-  "Max 25 MB file size",
+  "No file size limit",
   "Basic PDF tools",
   "Standard processing speed",
   "Files deleted after 2 hours",
@@ -69,7 +69,7 @@ export const FREE_FEATURES = [
 
 export const PRO_FEATURES = [
   "100 tool uses per day",
-  "Max 200 MB file size",
+  "No file size limit",
   "All PDF tools including Edit & Sign",
   "AI PDF Summarizer",
   "Priority processing",

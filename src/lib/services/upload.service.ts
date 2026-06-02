@@ -18,6 +18,8 @@ export interface FileValidation {
   message: string;
 }
 
+import { isUnlimitedFileSizeMB } from "@/config/constants";
+
 export function validateFile(
   file: { name: string; size: number; type: string },
   maxSizeMB: number,
@@ -27,8 +29,10 @@ export function validateFile(
     return { valid: false, message: "File is empty." };
   }
 
-  const maxBytes = maxSizeMB * 1024 * 1024;
-  if (file.size > maxBytes) {
+  if (
+    !isUnlimitedFileSizeMB(maxSizeMB) &&
+    file.size > maxSizeMB * 1024 * 1024
+  ) {
     return {
       valid: false,
       message: `File size exceeds the maximum allowed size of ${maxSizeMB} MB.`,

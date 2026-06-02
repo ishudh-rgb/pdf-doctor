@@ -87,25 +87,47 @@ export default function ProtectPdfPage() {
     setProcessing(true);
     setError(null);
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 120_000);
+
     try {
       const formData = new FormData();
       formData.append('file', files[0]);
       formData.append('password', password);
 
-      const res = await fetch('/api/tools/protect-pdf', { method: 'POST', body: formData });
+      const res = await fetch('/api/tools/protect-pdf', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to protect PDF.');
+        const apiMessage = typeof err?.error === 'string' ? err.error : '';
+        throw new Error(apiMessage || `Failed to protect PDF (${res.status}).`);
+      }
+
+      const contentType = res.headers.get('content-type') ?? '';
+      if (!contentType.includes('application/pdf')) {
+        throw new Error('Server did not return a PDF file. Please try again.');
       }
 
       const blob = await res.blob();
+      if (blob.size === 0) {
+        throw new Error('Protected PDF is empty. Please try again.');
+      }
+
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
-      setResultFilename(files[0].name.replace('.pdf', '-protected.pdf'));
+      setResultFilename(files[0].name.replace(/\.pdf$/i, '-protected.pdf'));
       setCompleted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        setError('Protection timed out after 2 minutes. Try a smaller PDF or refresh and retry.');
+      } else {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      }
     } finally {
+      window.clearTimeout(timeoutId);
       setProcessing(false);
     }
   };

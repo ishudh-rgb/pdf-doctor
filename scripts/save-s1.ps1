@@ -55,9 +55,11 @@ git add -A
 $status = git status --porcelain
 if ($status) {
   $msg = @"
-S1: Full snapshot — website, PDF-to-Word pipeline, CONFIDENTIAL watermarks, Theme A + Layout B.
+S1: Full snapshot — website, PDF-to-Word, PPT-to-PDF (PowerPoint native), Excel-to-PDF, Theme A + Layout B.
 
 Includes: all pages/tools/APIs, hero images, i18n, convert UI with progress meter,
+PPT-to-PDF via PowerPoint COM slide export + pdf-lib embedding (Smallpdf-level accuracy),
+Excel-to-PDF landscape + zoom fix, legacy .ppt support, EMF chart rendering,
 smallpdf_transform.py + watermark XML templates + logo PNG asset.
 Revert with scripts/revert-to-s1.ps1
 "@

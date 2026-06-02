@@ -5,7 +5,7 @@
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
 | **Commit** | `075c60f` (main code snapshot `7e3dee6`) |
-| **Saved** | 2026-06-01 21:33 — website + PDF-to-Word + CONFIDENTIAL watermarks |
+| **Saved** | 2026-06-02 06:08 — website + PDF-to-Word + CONFIDENTIAL watermarks + PPT-to-PDF (PowerPoint native) + Excel-to-PDF |
 
 ## Locked design (100% — do not change without unlock)
 
@@ -84,6 +84,32 @@
 | Core Python scripts | `.snapshots/s1/scripts-core/` |
 | Reference DOCX | `.snapshots/s1/reference-merged-test.docx` |
 | Manifest | `.snapshots/s1/MANIFEST.txt` |
+
+## PPT-to-PDF pipeline (100% in git)
+
+| Component | Path |
+|-----------|------|
+| Main service | `src/lib/services/ppt-to-pdf.service.ts` |
+| PPTX parser (text, images, tables, styled tables) | `src/lib/services/pptx-parse.service.ts` |
+| Legacy `.ppt` parser (CFB/binary) | `src/lib/services/legacy-ppt-parse.service.ts` |
+| PowerPoint slide export (COM/VBS) | `src/lib/services/powerpoint-slide-export.service.ts` |
+| PowerPoint `.ppt` → `.pptx` convert | `src/lib/services/powerpoint-pptx-convert.service.ts` |
+| EMF → PNG converter (GDI+) | `src/lib/services/emf-to-png.service.ts` |
+| Slide image → PDF (pdf-lib) | `src/lib/services/html-to-pdf.service.ts` (`renderSlideImagesToPdf`) |
+| VBS: slide PNG export | `scripts/ppt-export-slide-images.vbs` |
+| VBS: `.ppt` → `.pptx` save | `scripts/ppt-save-as-pptx.vbs` |
+
+### PPT-to-PDF conversion flow (at S1 save)
+
+1. **Windows + PowerPoint installed** → each slide exported as 2560×1440 PNG via COM → embedded into A4 landscape PDF pages via `pdf-lib` (pixel-perfect, matches Smallpdf)
+2. **LibreOffice fallback** → `libreoffice-convert` if `soffice` available
+3. **HTML fallback** → parse PPTX XML (text blocks, styled tables, images, EMF charts) → Puppeteer render
+
+## Excel-to-PDF improvements (at S1 save)
+
+- Landscape mode, full table per sheet page
+- Trimmed empty rows, merged cells, cell styles, formatted numbers
+- Default zoom 100% via `OpenAction` in PDF
 
 ## NOT in git (restore after revert)
 

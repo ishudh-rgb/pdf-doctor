@@ -6,8 +6,11 @@
     }
   ],
   "functions": {
+    "src/app/api/tools/pdf-to-word/route.ts": {
+      "maxDuration": 300
+    },
     "src/app/api/tools/*/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 120
     },
     "src/app/api/ai/*/route.ts": {
       "maxDuration": 120

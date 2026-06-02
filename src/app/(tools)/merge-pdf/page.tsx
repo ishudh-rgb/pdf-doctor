@@ -14,7 +14,7 @@ const RELATED_TOOLS = [
 ];
 
 const FAQS = [
-  { q: 'Is there a limit to how many PDFs I can merge?', a: 'You can merge up to 20 PDF files at once. Each file can be up to 50MB in size.' },
+  { q: 'Is there a limit to how many PDFs I can merge?', a: 'You can merge up to 20 PDF files at once (50 for Pro). There is no file size limit per file.' },
   { q: 'Will the merged PDF keep the original formatting?', a: 'Yes, merging preserves all formatting, images, links, and bookmarks from the original documents.' },
   { q: 'Can I reorder the files before merging?', a: 'Yes! Drag files in the grid or use the + buttons to add documents in the order you want.' },
   { q: 'Is my data secure?', a: 'All uploaded files are processed securely and automatically deleted from our servers after processing.' },

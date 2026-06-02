@@ -113,9 +113,9 @@ export default function TermsPage() {
                     This is non-negotiable and cannot be extended.
                   </li>
                   <li>
-                    <strong>File Size Limits:</strong> Free users: 25 MB per
-                    file. Pro users: 200 MB per file. Files exceeding these
-                    limits will be rejected.
+                    <strong>File Size:</strong> There is no file size limit.
+                    All tools accept PDFs and documents of any size, subject to
+                    your device and network capabilities.
                   </li>
                   <li>
                     <strong>Daily Limits:</strong> Free users: 5 tool uses per

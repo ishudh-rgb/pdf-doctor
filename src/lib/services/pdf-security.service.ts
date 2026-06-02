@@ -1,32 +1,38 @@
-import fs from "fs/promises";
-import os from "os";
-import path from "path";
-import { randomUUID } from "crypto";
-import muhammara, { Recipe } from "muhammara";
-import { logError } from "@/lib/db/queries";
+import { encryptPDF } from "@pdfsmaller/pdf-encrypt";
+import { decryptPDF } from "@pdfsmaller/pdf-decrypt";
 
 export interface PDFEncryptionAdapter {
   encrypt(fileBuffer: Buffer, password: string): Promise<Buffer>;
   decrypt(fileBuffer: Buffer, password: string): Promise<Buffer>;
 }
 
-async function withTempPdfFiles<T>(
-  inputBuffer: Buffer,
-  fn: (inputPath: string, outputPath: string) => Promise<T>
-): Promise<T> {
-  const id = randomUUID();
-  const inputPath = path.join(os.tmpdir(), `pdf-doctor-in-${id}.pdf`);
-  const outputPath = path.join(os.tmpdir(), `pdf-doctor-out-${id}.pdf`);
-
-  await fs.writeFile(inputPath, inputBuffer);
-
+async function isPdfEncrypted(fileBuffer: Buffer): Promise<boolean> {
   try {
-    return await fn(inputPath, outputPath);
-  } finally {
-    await fs.unlink(inputPath).catch(() => {});
-    await fs.unlink(outputPath).catch(() => {});
-    await fs.unlink(`${outputPath}.tmp.pdf`).catch(() => {});
+    const { PDFDocument } = await import("pdf-lib");
+    await PDFDocument.load(fileBuffer);
+    return false;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
+    return (
+      msg.includes("encrypt") ||
+      msg.includes("password") ||
+      msg.includes("decrypt")
+    );
   }
+}
+
+function friendlyProtectError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const lower = raw.toLowerCase();
+
+  if (lower.includes("already") && lower.includes("encrypt")) {
+    return "This PDF is already password protected. Unlock it first, then add a new password.";
+  }
+  if (lower.includes("invalid") && lower.includes("pdf")) {
+    return "This file does not look like a valid PDF. Try re-saving or re-scanning it.";
+  }
+
+  return raw || "Unknown encryption error";
 }
 
 export async function protectPDF(
@@ -38,31 +44,28 @@ export async function protectPDF(
     throw new Error("Password is required to protect a PDF.");
   }
 
+  if (await isPdfEncrypted(fileBuffer)) {
+    throw new Error(
+      "This PDF is already password protected. Use Unlock PDF first, then protect again."
+    );
+  }
+
   try {
     if (adapter) {
       return adapter.encrypt(fileBuffer, password);
     }
 
-    return await withTempPdfFiles(fileBuffer, async (inputPath, outputPath) => {
-      const pdfDoc = new Recipe(inputPath, outputPath);
-      pdfDoc.encrypt({
-        userPassword: password,
-        ownerPassword: password,
-        userProtectionFlag: 4,
-      });
-      pdfDoc.endPDF();
-      return fs.readFile(outputPath);
+    const encrypted = await encryptPDF(fileBuffer, password, {
+      ownerPassword: password,
+      algorithm: "AES-256",
+      allowPrinting: true,
+      allowCopying: true,
+      allowModifying: true,
     });
+
+    return Buffer.from(encrypted);
   } catch (err) {
-    await logError({
-      tool_name: "protect-pdf",
-      error_type: "PROTECT_FAILED",
-      error_message: err instanceof Error ? err.message : String(err),
-      stack_trace: err instanceof Error ? err.stack : undefined,
-    });
-    throw new Error(
-      `Failed to protect PDF: ${err instanceof Error ? err.message : "Unknown error"}`
-    );
+    throw new Error(`Failed to protect PDF: ${friendlyProtectError(err)}`);
   }
 }
 
@@ -80,31 +83,21 @@ export async function unlockPDF(
       return adapter.decrypt(fileBuffer, password);
     }
 
-    return await withTempPdfFiles(fileBuffer, async (inputPath, outputPath) => {
-      muhammara.recrypt(inputPath, outputPath, {
-        password,
-        userPassword: "",
-        ownerPassword: "",
-      });
-      return fs.readFile(outputPath);
-    });
+    const decrypted = await decryptPDF(fileBuffer, password);
+    return Buffer.from(decrypted);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const lower = message.toLowerCase();
 
     if (
-      message.toLowerCase().includes("password") ||
-      message.toLowerCase().includes("encrypted") ||
-      message.toLowerCase().includes("decrypt")
+      lower.includes("password") ||
+      lower.includes("incorrect") ||
+      lower.includes("decrypt") ||
+      lower.includes("invalid")
     ) {
       throw new Error("Incorrect password. Please try again.");
     }
 
-    await logError({
-      tool_name: "unlock-pdf",
-      error_type: "UNLOCK_FAILED",
-      error_message: message,
-      stack_trace: err instanceof Error ? err.stack : undefined,
-    });
     throw new Error(`Failed to unlock PDF: ${message}`);
   }
 }

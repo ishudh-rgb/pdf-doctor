@@ -8,7 +8,7 @@ const TTL_MS = 30 * 60 * 1000;
 type PdfSession = {
   filePath: string;
   expires: number;
-  thumbCache: Map<number, string>;
+  thumbCache: Map<string, string>;
 };
 
 type SessionGlobal = {
@@ -61,12 +61,12 @@ export async function getPdfSessionBuffer(id: string): Promise<Buffer | null> {
   }
 }
 
-export function cacheThumb(sessionId: string, page: number, dataUrl: string) {
+export function cacheThumb(sessionId: string, cacheKey: string, dataUrl: string) {
   const session = sessions.get(sessionId);
   if (!session) return;
-  session.thumbCache.set(page, dataUrl);
+  session.thumbCache.set(cacheKey, dataUrl);
 }
 
-export function getCachedThumb(sessionId: string, page: number): string | undefined {
-  return sessions.get(sessionId)?.thumbCache.get(page);
+export function getCachedThumb(sessionId: string, cacheKey: string): string | undefined {
+  return sessions.get(sessionId)?.thumbCache.get(cacheKey);
 }

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Upload too large or invalid. Try fewer images or smaller file sizes (max 25MB per image).",
+            "Upload too large or invalid. Try fewer images or check your connection.",
         },
         { status: 413 }
       );

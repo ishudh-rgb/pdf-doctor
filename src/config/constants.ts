@@ -5,9 +5,35 @@ export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000
 export const APP_DESCRIPTION =
   "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs. No signup required for basic tools.";
 
+/** 0 means no upload size cap (all tools accept any file size). */
+export const UNLIMITED_FILE_SIZE_MB = 0;
+
+function parseFileSizeLimitMb(
+  value: string | undefined,
+  fallback: number
+): number {
+  if (value === undefined || value.trim() === "") return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+export function isUnlimitedFileSizeMB(maxSizeMB: number): boolean {
+  return maxSizeMB <= 0;
+}
+
+export function getMaxFileSizeMB(isPro: boolean): number {
+  return isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+}
+
 export const FILE_LIMITS = {
-  maxFreeFileSizeMB: Number(process.env.MAX_FREE_FILE_SIZE_MB) || 25,
-  maxProFileSizeMB: Number(process.env.MAX_PRO_FILE_SIZE_MB) || 200,
+  maxFreeFileSizeMB: parseFileSizeLimitMb(
+    process.env.MAX_FREE_FILE_SIZE_MB,
+    UNLIMITED_FILE_SIZE_MB
+  ),
+  maxProFileSizeMB: parseFileSizeLimitMb(
+    process.env.MAX_PRO_FILE_SIZE_MB,
+    UNLIMITED_FILE_SIZE_MB
+  ),
   fileRetentionHours: Number(process.env.FILE_RETENTION_HOURS) || 2,
   maxFreeUsesPerDay: 5,
   maxProUsesPerDay: 100,
@@ -328,7 +354,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     currency: "INR",
     features: [
       "5 tool uses per day",
-      "Max 25 MB file size",
+      "No file size limit",
       "Basic PDF tools",
       "Standard processing speed",
       "Files deleted after 2 hours",
@@ -345,7 +371,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     currency: "INR",
     features: [
       "100 tool uses per day",
-      "Max 200 MB file size",
+      "No file size limit",
       "All PDF tools including Edit & Sign",
       "AI PDF Summarizer",
       "Priority processing speed",

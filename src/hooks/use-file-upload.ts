@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { UNLIMITED_FILE_SIZE_MB, isUnlimitedFileSizeMB } from "@/config/constants";
 
 interface UploadedFile {
   id: string;
@@ -22,7 +23,7 @@ interface UseFileUploadOptions {
 export function useFileUpload(options: UseFileUploadOptions = {}) {
   const {
     maxFiles = 10,
-    maxSizeMB = 25,
+    maxSizeMB = UNLIMITED_FILE_SIZE_MB,
     acceptedTypes = ["application/pdf"],
     onFilesChange,
   } = options;
@@ -40,7 +41,10 @@ export function useFileUpload(options: UseFileUploadOptions = {}) {
           break;
         }
 
-        if (file.size > maxSizeMB * 1024 * 1024) {
+        if (
+          !isUnlimitedFileSizeMB(maxSizeMB) &&
+          file.size > maxSizeMB * 1024 * 1024
+        ) {
           validFiles.push({
             id: crypto.randomUUID(),
             file,

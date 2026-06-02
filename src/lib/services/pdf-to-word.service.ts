@@ -12,8 +12,8 @@ import { pdfToWordNode } from "@/lib/services/pdf-to-word-node.service";
 export type PdfToWordEngine = "convertapi" | "pdf2docx" | "node";
 
 function estimateTimeoutMs(fileBuffer: Buffer): number {
-  const pageCountEstimate = Math.max(1, Math.ceil(fileBuffer.length / 50_000));
-  return Math.min(300_000, 45_000 + pageCountEstimate * 10_000);
+  const sizeMb = fileBuffer.length / (1024 * 1024);
+  return Math.min(900_000, 90_000 + Math.ceil(sizeMb) * 20_000);
 }
 
 /**

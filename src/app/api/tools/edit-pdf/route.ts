@@ -1,30 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addTextToPDF, addImageToPDF } from "@/lib/services/pdf-edit.service";
-import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, logError } from "@/lib/db/queries";
+import { applyEditPdfOperations, type EditPdfOperations } from "@/lib/services/pdf-edit.service";
+import { checkUsageLimit } from "@/lib/services/usage-limit.service";
+import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
-export const maxDuration = 60;
-
-interface TextOperation {
-  text: string;
-  x: number;
-  y: number;
-  page: number;
-  fontSize?: number;
-  color?: string;
-}
-
-interface ImageOperation {
-  imageIndex: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  page: number;
-}
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -35,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id ?? null;
 
-    const isPro = user ? await checkFileSizeLimit(user.id) : false;
+    const isPro = user ? (await getUserProfile(user.id)).plan === "pro" : false;
     const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
 
     await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
@@ -62,44 +44,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (!operationsJson) {
-      return NextResponse.json(
-        { error: "Operations JSON is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Operations JSON is required" }, { status: 400 });
     }
 
-    let operations: { texts?: TextOperation[]; images?: ImageOperation[] };
+    let operations: EditPdfOperations;
     try {
       operations = JSON.parse(operationsJson);
     } catch {
       return NextResponse.json({ error: "Invalid operations JSON" }, { status: 400 });
     }
 
-    let pdfBuffer: Buffer = Buffer.from(await file.arrayBuffer()) as Buffer;
+    const imageBuffers = await Promise.all(
+      images.map(async (img) => Buffer.from(await img.arrayBuffer()))
+    );
 
-    if (operations.texts && operations.texts.length > 0) {
-      pdfBuffer = await addTextToPDF(pdfBuffer, operations.texts);
-    }
-
-    if (operations.images && operations.images.length > 0) {
-      for (const imgOp of operations.images) {
-        if (imgOp.imageIndex >= images.length) {
-          return NextResponse.json(
-            { error: `Image at index ${imgOp.imageIndex} not found` },
-            { status: 400 }
-          );
-        }
-
-        const imageBuffer: Buffer = Buffer.from(await images[imgOp.imageIndex].arrayBuffer()) as Buffer;
-        pdfBuffer = await addImageToPDF(pdfBuffer, imageBuffer, {
-          x: imgOp.x,
-          y: imgOp.y,
-          width: imgOp.width,
-          height: imgOp.height,
-          page: imgOp.page,
-        });
-      }
-    }
+    let pdfBuffer = Buffer.from(await file.arrayBuffer());
+    pdfBuffer = await applyEditPdfOperations(pdfBuffer, operations, imageBuffers);
 
     const processingTime = Date.now() - startTime;
     await logToolUsage({
