@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
 interface ToolRouteOptions {
@@ -81,7 +81,7 @@ export function createToolRoute(options: ToolRouteOptions) {
         status: 200,
         headers: {
           "Content-Type": options.contentType,
-          "Content-Disposition": `attachment; filename="${baseName}.${options.outputExtension}"`,
+          "Content-Disposition": `attachment; filename="${sanitizeFilename(baseName)}.${options.outputExtension}"`,
           "Content-Length": String(outputBuffer.length),
         },
       });

@@ -1,4 +1,5 @@
 import { PDFDocument, PageSizes } from "pdf-lib";
+import { safePdfLoad } from "@/lib/pdf/pdf-safe-load";
 import { getPdfSessionBuffer } from "@/lib/pdf/pdf-session-store";
 
 export type ComposeSlot =
@@ -7,12 +8,13 @@ export type ComposeSlot =
   | { kind: "imported"; sessionId: string; page: number };
 
 async function loadPdfBuffer(buffer: Buffer) {
-  return PDFDocument.load(buffer, { ignoreEncryption: true });
+  return safePdfLoad(buffer, "compose-pdf");
 }
 
 export async function composePdfFromSlots(
   mainBuffer: Buffer,
-  slots: ComposeSlot[]
+  slots: ComposeSlot[],
+  ownerHash?: string
 ): Promise<Buffer> {
   if (slots.length === 0) {
     throw new Error("No pages to export.");
@@ -36,7 +38,9 @@ export async function composePdfFromSlots(
     }
 
     if (slot.kind === "original") {
-      if (slot.page < 1 || slot.page > mainPdf.getPageCount()) continue;
+      if (slot.page < 1 || slot.page > mainPdf.getPageCount()) {
+        throw new Error(`Page ${slot.page} does not exist in the original PDF (has ${mainPdf.getPageCount()} pages).`);
+      }
       const [page] = await output.copyPages(mainPdf, [slot.page - 1]);
       output.addPage(page);
       continue;
@@ -44,13 +48,17 @@ export async function composePdfFromSlots(
 
     let importedPdf = sessionCache.get(slot.sessionId);
     if (!importedPdf) {
-      const buf = await getPdfSessionBuffer(slot.sessionId);
-      if (!buf) continue;
+      const buf = await getPdfSessionBuffer(slot.sessionId, ownerHash);
+      if (!buf) {
+        throw new Error("An imported PDF session has expired. Please re-upload the file and try again.");
+      }
       importedPdf = await loadPdfBuffer(buf);
       sessionCache.set(slot.sessionId, importedPdf);
     }
 
-    if (slot.page < 1 || slot.page > importedPdf.getPageCount()) continue;
+    if (slot.page < 1 || slot.page > importedPdf.getPageCount()) {
+      throw new Error(`Page ${slot.page} does not exist in the imported PDF (has ${importedPdf.getPageCount()} pages).`);
+    }
     const [page] = await output.copyPages(importedPdf, [slot.page - 1]);
     output.addPage(page);
   }

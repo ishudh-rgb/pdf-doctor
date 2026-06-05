@@ -137,15 +137,20 @@ export async function renderHtmlToPdf(
 
 export async function renderSlideImagesToPdf(slideImages: Buffer[]): Promise<Buffer> {
   const { PDFDocument } = await import("pdf-lib");
+  const sharp = (await import("sharp")).default;
   const pdfDoc = await PDFDocument.create();
 
   const A4_LANDSCAPE_W = 841.89;
   const A4_LANDSCAPE_H = 595.28;
 
   for (const imgBuffer of slideImages) {
-    const pngImage = await pdfDoc.embedPng(imgBuffer);
+    const jpegBuffer = await sharp(imgBuffer)
+      .jpeg({ quality: 85, mozjpeg: true })
+      .toBuffer();
 
-    const imgAspect = pngImage.width / pngImage.height;
+    const jpegImage = await pdfDoc.embedJpg(jpegBuffer);
+
+    const imgAspect = jpegImage.width / jpegImage.height;
     const pageAspect = A4_LANDSCAPE_W / A4_LANDSCAPE_H;
 
     let drawW: number, drawH: number, drawX: number, drawY: number;
@@ -163,7 +168,7 @@ export async function renderSlideImagesToPdf(slideImages: Buffer[]): Promise<Buf
     }
 
     const page = pdfDoc.addPage([A4_LANDSCAPE_W, A4_LANDSCAPE_H]);
-    page.drawImage(pngImage, {
+    page.drawImage(jpegImage, {
       x: drawX,
       y: drawY,
       width: drawW,

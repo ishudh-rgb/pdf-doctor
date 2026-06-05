@@ -21,6 +21,7 @@ import {
   splitAfterFromEveryN,
 } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { ExtractToolbar } from "@/components/tools/split-pdf/extract-toolbar";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
 import { SplitDivider } from "@/components/tools/split-pdf/split-divider";
@@ -63,6 +64,12 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultFilename, setResultFilename] = useState<string | null>(null);
+  const [passwordPrompt, setPasswordPrompt] = useState<{
+    file: File;
+    fileName: string;
+    errorMsg?: string;
+    loading?: boolean;
+  } | null>(null);
   const loadRequestRef = useRef(0);
   const insertFileRef = useRef<HTMLInputElement>(null);
   const insertAfterIndexRef = useRef(0);
@@ -137,6 +144,14 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       })
       .then((result) => {
         if (requestId !== loadRequestRef.current) return;
+        if (result.passwordRequired) {
+          setPasswordPrompt({ file, fileName: file.name });
+          return;
+        }
+        if (result.wrongPassword) {
+          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+          return;
+        }
         if (result.totalPages === 0) {
           setError(result.error ?? "Could not read this PDF. Try another file.");
         } else if (result.error) {
@@ -157,6 +172,33 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         if (requestId === loadRequestRef.current) setLoadingThumbs(false);
       });
   }, [fileKey, file]);
+
+  const retryWithPassword = useCallback((pw: string) => {
+    if (!passwordPrompt) return;
+    const { file } = passwordPrompt;
+    setPasswordPrompt((prev) => prev ? { ...prev, loading: true, errorMsg: undefined } : prev);
+
+    loadPdfThumbnailsBatched(file, (thumbs, total, trunc) => {
+      setThumbnails([...thumbs]);
+      setTotalPages(total);
+      setTruncated(trunc);
+      if (total > 0) {
+        const slots = createOriginalSlots(total);
+        setPageSlots(slots);
+        setSelectedSlotIds(new Set(slots.map((s) => s.id)));
+        setSplitAfter(new Set());
+        setManualSplits(false);
+        setError(null);
+      }
+    }, pw).then((result) => {
+      if (result.wrongPassword) {
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+        return;
+      }
+      setPasswordPrompt(null);
+      if (result.error) setError(result.error);
+    });
+  }, [passwordPrompt]);
 
   useEffect(() => {
     if (manualSplits || tab !== "split" || splitVisibleSlots.length === 0) return;
@@ -513,6 +555,19 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
 
   return (
     <>
+      {passwordPrompt && (
+        <PdfPasswordModal
+          fileName={passwordPrompt.fileName}
+          errorMessage={passwordPrompt.errorMsg}
+          loading={passwordPrompt.loading}
+          onSubmit={retryWithPassword}
+          onCancel={() => {
+            setPasswordPrompt(null);
+            onReset();
+          }}
+        />
+      )}
+
       <input
         ref={insertFileRef}
         type="file"
@@ -528,9 +583,27 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         return (
           <PageZoomModal
             pageNum={idx + 1}
+            totalPages={visibleSlots.length}
             imageUrl={slotThumbUrl(slot, thumbnails)}
             rotation={rotations[slot.id] ?? 0}
+            thumbnails={visibleSlots.map((s) => slotThumbUrl(s, thumbnails) ?? "")}
             onClose={() => setZoomSlotId(null)}
+            onNavigate={(n) => {
+              const target = visibleSlots[n - 1];
+              if (target) setZoomSlotId(target.id);
+            }}
+            onRotateLeft={() => rotateSlot(zoomSlotId, -90)}
+            onRotateRight={() => rotateSlot(zoomSlotId, 90)}
+            onDelete={() => {
+              removeSlot(zoomSlotId);
+              const remaining = visibleSlots.filter((s) => s.id !== zoomSlotId);
+              if (remaining.length === 0) {
+                setZoomSlotId(null);
+                return;
+              }
+              const nextIdx = Math.min(idx, remaining.length - 1);
+              setZoomSlotId(remaining[nextIdx].id);
+            }}
           />
         );
       })()}

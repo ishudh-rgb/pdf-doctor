@@ -16,6 +16,7 @@ import {
   UploadFirstHero,
   WorkflowSection,
 } from "@/components/marketing/home/home-sections";
+import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 
 /** Layout A — Smallpdf-style: tools-first, minimal hero, dense grid */
 export function HomeLayoutA() {
@@ -47,6 +48,7 @@ export function HomeLayoutA() {
       <WorkflowSection />
       <SecuritySection variant="cards" />
       <PricingSection />
+      <TestimonialsSection />
       <FAQSection />
       <CTASection />
     </>

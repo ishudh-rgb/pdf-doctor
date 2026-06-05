@@ -178,12 +178,8 @@ export function ConvertToolPage({
           }}
         >
           {showOutputSize && resultSize !== null ? (
-            <p className="mt-3 text-xs text-pd-muted">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-pd-border bg-pd-background px-3 py-1 font-medium text-pd-foreground">
-                <span className="uppercase tracking-wide text-pd-muted">{outputExtension}</span>
-                <span className="text-pd-border">·</span>
-                <span>{formatFileSize(resultSize)}</span>
-              </span>
+            <p className="mt-2 text-xs text-pd-muted">
+              File size: <span className="font-semibold text-pd-foreground">{formatFileSize(resultSize)}</span>
             </p>
           ) : null}
         </ToolSuccessPanel>

@@ -20,7 +20,10 @@ export async function POST(request: NextRequest) {
     const isPro = user ? (await getUserProfile(user.id)).plan === "pro" : false;
     const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
 
-    await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    const usageResult = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"), "edit-pdf");
+    if (!usageResult.allowed) {
+      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

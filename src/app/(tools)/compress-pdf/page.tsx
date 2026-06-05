@@ -95,7 +95,7 @@ export default function CompressPdfPage() {
     <ToolPageShell
       title="Compress PDF"
       description="Reduce your PDF file size without losing quality"
-      splitWorkspace
+      splitWorkspace={!completed}
       previewPlaceholder="Select a PDF to see estimated compression"
       relatedTools={mapRelatedTools(RELATED_TOOLS)}
       faqs={mapFaqs(FAQS)}

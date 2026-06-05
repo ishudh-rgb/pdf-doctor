@@ -1,38 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  buildOwnerHash,
   cacheThumb,
   getCachedThumb,
   getPdfSessionBuffer,
 } from "@/lib/pdf/pdf-session-store";
 import { renderPageThumb } from "@/lib/pdf/pdf-thumbnails.server";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 function thumbCacheKey(page: number, width: number): string {
-  return width === 140 ? String(page) : `${page}@${width}`;
+  return width === 300 ? String(page) : `${page}@${width}`;
 }
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const ownerHash = buildOwnerHash(user?.id ?? null, request.headers.get("x-forwarded-for"));
+
     const sessionId = request.nextUrl.searchParams.get("session");
     const page = parseInt(request.nextUrl.searchParams.get("page") ?? "0", 10);
     const widthParam = request.nextUrl.searchParams.get("width");
     const desiredWidth = widthParam
-      ? Math.min(1200, Math.max(40, parseInt(widthParam, 10) || 140))
-      : 140;
+      ? Math.min(1200, Math.max(40, parseInt(widthParam, 10) || 300))
+      : 300;
 
     if (!sessionId || page < 1) {
       return NextResponse.json({ error: "Invalid session or page" }, { status: 400 });
     }
 
-    const buffer = await getPdfSessionBuffer(sessionId);
+    const buffer = await getPdfSessionBuffer(sessionId, ownerHash);
     if (!buffer) {
       return NextResponse.json({ error: "Session expired. Re-upload the PDF." }, { status: 410 });
     }
 
     const cacheKey = thumbCacheKey(page, desiredWidth);
-    let dataUrl = getCachedThumb(sessionId, cacheKey);
+    let dataUrl = getCachedThumb(sessionId, cacheKey, ownerHash);
     if (!dataUrl) {
       dataUrl = await renderPageThumb(buffer, page, desiredWidth);
       if (dataUrl) cacheThumb(sessionId, cacheKey, dataUrl);

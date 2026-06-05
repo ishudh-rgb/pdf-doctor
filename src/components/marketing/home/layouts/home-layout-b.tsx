@@ -18,6 +18,7 @@ import {
 } from "@/components/marketing/home/home-sections";
 import { PopularToolsGrid } from "@/components/marketing/popular-tools-grid";
 import { WhyChooseSection } from "@/components/marketing/why-choose-section";
+import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 
 /** Layout B — Stripe-style: split hero, category rows, live preview feel */
 export function HomeLayoutB() {
@@ -63,6 +64,7 @@ export function HomeLayoutB() {
       <AISection split />
       <SecuritySection />
       <PricingSection centered={false} />
+      <TestimonialsSection />
       <FAQSection />
       <CTASection />
     </>

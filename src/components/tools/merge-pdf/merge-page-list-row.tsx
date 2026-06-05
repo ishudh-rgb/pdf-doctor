@@ -46,7 +46,7 @@ export function MergePageListRow({
           <img
             src={thumb}
             alt={`Page ${index + 1}`}
-            className="h-full w-full object-contain object-top"
+            className="h-full w-full object-contain"
             style={{ transform: `rotate(${rotation}deg)` }}
             draggable={false}
           />

@@ -16,10 +16,15 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id ?? null;
 
-    const isPro = user ? await checkFileSizeLimit(user.id) : false;
-    const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+    const sizeResult = userId
+      ? await checkFileSizeLimit(userId)
+      : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
+    const maxSizeMB = sizeResult.maxSizeMB;
 
-    await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    const usageResult = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"), "file-upload");
+    if (!usageResult.allowed) {
+      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -28,7 +33,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
 
-    const validation = validateFile(file, maxSizeMB, []);
+    const ALLOWED_UPLOAD_TYPES = [
+      "application/pdf",
+      "image/jpeg", "image/png", "image/webp", "image/gif",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/html", "text/plain",
+    ];
+    const validation = validateFile(file, maxSizeMB, ALLOWED_UPLOAD_TYPES);
     if (!validation.valid) {
       return NextResponse.json({ error: validation.message }, { status: 400 });
     }

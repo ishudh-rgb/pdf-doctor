@@ -17,10 +17,15 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id ?? null;
 
-    const isPro = user ? await checkFileSizeLimit(user.id) : false;
-    const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+    const sizeResult = userId
+      ? await checkFileSizeLimit(userId)
+      : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
+    const maxSizeMB = sizeResult.maxSizeMB;
 
-    await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    const usageResult = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"), "unlock-pdf");
+    if (!usageResult.allowed) {
+      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

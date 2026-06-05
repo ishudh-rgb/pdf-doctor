@@ -32,13 +32,16 @@ const toolOptions = [
   "pdf-to-word",
   "word-to-pdf",
   "jpg-to-pdf",
-  "edit-pdf",
   "sign-pdf",
   "ai-pdf-summarizer",
   "pdf-scanner",
   "unlock-pdf",
   "protect-pdf",
   "rotate-pdf",
+  "delete-pdf",
+  "extract-pdf",
+  "html-to-pdf",
+  "txt-to-pdf",
 ];
 
 function formatFileSize(bytes: number): string {

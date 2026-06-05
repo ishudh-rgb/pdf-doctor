@@ -27,6 +27,7 @@ import {
   loadPdfThumbnailsBatched,
   pageThumbFromSession,
 } from "@/lib/pdf/pdf-thumbnails.client";
+import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import {
   clickToNorm,
   dimensionsFromAspect,
@@ -97,6 +98,12 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [passwordPrompt, setPasswordPrompt] = useState<{
+    file: File;
+    fileName: string;
+    errorMsg?: string;
+    loading?: boolean;
+  } | null>(null);
   const [showSignModal, setShowSignModal] = useState(false);
   const [activeStroke, setActiveStroke] = useState<DrawStroke | null>(null);
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
@@ -210,6 +217,11 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
 
     loadPdfDocumentPreview(file).then((preview) => {
       if (requestId !== loadRef.current) return;
+      if (preview.passwordRequired) {
+        setPasswordPrompt({ file, fileName: preview.fileName ?? file.name });
+        setLoading(false);
+        return;
+      }
       if (!preview.sessionId || preview.totalPages === 0) {
         setError(preview.error ?? "Could not read this PDF.");
         return;
@@ -225,6 +237,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
       setLoading(false);
     }).then((result) => {
       if (requestId !== loadRef.current) return;
+      if (result.passwordRequired) return;
       if (result.totalPages === 0) setError(result.error ?? "Could not read this PDF.");
       setLoading(false);
     });
@@ -676,6 +689,45 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
       setShowSignModal(false);
     }, "image/png");
   };
+
+  const retryEditWithPassword = useCallback((pw: string) => {
+    if (!passwordPrompt) return;
+    const { file: pFile } = passwordPrompt;
+    setPasswordPrompt((prev) => prev ? { ...prev, loading: true, errorMsg: undefined } : prev);
+
+    loadPdfDocumentPreview(pFile, pw).then((preview) => {
+      if (preview.wrongPassword) {
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: preview.error ?? "Incorrect password.", loading: false } : prev);
+        return;
+      }
+      if (preview.passwordRequired) return;
+      setPasswordPrompt(null);
+      if (!preview.sessionId || preview.totalPages === 0) {
+        setError(preview.error ?? "Could not read this PDF.");
+        return;
+      }
+      setSessionId(preview.sessionId);
+      setTotalPages(preview.totalPages);
+
+      loadPdfThumbnailsBatched(pFile, (thumbs, total) => {
+        setThumbnails(thumbs);
+        if (total > 0) setTotalPages(total);
+        setLoading(false);
+      }, pw);
+    });
+  }, [passwordPrompt]);
+
+  if (passwordPrompt) {
+    return (
+      <PdfPasswordModal
+        fileName={passwordPrompt.fileName}
+        errorMessage={passwordPrompt.errorMsg}
+        loading={passwordPrompt.loading}
+        onSubmit={retryEditWithPassword}
+        onCancel={() => { setPasswordPrompt(null); onReset(); }}
+      />
+    );
+  }
 
   if (completed && resultUrl) {
     return (

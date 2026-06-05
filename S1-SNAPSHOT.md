@@ -4,7 +4,7 @@
 |-------|-------|
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
-| **Saved** | 2026-06-02 23:58 — website + PDF-to-Word + CONFIDENTIAL watermarks + PPT-to-PDF (PowerPoint native) + Excel-to-PDF + PDF-to-PPT (PyMuPDF image-based) + PDF-to-Excel (PyMuPDF table extraction) + **Rotate PDF (pdf-lib, Smallpdf-style UI)** |
+| **Saved** | 2026-06-03 02:03 — website + PDF-to-Word + CONFIDENTIAL watermarks + PPT-to-PDF (PowerPoint native) + Excel-to-PDF + PDF-to-PPT (PyMuPDF image-based) + PDF-to-Excel (PyMuPDF table extraction) + **Rotate PDF** + **Delete PDF Pages** + **Extract PDF Pages** (Smallpdf-style UI, full-screen preview, modern result page) |
 
 ## Locked design (100% — do not change without unlock)
 
@@ -19,12 +19,12 @@
 ## Website (100% in git)
 
 - **Pages:** homepage, all tool pages, auth, dashboard, admin, pricing, legal (privacy, terms, contact, faq)
-- **PDF tools:** merge, split, compress, pdf-to-word, word-to-pdf, jpg-to-pdf, watermark, sign, protect, unlock, scanner, edit, AI summarizer, **rotate-pdf**
+- **PDF tools:** merge, split, compress, pdf-to-word, word-to-pdf, jpg-to-pdf, watermark, sign, protect, unlock, scanner, edit, AI summarizer, **rotate-pdf**, **delete-pdf**, **extract-pdf**
 - **API routes:** tools/*, auth/*, files, payments, admin, cron
 - **Live previews:** watermark, sign, compress, split, jpg-to-pdf, scanner, edit
 - **i18n:** English + Hindi (`src/i18n/en.json`, `src/i18n/hi.json`)
 - **Tool registry:** `src/config/tools.ts`, `src/config/constants.ts`
-- **Mega menu:** Rotate PDF in "Organize PDF" category (`src/components/layout/header.tsx`)
+- **Mega menu:** Rotate PDF, Delete PDF Pages, Extract PDF Pages in "Organize PDF" category (`src/components/layout/header.tsx`)
 
 ## Images & visual content (100% in git)
 
@@ -140,7 +140,7 @@
 5. Works with **any PDF** — 1000-row employee tables, bank statements, invoices
 6. **99.9% match** with Smallpdf for Employee Sample Data (1001 rows × 14 cols)
 
-## Rotate PDF feature (100% in git) — NEW
+## Rotate PDF feature (100% in git)
 
 | Component | Path |
 |-----------|------|
@@ -161,26 +161,80 @@
 7. **Proper rotation output** — pdf-lib `setRotation` with MediaBox/CropBox dimension swap for 90°/270° (no empty space)
 8. **Additive rotation** — reads existing page rotation and adds desired angle (doesn't overwrite)
 
-### Rotate PDF UI design (Smallpdf-style, at S1 save)
+## Delete PDF Pages feature (100% in git) — NEW
 
-- **Page cards:** white background, subtle shadow, A4 aspect ratio (141.4%), `object-contain` with white fill
-- **Rotation preview:** CSS `rotate()` + `scale(1.414)` for 90°/270° to fill cards without empty space
-- **Hover actions:** dark translucent toolbar (zoom, duplicate, delete) top-right; blue circular rotate buttons bottom-center
-- **Selection:** blue ring + light blue fill on selected cards; checkbox top-left
-- **Grid background:** neutral `gray-100`
-- **Toolbar:** white bar with select all, rotate L/R, delete, file info, change file, Export button
-- **File label:** emerald green pill badge below each card
-- **Completed view:** green check → download button → "Rotate another file"
+| Component | Path |
+|-----------|------|
+| Delete service (pdf-lib) | `src/lib/services/pdf-delete.service.ts` |
+| API route | `src/app/api/tools/delete-pdf/route.ts` |
+| Page component | `src/app/(tools)/delete-pdf/page.tsx` |
+| Workspace UI | `src/components/tools/delete-pdf/delete-pdf-workspace.tsx` |
+| Page card (Smallpdf-style) | `src/components/tools/delete-pdf/delete-page-card.tsx` |
 
-### Rotate PDF config (at S1 save)
+### Delete PDF Pages features (at S1 save)
 
-- **Tool registry:** added in `src/config/constants.ts` (TOOLS array + MEGA_MENU_CATEGORIES under "Organize PDF")
-- **SEO metadata:** `src/config/tools.ts` (title, description, h1, FAQs)
+1. **Individual page deletion** — hover trash overlay on any page
+2. **Bulk deletion** — select multiple pages → toolbar delete
+3. **Add documents/blank pages** — click `+` between pages
+4. **Duplicate pages** — hover toolbar → duplicate icon
+5. **No file size limit** — works with any PDF size
+6. **Full-screen page preview** with rotate + delete actions in bottom bar
+
+## Extract PDF Pages feature (100% in git) — NEW
+
+| Component | Path |
+|-----------|------|
+| API route (reuses delete service) | `src/app/api/tools/extract-pdf/route.ts` |
+| Page component | `src/app/(tools)/extract-pdf/page.tsx` |
+| Workspace UI | `src/components/tools/extract-pdf/extract-pdf-workspace.tsx` |
+| Page card (blue selection theme) | `src/components/tools/extract-pdf/extract-page-card.tsx` |
+| Result view (Smallpdf-style) | `src/components/tools/extract-pdf/extract-result-view.tsx` |
+
+### Extract PDF Pages features (at S1 save)
+
+1. **Select & extract** — click pages to select → blue highlight → Extract/Finish
+2. **Rotate right** — per-page rotate button on hover toolbar + rotate in full-screen preview
+3. **Rotation state** — tracked per slot, visually reflected in card thumbnails (CSS rotate + scale)
+4. **Add documents/blank pages** — click `+` between pages
+5. **Duplicate pages** — hover toolbar → duplicate icon
+6. **Remove pages** — hover toolbar → trash icon
+7. **No file size limit** — works with any PDF size
+8. **Modern result page (Smallpdf-style):**
+   - Left: live scrollable high-res page preview (800px width thumbnails, page number badges)
+   - Right sidebar: Done status, filename, file size, page count, full-width Download button
+   - Action icons: Share (Web Share API) + Print
+   - Smart tip (3+ pages): suggests Split and Delete Pages
+   - Continue in: Compress, Merge, Split, Delete Pages links with colored icons
+   - "Extract from another file" start-over button
+
+## Full-screen PageZoomModal (shared, 100% in git) — UPGRADED
+
+| Component | Path |
+|-----------|------|
+| Modal component | `src/components/tools/split-pdf/page-zoom-modal.tsx` |
+
+### PageZoomModal features (at S1 save)
+
+1. **Full-screen dark overlay** (`bg-black/95`) — fills entire viewport
+2. **High-res image loading** — upgrades 140px thumbnails to 1200px via `toHiRes()` helper; low-res shown as instant placeholder
+3. **Body scroll lock** — prevents background scrolling
+4. **Click backdrop to close** — click dark area outside image
+5. **Page navigation** — left/right arrow buttons, `< 2 /14 >` counter, keyboard Left/Right/Escape
+6. **Bottom control bar** — prev/next, page counter, rotate left/right (conditional), delete (conditional)
+7. **Thumbnail strip** — scrollable row at bottom, active page highlighted with white border + glow
+8. **Rotation support** — CSS transform applied to preview image
+9. **Used by all 5 tools:** Extract PDF, Delete PDF, Rotate PDF, Split PDF, Merge PDF
+10. **All tools pass edit actions:** rotate left/right + delete buttons visible in all tool previews
+
+## Organize PDF tools — config (at S1 save)
+
+- **Tool registry:** all 3 (rotate-pdf, delete-pdf, extract-pdf) added to `src/config/constants.ts` (TOOLS array + MEGA_MENU_CATEGORIES under "Organize PDF")
+- **SEO metadata:** `src/config/tools.ts` (title, description, h1, FAQs for each)
 - **Breadcrumbs:** `src/components/layout/tool-layout-chrome.tsx` (TOOL_SLUG_LABELS)
 - **Homepage:** `src/components/marketing/home/home-shared.ts` (TOOL_KEYS + TOOL_ACCENT)
 - **Admin panel:** `src/app/admin/jobs/page.tsx` (toolOptions filter)
-- **Mega menu:** `src/components/layout/header.tsx` (hardcoded in megaMenuCategories → Organize PDF)
-- **i18n:** `src/i18n/en.json` + `src/i18n/hi.json`
+- **Mega menu:** `src/components/layout/header.tsx` (megaMenuCategories → Organize PDF)
+- **i18n:** `src/i18n/en.json` + `src/i18n/hi.json` (English + Hindi translations)
 
 ## Excel-to-PDF improvements (at S1 save)
 

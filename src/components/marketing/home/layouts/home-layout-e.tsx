@@ -18,6 +18,7 @@ import {
   ToolsGrid,
   WorkflowSection,
 } from "@/components/marketing/home/home-sections";
+import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 
 /** Layout E — Expert mix: balanced hero + tools + trust (recommended default) */
 export function HomeLayoutE() {
@@ -68,6 +69,7 @@ export function HomeLayoutE() {
       <AISection split />
       <SecuritySection />
       <PricingSection />
+      <TestimonialsSection />
       <FAQSection />
       <CTASection />
     </>

@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { composePdfFromSlots, type ComposeSlot } from "@/lib/services/pdf-compose.service";
 import { splitPDF } from "@/lib/services/pdf-split.service";
+import { buildOwnerHash } from "@/lib/pdf/pdf-session-store";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const ownerHash = buildOwnerHash(user?.id ?? null, request.headers.get("x-forwarded-for"));
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const slotsRaw = formData.get("slots") as string | null;
@@ -32,7 +38,7 @@ export async function POST(request: NextRequest) {
     const splitRangesRaw = formData.get("splitRanges") as string | null;
 
     if (splitRangesRaw) {
-      const composed = await composePdfFromSlots(buffer, slots);
+      const composed = await composePdfFromSlots(buffer, slots, ownerHash);
       const parsedRanges = splitRangesRaw.split(",").map((r: string) => {
         const [start, end] = r.trim().split("-").map(Number);
         return { start, end: end ?? start };
@@ -56,7 +62,7 @@ export async function POST(request: NextRequest) {
     if (separate) {
       const results: Buffer[] = [];
       for (let i = 0; i < slots.length; i++) {
-        results.push(await composePdfFromSlots(buffer, [slots[i]]));
+        results.push(await composePdfFromSlots(buffer, [slots[i]], ownerHash));
       }
       const { buildZip } = await import("@/lib/services/zip-builder");
       const filesMap: Record<string, Buffer> = {};
@@ -73,7 +79,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const result = await composePdfFromSlots(buffer, slots);
+    const result = await composePdfFromSlots(buffer, slots, ownerHash);
 
     return new NextResponse(new Uint8Array(result), {
       status: 200,

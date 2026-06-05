@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { deleteFile, getFileUrl } from "@/lib/services/upload.service";
 import { getUploadedFileById, deleteUploadedFileRecord, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeFilename } from "@/lib/utils/file";
 
 export async function GET(
   request: NextRequest,
@@ -23,8 +24,14 @@ export async function GET(
       return NextResponse.json({ error: "File has expired" }, { status: 410 });
     }
 
-    if (file.user_id && file.user_id !== user?.id) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (file.user_id) {
+      if (file.user_id !== user?.id) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
+    } else {
+      if (!user) {
+        return NextResponse.json({ error: "Authentication required to download this file" }, { status: 401 });
+      }
     }
 
     const fileUrl = await getFileUrl(file.storage_path);
@@ -40,7 +47,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": file.mime_type,
-        "Content-Disposition": `attachment; filename="${file.original_name}"`,
+        "Content-Disposition": `attachment; filename="${sanitizeFilename(file.original_name)}"`,
         "Content-Length": String(file.size),
       },
     });

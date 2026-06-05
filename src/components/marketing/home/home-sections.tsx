@@ -16,8 +16,11 @@ import {
   Check,
   Upload,
   Search,
+  HelpCircle,
+  Crown,
 } from "lucide-react";
 import { useTranslation } from "@/i18n";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { HeroVisual } from "@/components/marketing/hero-visual";
 import { StatsBar } from "@/components/marketing/stats-bar";
@@ -327,54 +330,112 @@ export function PricingSection({ centered = true }: { centered?: boolean }) {
   const { t } = useTranslation();
 
   return (
-    <section className="mesh-section pd-section sm:py-28">
-      <div className={`pd-container ${centered ? "max-w-4xl" : ""}`}>
+    <section className="relative overflow-hidden bg-gradient-to-b from-pd-background via-slate-50/50 to-pd-background py-14 sm:py-18">
+      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "28px 28px" }} />
+      <div className={`pd-container relative ${centered ? "max-w-4xl" : ""}`}>
         <SectionHeading
           eyebrow={t("landing.pricingEyebrow")}
           title={t("landing.pricingTitle")}
           description={t("landing.pricingDesc")}
         />
-        <div className="mt-14 grid gap-6 sm:grid-cols-2">
-          <div className="rounded-2xl border border-pd-border bg-pd-surface p-8 shadow-sm">
-            <h3 className="text-lg font-semibold text-pd-foreground">{t("landing.pricingFree")}</h3>
-            <p className="mt-4">
-              <span className="text-4xl font-extrabold text-pd-foreground">₹0</span>
-              <span className="ml-1 text-pd-muted">{t("landing.pricingPerMonth")}</span>
-            </p>
-            <ul className="mt-6 space-y-3">
-              {FREE_FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-pd-muted">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-pd-success" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link href="#tools" className="mt-8 block">
-              <Button variant="outline" className="w-full">
-                {t("landing.pricingFreeCta")}
-              </Button>
-            </Link>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          {/* Free Plan */}
+          <div className={cn(
+            "group relative overflow-hidden rounded-2xl border border-white/70 bg-white",
+            "shadow-[0_2px_20px_-6px_rgba(0,0,0,0.07)]",
+            "transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)]"
+          )}>
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-white to-white opacity-80" />
+            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-emerald-400/10 blur-2xl" />
+
+            <div className="relative z-10 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md ring-1 ring-white/20">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">{t("landing.pricingFree")}</h3>
+                  <p className="text-[11px] font-medium text-gray-400">Perfect to get started</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold tracking-tight text-gray-900">₹0</span>
+                <span className="text-sm text-gray-400">{t("landing.pricingPerMonth")}</span>
+              </div>
+
+              <div className="my-4 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+
+              <ul className="space-y-2.5">
+                {FREE_FEATURES.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-gray-600">
+                    <div className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                      <Check className="h-3 w-3 text-emerald-600" />
+                    </div>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="#tools" className="mt-6 block">
+                <Button variant="outline" className="w-full rounded-xl border-gray-200 py-2.5 font-semibold transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700">
+                  {t("landing.pricingFreeCta")}
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="relative rounded-2xl border-2 border-pd-brand bg-pd-surface p-8 shadow-lg">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-pd-brand px-4 py-0.5 text-xs font-bold text-white">
-              {t("landing.pricingPopular")}
-            </span>
-            <h3 className="text-lg font-semibold text-pd-foreground">{t("landing.pricingPro")}</h3>
-            <p className="mt-4">
-              <span className="text-4xl font-extrabold text-pd-foreground">₹299</span>
-              <span className="ml-1 text-pd-muted">{t("landing.pricingPerMonth")}</span>
-            </p>
-            <ul className="mt-6 space-y-3">
-              {PRO_FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-pd-muted">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-pd-brand" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/pricing" className="mt-8 block">
-              <Button className="w-full">{t("landing.pricingProCta")}</Button>
-            </Link>
+
+          {/* Pro Plan */}
+          <div className={cn(
+            "group relative overflow-hidden rounded-2xl border-2 border-pd-brand/30 bg-white",
+            "shadow-[0_4px_24px_-6px_rgba(37,99,235,0.15)]",
+            "transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_-8px_rgba(37,99,235,0.2)]"
+          )}>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-indigo-50/30 to-white" />
+            <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-blue-400/15 blur-2xl" />
+            <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-indigo-400/10 blur-2xl" />
+
+            <div className="relative z-10 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md ring-1 ring-white/20">
+                    <Crown className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">{t("landing.pricingPro")}</h3>
+                    <p className="text-[11px] font-medium text-gray-400">For power users & teams</p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 px-3 py-1 text-[10px] font-bold tracking-wide text-white shadow-md">
+                  {t("landing.pricingPopular")}
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold tracking-tight text-gray-900">₹299</span>
+                <span className="text-sm text-gray-400">{t("landing.pricingPerMonth")}</span>
+              </div>
+
+              <div className="my-4 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent" />
+
+              <ul className="space-y-2.5">
+                {PRO_FEATURES.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-gray-600">
+                    <div className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                      <Check className="h-3 w-3 text-blue-600" />
+                    </div>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/pricing" className="mt-6 block">
+                <Button className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 py-2.5 font-semibold text-white shadow-md shadow-blue-200 transition-all hover:shadow-lg hover:shadow-blue-300">
+                  {t("landing.pricingProCta")}
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -382,24 +443,68 @@ export function PricingSection({ centered = true }: { centered?: boolean }) {
   );
 }
 
+const FAQ_COLORS = [
+  { num: "bg-gradient-to-br from-blue-500 to-indigo-600", glow: "bg-blue-400/20", ring: "group-open:ring-blue-200" },
+  { num: "bg-gradient-to-br from-emerald-500 to-teal-600", glow: "bg-emerald-400/20", ring: "group-open:ring-emerald-200" },
+  { num: "bg-gradient-to-br from-amber-500 to-orange-600", glow: "bg-amber-400/20", ring: "group-open:ring-amber-200" },
+  { num: "bg-gradient-to-br from-rose-500 to-pink-600", glow: "bg-rose-400/20", ring: "group-open:ring-rose-200" },
+  { num: "bg-gradient-to-br from-violet-500 to-purple-600", glow: "bg-violet-400/20", ring: "group-open:ring-violet-200" },
+  { num: "bg-gradient-to-br from-cyan-500 to-sky-600", glow: "bg-cyan-400/20", ring: "group-open:ring-cyan-200" },
+  { num: "bg-gradient-to-br from-fuchsia-500 to-pink-600", glow: "bg-fuchsia-400/20", ring: "group-open:ring-fuchsia-200" },
+];
+
 export function FAQSection() {
   const { t } = useTranslation();
   return (
-    <section className="bg-pd-surface pd-section sm:py-28">
-      <div className="pd-container max-w-3xl">
+    <section className="relative overflow-hidden bg-gradient-to-b from-pd-surface via-pd-background to-pd-surface pd-section sm:py-28">
+      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "28px 28px" }} />
+      <div className="pd-container relative max-w-3xl">
+        <div className="mb-3 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-pd-brand-muted px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-pd-brand">
+            <HelpCircle className="h-3.5 w-3.5" />
+            FAQ
+          </span>
+        </div>
         <SectionHeading title={t("landing.faqTitle")} />
-        <div className="mt-12 divide-y divide-pd-border rounded-2xl border border-pd-border bg-pd-background px-6">
-          {FAQ_KEYS.map((key) => (
-            <details key={key} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-pd-foreground [&::-webkit-details-marker]:hidden">
-                {t(`landing.${key}q`)}
-                <span className="ml-4 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pd-surface text-pd-muted shadow-sm transition group-open:rotate-45">
-                  +
-                </span>
-              </summary>
-              <p className="mt-3 text-sm leading-relaxed text-pd-muted">{t(`landing.${key}a`)}</p>
-            </details>
-          ))}
+
+        <div className="mt-12 space-y-3">
+          {FAQ_KEYS.map((key, i) => {
+            const color = FAQ_COLORS[i % FAQ_COLORS.length];
+            return (
+              <details
+                key={key}
+                className={cn(
+                  "group overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] transition-all duration-300",
+                  "hover:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.1)]",
+                  "open:ring-2 open:shadow-[0_6px_24px_-6px_rgba(0,0,0,0.1)]",
+                  color.ring
+                )}
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 [&::-webkit-details-marker]:hidden">
+                  <div className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-md transition-transform duration-300 group-hover:scale-110",
+                    color.num
+                  )}>
+                    {i + 1}
+                  </div>
+                  <span className="flex-1 text-[15px] font-semibold text-gray-800">
+                    {t(`landing.${key}q`)}
+                  </span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-all duration-300 group-open:rotate-45 group-open:bg-pd-brand group-open:text-white">
+                    +
+                  </span>
+                </summary>
+                <div className="relative px-5 pb-5">
+                  <div className={cn("absolute -left-4 top-0 h-full w-20 rounded-full blur-3xl opacity-30", color.glow)} />
+                  <div className="relative ml-[52px] rounded-xl bg-gray-50/80 px-4 py-3">
+                    <p className="text-sm leading-relaxed text-gray-600">
+                      {t(`landing.${key}a`)}
+                    </p>
+                  </div>
+                </div>
+              </details>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -453,14 +558,14 @@ export function HeroCopy({ align = "center" }: { align?: "center" | "left" }) {
           <span className="pd-hero-line block text-pd-foreground lg:whitespace-nowrap">
             {t("landing.heroTitle")}
           </span>
-          <span className="pd-hero-line mt-1 block text-pd-brand lg:mt-1.5 lg:whitespace-nowrap">
+          <span className="pd-hero-line mt-1 block bg-gradient-to-r from-blue-600 via-violet-500 to-rose-500 bg-clip-text text-transparent lg:mt-1.5 lg:whitespace-nowrap">
             {t("landing.heroTitleHighlight")}
           </span>
         </h1>
       ) : (
         <h1 className="pd-display mt-6 text-4xl font-extrabold tracking-tight text-pd-foreground sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
           {t("landing.heroTitle")}{" "}
-          <span className="text-pd-brand">{t("landing.heroTitleHighlight")}</span>
+          <span className="bg-gradient-to-r from-blue-600 via-violet-500 to-rose-500 bg-clip-text text-transparent">{t("landing.heroTitleHighlight")}</span>
         </h1>
       )}
       <p
@@ -501,7 +606,7 @@ export function UploadFirstHero() {
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="pd-display text-3xl font-extrabold tracking-tight text-pd-foreground sm:text-4xl">
             {t("landing.heroTitle")}{" "}
-            <span className="text-pd-brand">{t("landing.heroTitleHighlight")}</span>
+            <span className="bg-gradient-to-r from-blue-600 via-violet-500 to-rose-500 bg-clip-text text-transparent">{t("landing.heroTitleHighlight")}</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-pd-muted">{t("landing.heroSubtitle")}</p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">

@@ -34,6 +34,7 @@ import {
   type MergeFileItem,
   type MergePageSlot,
 } from "@/components/tools/merge-pdf/merge-file-types";
+import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 
 interface MergePdfWorkspaceProps {
   initialFiles: File[];
@@ -84,9 +85,42 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
   const insertAfterFileIndexRef = useRef<number | null>(null);
   const insertAfterPageIndexRef = useRef<number | null>(null);
   const insertFileRef = useRef<HTMLInputElement>(null);
+  const [passwordPrompt, setPasswordPrompt] = useState<{
+    itemId: string;
+    file: File;
+    fileName: string;
+    errorMsg?: string;
+    loading?: boolean;
+  } | null>(null);
 
-  const loadPreview = useCallback(async (id: string, file: File) => {
-    const preview = await loadPdfDocumentPreview(file);
+  const loadPreview = useCallback(async (id: string, file: File, password?: string) => {
+    const preview = await loadPdfDocumentPreview(file, password);
+
+    if (preview.passwordRequired) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, loadingThumb: false } : item
+        )
+      );
+      setPasswordPrompt({
+        itemId: id,
+        file,
+        fileName: preview.fileName ?? file.name,
+      });
+      return;
+    }
+
+    if (preview.wrongPassword) {
+      setPasswordPrompt((prev) =>
+        prev?.itemId === id
+          ? { ...prev, errorMsg: preview.error ?? "Incorrect password.", loading: false }
+          : prev
+      );
+      return;
+    }
+
+    setPasswordPrompt((prev) => (prev?.itemId === id ? null : prev));
+
     setItems((prev) =>
       prev.map((item) =>
         item.id === id
@@ -474,9 +508,46 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
       {zoomPage && (
         <PageZoomModal
           pageNum={pageSlots.findIndex((s) => s.id === zoomPage.id) + 1}
+          totalPages={pageSlots.length}
           imageUrl={mergePageSlotThumb(zoomPage)}
           rotation={rotations[zoomPage.id] ?? 0}
+          thumbnails={pageSlots.map((s) => mergePageSlotThumb(s) ?? "")}
           onClose={() => setZoomPageId(null)}
+          onNavigate={(n) => {
+            const target = pageSlots[n - 1];
+            if (target) setZoomPageId(target.id);
+          }}
+          onRotateLeft={() => {
+            if (!zoomPage) return;
+            setRotations((prev) => ({
+              ...prev,
+              [zoomPage.id]: ((prev[zoomPage.id] ?? 0) - 90 + 360) % 360,
+            }));
+          }}
+          onRotateRight={() => {
+            if (!zoomPage) return;
+            setRotations((prev) => ({
+              ...prev,
+              [zoomPage.id]: ((prev[zoomPage.id] ?? 0) + 90) % 360,
+            }));
+          }}
+        />
+      )}
+
+      {passwordPrompt && (
+        <PdfPasswordModal
+          fileName={passwordPrompt.fileName}
+          errorMessage={passwordPrompt.errorMsg}
+          loading={passwordPrompt.loading}
+          onSubmit={(pw) => {
+            setPasswordPrompt((prev) => (prev ? { ...prev, loading: true, errorMsg: undefined } : prev));
+            loadPreview(passwordPrompt.itemId, passwordPrompt.file, pw);
+          }}
+          onCancel={() => {
+            const id = passwordPrompt.itemId;
+            setPasswordPrompt(null);
+            setItems((prev) => prev.filter((i) => i.id !== id));
+          }}
         />
       )}
 
@@ -486,9 +557,22 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
         return (
           <PageZoomModal
             pageNum={1}
+            totalPages={1}
             imageUrl={item.thumbUrl}
             rotation={rotations[item.id] ?? 0}
             onClose={() => setZoomFileId(null)}
+            onRotateLeft={() => {
+              setRotations((prev) => ({
+                ...prev,
+                [item.id]: ((prev[item.id] ?? 0) - 90 + 360) % 360,
+              }));
+            }}
+            onRotateRight={() => {
+              setRotations((prev) => ({
+                ...prev,
+                [item.id]: ((prev[item.id] ?? 0) + 90) % 360,
+              }));
+            }}
           />
         );
       })()}

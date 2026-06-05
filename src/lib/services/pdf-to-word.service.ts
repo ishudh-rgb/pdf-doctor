@@ -44,17 +44,13 @@ export async function pdfToWord(
       const buffer = await pdfToWordPdf2docx(fileBuffer, { timeoutMs });
       return { buffer, engine: "pdf2docx" };
     } catch (err) {
+      console.warn("[pdf-to-word] pdf2docx failed, falling back to Node extractor:", err instanceof Error ? err.message : err);
       await logError({
         tool_name: "pdf-to-word",
         error_type: "PDF2DOCX_FAILED",
         error_message: err instanceof Error ? err.message : String(err),
         stack_trace: err instanceof Error ? err.stack : undefined,
       });
-      throw new Error(
-        `High-quality conversion failed. Please retry or contact support. (${
-          err instanceof Error ? err.message : "pdf2docx error"
-        })`
-      );
     }
   }
 

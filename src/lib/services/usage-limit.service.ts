@@ -56,28 +56,21 @@ export async function checkUsageLimit(
       };
     }
 
-    if (guestIpHash) {
-      const dailyLimit =
-        typeof settings.free_daily_limit === "number"
-          ? settings.free_daily_limit
-          : Number(settings.free_daily_limit) || 5;
-      const used = await getGuestDailyUsage(guestIpHash);
-
-      return {
-        allowed: used < dailyLimit,
-        remaining: Math.max(0, dailyLimit - used),
-        limit: dailyLimit,
-        message:
-          used >= dailyLimit
-            ? `Daily limit of ${dailyLimit} files reached. Sign up or upgrade to Pro for more.`
-            : undefined,
-      };
-    }
+    const guestKey = guestIpHash || "unknown-guest";
+    const dailyLimit =
+      typeof settings.free_daily_limit === "number"
+        ? settings.free_daily_limit
+        : Number(settings.free_daily_limit) || 5;
+    const used = await getGuestDailyUsage(guestKey);
 
     return {
-      allowed: true,
-      remaining: 5,
-      limit: 5,
+      allowed: used < dailyLimit,
+      remaining: Math.max(0, dailyLimit - used),
+      limit: dailyLimit,
+      message:
+        used >= dailyLimit
+          ? `Daily limit of ${dailyLimit} files reached. Sign up or upgrade to Pro for more.`
+          : undefined,
     };
   } catch (err) {
     await logError({
@@ -85,8 +78,8 @@ export async function checkUsageLimit(
       tool_name: tool,
       error_type: "USAGE_LIMIT_CHECK_FAILED",
       error_message: err instanceof Error ? err.message : String(err),
-    });
-    return { allowed: true, remaining: 1, limit: 1 };
+    }).catch(() => {});
+    return { allowed: false, remaining: 0, limit: 0, message: "Service temporarily unavailable. Please try again shortly." };
   }
 }
 

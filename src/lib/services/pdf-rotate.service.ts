@@ -1,4 +1,5 @@
 import { PDFDocument, degrees, PageSizes, PDFPage, PDFName, PDFArray, PDFNumber } from "pdf-lib";
+import { safePdfLoad } from "@/lib/pdf/pdf-safe-load";
 import { logError } from "@/lib/db/queries";
 
 const VALID_ROTATIONS = new Set([0, 90, 180, 270]);
@@ -49,7 +50,7 @@ export async function rotatePdfPages(
   pageRotations: Record<number, number>
 ): Promise<Buffer> {
   try {
-    const pdfDoc = await PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+    const pdfDoc = await safePdfLoad(fileBuffer, "rotate-pdf");
     const pages = pdfDoc.getPages();
     const totalPages = pages.length;
 
@@ -108,7 +109,7 @@ export async function addBlankPages(
   pageSize: [number, number] = PageSizes.A4
 ): Promise<Buffer> {
   try {
-    const pdfDoc = await PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+    const pdfDoc = await safePdfLoad(fileBuffer, "rotate-pdf");
 
     const sorted = [...positions].sort((a, b) => a - b);
     let inserted = 0;

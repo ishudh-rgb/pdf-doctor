@@ -172,36 +172,68 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
     ],
   },
 
-  "edit-pdf": {
-    title: "Edit PDF — Add Text, Images & Annotations Online | PDF Doctor",
+  "html-to-pdf": {
+    title: "HTML to PDF — Convert HTML Pages to PDF Online | PDF Doctor",
     metaDescription:
-      "Edit PDF files online. Add text, images, shapes, highlights, and annotations to your PDFs. Pro feature with powerful editing tools.",
-    h1: "Edit PDF Online — Add Text, Images & More",
+      "Convert HTML files to pixel-perfect PDF documents online for free. Supports CSS, images, SVG, and complex layouts. Fast and accurate.",
+    h1: "Convert HTML to PDF — Pixel Perfect Results",
     seoContent:
-      "Edit your PDF documents directly in the browser with PDF Doctor's powerful PDF editor. Add text in any font and color, insert images, draw shapes, highlight important sections, and add annotations. Our editor preserves the original document layout while giving you the flexibility to make changes. Available as a Pro feature with a full suite of editing tools including freehand drawing, text boxes, stamps, and more.",
+      "Convert any HTML page to a professional PDF document with PDF Doctor's HTML to PDF converter. Our tool renders your HTML exactly as a browser would — supporting full CSS (Flexbox, Grid, animations), embedded images, SVG graphics, web fonts, and complex layouts. Upload your .html, .htm, .xhtml, or .svg file and get a pixel-perfect PDF. Customize page size (A4, Letter, Auto), orientation (Portrait, Landscape), and margins. Perfect for converting web reports, dashboards, invoices, resumes, and documentation to PDF format.",
     faqs: [
       {
-        question: "What can I edit in a PDF?",
+        question: "What file types can I convert?",
         answer:
-          "You can add new text, images, shapes (rectangles, circles, lines), highlights, freehand drawings, and annotations to your PDF. You can also adjust colors, font sizes, and opacity.",
+          "We support HTML (.html, .htm), XHTML (.xhtml), MHTML (.mhtml), and SVG (.svg) files for conversion to PDF.",
       },
       {
-        question: "Is the Edit PDF tool free?",
+        question: "Will CSS styles be preserved in the PDF?",
         answer:
-          "Edit PDF is a Pro feature. You'll need a Pro subscription to access the full editing capabilities. Free users can explore the editor interface with limited functionality.",
+          "Yes, our converter renders HTML with full CSS support including Flexbox, Grid, animations, custom fonts, media queries, and print stylesheets. The PDF output matches what you see in a browser.",
       },
       {
-        question: "Can I edit the existing text in a PDF?",
+        question: "Can I customize the PDF page size?",
         answer:
-          "Currently, you can add new text and annotations on top of existing content. Direct editing of existing PDF text requires more advanced desktop software.",
+          "Yes, you can choose between A4, US Letter, or Auto (which uses the HTML page's own CSS page size). You can also set orientation and margin preferences.",
       },
       {
-        question: "Will editing change the original file?",
+        question: "Are external resources (images, fonts) included?",
         answer:
-          "No, the original file remains unchanged. A new PDF with your edits is created for download.",
+          "Inline images (base64) and embedded resources are fully supported. External URLs referenced in the HTML may not load depending on network access. For best results, embed all resources inline.",
       },
     ],
   },
+
+  "txt-to-pdf": {
+    title: "TXT to PDF — Convert Text Files to PDF Online | PDF Doctor",
+    metaDescription:
+      "Convert TXT and other text files to professionally formatted PDF documents online for free. Choose fonts, sizes, and page layout. Fast and accurate.",
+    h1: "Convert TXT to PDF — Professional Formatting",
+    seoContent:
+      "Convert any text file to a cleanly formatted PDF document with PDF Doctor's TXT to PDF converter. Supports TXT, LOG, CSV, MD, JSON, XML, YAML, INI, and other plain-text formats. Choose your preferred font (Helvetica, Courier, or Times), font size (9pt–16pt), page size (A4 or Letter), orientation, and margins. The converter intelligently wraps long lines, preserves blank lines and paragraph breaks, and produces a professional PDF that matches the original text structure. Perfect for converting code files, log files, configuration files, and plain text documents to shareable PDF format.",
+    faqs: [
+      {
+        question: "What file types can I convert?",
+        answer:
+          "We support TXT, TEXT, LOG, CSV, MD (Markdown), JSON, XML, YAML, YML, INI, CFG, CONF, and ENV files — essentially any plain-text file.",
+      },
+      {
+        question: "Can I choose the font and size?",
+        answer:
+          "Yes! Choose between Helvetica (clean sans-serif), Courier (monospace — great for code), or Times (classic serif). Font sizes range from 9pt to 16pt.",
+      },
+      {
+        question: "Will long lines be cut off?",
+        answer:
+          "No. Long lines are automatically word-wrapped to fit within the page margins. No text content is ever lost or cut off.",
+      },
+      {
+        question: "Is there a file size limit?",
+        answer:
+          "There is no file size limit — convert text files of any size to PDF.",
+      },
+    ],
+  },
+
 
   "sign-pdf": {
     title: "Sign PDF — Add Digital Signature to PDF Online | PDF Doctor",
@@ -478,6 +510,66 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
         question: "Can I add pages from another PDF?",
         answer:
           "Yes! Click the + button between any two pages to add documents from another PDF or insert a blank page.",
+      },
+    ],
+  },
+  "delete-pdf": {
+    title: "Delete PDF Pages — Remove Pages Online Free | PDF Doctor",
+    metaDescription:
+      "Delete pages from your PDF online for free. Remove individual pages or multiple pages at once. Add pages from other PDFs. No signup required.",
+    h1: "Delete PDF Pages Online — Free & Visual",
+    seoContent:
+      "Remove unwanted pages from your PDF with a visual workspace. PDF Doctor's Delete PDF Pages tool lets you preview every page, delete individual pages with one click, or select multiple pages to remove at once. You can also add blank pages or insert pages from other PDFs. Download the result instantly — no signup, no watermarks, no quality loss.",
+    faqs: [
+      {
+        question: "How do I delete a single page from a PDF?",
+        answer:
+          "Upload your PDF, hover over the page you want to remove, and click the red trash icon. The page is removed instantly from the preview.",
+      },
+      {
+        question: "Can I delete multiple pages at once?",
+        answer:
+          "Yes! Select multiple pages using the checkboxes, then click the 'Delete selected' button in the toolbar to remove all selected pages simultaneously.",
+      },
+      {
+        question: "Does deleting pages affect PDF quality?",
+        answer:
+          "No, the remaining pages keep their original quality, content, images, and text — completely unchanged and pixel-perfect.",
+      },
+      {
+        question: "Can I add pages from another PDF?",
+        answer:
+          "Yes! Click the + button between any two pages to add documents from another PDF or insert a blank page.",
+      },
+    ],
+  },
+  "extract-pdf": {
+    title: "Extract PDF Pages — Extract Pages Online Free | PDF Doctor",
+    metaDescription:
+      "Extract specific pages from your PDF online for free. Select the pages you need, click Finish, and download a new PDF with only those pages. No signup required.",
+    h1: "Extract PDF Pages Online — Free & Visual",
+    seoContent:
+      "Extract pages from any PDF with a visual workspace. PDF Doctor's Extract Pages tool lets you preview every page, select the ones you need, and create a new PDF with just those pages. You can also add pages from other PDFs or insert blank pages. Download instantly — no signup, no watermarks, no quality loss.",
+    faqs: [
+      {
+        question: "How do I extract specific pages from a PDF?",
+        answer:
+          "Upload your PDF, click the pages you want to extract (they highlight in blue), then click 'Finish' to download a new PDF containing only those pages.",
+      },
+      {
+        question: "Can I extract non-consecutive pages?",
+        answer:
+          "Yes! Click any combination of pages — they don't need to be adjacent or in a specific order. The extracted PDF preserves page order.",
+      },
+      {
+        question: "Does extracting pages affect quality?",
+        answer:
+          "No, pages are copied at their original quality. Your content, images, and text remain pixel-perfect with zero quality loss.",
+      },
+      {
+        question: "Can I add pages from another PDF before extracting?",
+        answer:
+          "Yes! Click the + button between any two pages to add documents from another PDF or insert a blank page, then select from all available pages.",
       },
     ],
   },

@@ -11,42 +11,49 @@ export async function compressPDF(
 
   try {
     const structural = await compressStructurally(fileBuffer, level);
-    if (structural.length < originalSize) {
-      const savedEnough =
-        level === "strong" ||
-        (originalSize - structural.length) / originalSize >= 0.02;
 
-      if (savedEnough) {
+    let rasterized: Buffer | null = null;
+    try {
+      rasterized = await compressByRasterizing(
+        fileBuffer,
+        level === "strong"
+          ? { scale: 1.25, quality: 45 }
+          : { scale: 1.75, quality: 72 }
+      );
+    } catch (rasterErr) {
+      await logError({
+        tool_name: "compress-pdf",
+        error_type: "RASTERIZE_FALLBACK",
+        error_message: rasterErr instanceof Error ? rasterErr.message : String(rasterErr),
+      }).catch(() => {});
+    }
+
+    if (level === "strong") {
+      const candidates = [structural, rasterized].filter(
+        (b): b is Buffer => b !== null && b.length < originalSize
+      );
+      if (candidates.length > 0) {
+        const best = candidates.reduce((a, b) => (a.length <= b.length ? a : b));
+        return { buffer: best, originalSize, compressedSize: best.length };
+      }
+    } else {
+      const structuralSaved =
+        (originalSize - structural.length) / originalSize >= 0.02;
+      if (structuralSaved) {
         return {
           buffer: structural,
           originalSize,
           compressedSize: structural.length,
         };
       }
-    }
 
-    const rasterized = await compressByRasterizing(
-      fileBuffer,
-      level === "strong"
-        ? { scale: 1.25, quality: 45 }
-        : { scale: 1.75, quality: 72 }
-    );
-
-    if (rasterized.length < originalSize) {
-      return {
-        buffer: rasterized,
-        originalSize,
-        compressedSize: rasterized.length,
-      };
-    }
-
-    const best = structural.length <= rasterized.length ? structural : rasterized;
-    if (best.length < originalSize) {
-      return {
-        buffer: best,
-        originalSize,
-        compressedSize: best.length,
-      };
+      if (rasterized && rasterized.length < originalSize) {
+        return {
+          buffer: rasterized,
+          originalSize,
+          compressedSize: rasterized.length,
+        };
+      }
     }
 
     return {
@@ -93,7 +100,7 @@ async function compressStructurally(
   const compressedBytes = await pdfDoc.save({
     useObjectStreams: true,
     addDefaultPage: false,
-    objectsPerTick: level === "strong" ? 20 : 50,
+    objectsPerTick: level === "strong" ? 35 : 50,
   });
 
   return Buffer.from(compressedBytes);

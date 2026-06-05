@@ -8,13 +8,16 @@ import {
   RotateCcw,
   RotateCw,
   Trash2,
+  X,
 } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner } from "@/components/tools/tool-ui";
-import { RotatePageCard } from "@/components/tools/rotate-pdf/rotate-page-card";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
+import { SplitPageCard } from "@/components/tools/split-pdf/split-page-card";
+import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { PageZoomModal } from "@/components/tools/split-pdf/page-zoom-modal";
 import {
   createOriginalSlots,
@@ -30,18 +33,10 @@ interface RotatePdfWorkspaceProps {
   onReset: () => void;
 }
 
-export function RotatePdfWorkspace({
-  file,
-  onChangeFile,
-  onReset,
-}: RotatePdfWorkspaceProps) {
+export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWorkspaceProps) {
   const [pageSlots, setPageSlots] = useState<WorkspacePageSlot[]>([]);
-  const [selectedSlotIds, setSelectedSlotIds] = useState<Set<string>>(
-    () => new Set()
-  );
-  const [hiddenSlotIds, setHiddenSlotIds] = useState<Set<string>>(
-    () => new Set()
-  );
+  const [selectedSlotIds, setSelectedSlotIds] = useState<Set<string>>(() => new Set());
+  const [hiddenSlotIds, setHiddenSlotIds] = useState<Set<string>>(() => new Set());
   const [rotations, setRotations] = useState<Record<string, number>>({});
   const [zoomSlotId, setZoomSlotId] = useState<string | null>(null);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
@@ -52,6 +47,12 @@ export function RotatePdfWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [passwordPrompt, setPasswordPrompt] = useState<{
+    file: File;
+    fileName: string;
+    errorMsg?: string;
+    loading?: boolean;
+  } | null>(null);
   const loadRequestRef = useRef(0);
   const insertFileRef = useRef<HTMLInputElement>(null);
   const insertAfterIndexRef = useRef(0);
@@ -69,16 +70,13 @@ export function RotatePdfWorkspace({
   );
 
   const allPagesSelected =
-    visibleSlots.length > 0 &&
-    visibleSlots.every((s) => selectedSlotIds.has(s.id));
+    visibleSlots.length > 0 && visibleSlots.every((s) => selectedSlotIds.has(s.id));
+  const somePagesSelected = selectedVisibleCount > 0 && !allPagesSelected;
 
-  const rotatedPageCount = useMemo(
-    () =>
-      visibleSlots.filter((s) => (rotations[s.id] ?? 0) !== 0).length,
+  const rotatedCount = useMemo(
+    () => visibleSlots.filter((s) => (rotations[s.id] ?? 0) !== 0).length,
     [visibleSlots, rotations]
   );
-
-  /* ─── load thumbnails ─── */
 
   useEffect(() => {
     const requestId = ++loadRequestRef.current;
@@ -89,6 +87,7 @@ export function RotatePdfWorkspace({
     setHiddenSlotIds(new Set());
     setPageSlots([]);
     setRotations({});
+    setSelectedSlotIds(new Set());
 
     loadPdfThumbnailsBatched(file, (thumbs, total, trunc) => {
       if (requestId !== loadRequestRef.current) return;
@@ -104,10 +103,16 @@ export function RotatePdfWorkspace({
     })
       .then((result) => {
         if (requestId !== loadRequestRef.current) return;
+        if (result.passwordRequired) {
+          setPasswordPrompt({ file, fileName: file.name });
+          return;
+        }
+        if (result.wrongPassword) {
+          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+          return;
+        }
         if (result.totalPages === 0) {
-          setError(
-            result.error ?? "Could not read this PDF. Try another file."
-          );
+          setError(result.error ?? "Could not read this PDF. Try another file.");
         } else if (result.error) {
           setError(result.error);
         } else {
@@ -119,9 +124,7 @@ export function RotatePdfWorkspace({
         setThumbnails([]);
         setTotalPages(0);
         setError(
-          err instanceof Error
-            ? err.message
-            : "Could not read this PDF. Try another file."
+          err instanceof Error ? err.message : "Could not read this PDF. Try another file."
         );
       })
       .finally(() => {
@@ -129,7 +132,30 @@ export function RotatePdfWorkspace({
       });
   }, [fileKey, file]);
 
-  /* ─── slot actions ─── */
+  const retryWithPassword = useCallback((pw: string) => {
+    if (!passwordPrompt) return;
+    const { file } = passwordPrompt;
+    setPasswordPrompt((prev) => prev ? { ...prev, loading: true, errorMsg: undefined } : prev);
+
+    loadPdfThumbnailsBatched(file, (thumbs, total, trunc) => {
+      setThumbnails([...thumbs]);
+      setTotalPages(total);
+      setTruncated(trunc);
+      if (total > 0) {
+        const slots = createOriginalSlots(total);
+        setPageSlots(slots);
+        setSelectedSlotIds(new Set(slots.map((s) => s.id)));
+        setError(null);
+      }
+    }, pw).then((result) => {
+      if (result.wrongPassword) {
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+        return;
+      }
+      setPasswordPrompt(null);
+      if (result.error) setError(result.error);
+    });
+  }, [passwordPrompt]);
 
   const rotateSlot = useCallback((slotId: string, delta: number) => {
     setRotations((prev) => ({
@@ -165,7 +191,7 @@ export function RotatePdfWorkspace({
     []
   );
 
-  const removeSelected = useCallback(() => {
+  const removeSelectedPages = useCallback(() => {
     const toRemove = visibleSlots.filter((s) => selectedSlotIds.has(s.id));
     for (const slot of toRemove) removeSlot(slot.id);
   }, [visibleSlots, selectedSlotIds, removeSlot]);
@@ -178,15 +204,6 @@ export function RotatePdfWorkspace({
       return next;
     });
   }, []);
-
-  const toggleSelectAll = useCallback(
-    (checked: boolean) => {
-      setSelectedSlotIds(
-        checked ? new Set(visibleSlots.map((s) => s.id)) : new Set()
-      );
-    },
-    [visibleSlots]
-  );
 
   const duplicateSlotAfter = useCallback(
     (slotId: string) => {
@@ -211,8 +228,6 @@ export function RotatePdfWorkspace({
     [pageSlots, hiddenSlotIds]
   );
 
-  /* ─── insert pages ─── */
-
   const insertBlankAfter = useCallback(
     (visibleIndex: number) => {
       const newSlot: WorkspacePageSlot = {
@@ -236,166 +251,99 @@ export function RotatePdfWorkspace({
     insertFileRef.current?.click();
   }, []);
 
-  const handleInsertDocuments = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const picked = e.target.files?.[0];
-      e.target.value = "";
-      if (!picked) return;
+  const handleInsertDocuments = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files?.[0];
+    e.target.value = "";
+    if (!picked) return;
 
-      const formData = new FormData();
-      formData.append("file", picked, picked.name || "document.pdf");
+    const formData = new FormData();
+    formData.append("file", picked, picked.name || "document.pdf");
 
-      try {
-        const res = await fetch("/api/tools/pdf-session", {
-          method: "POST",
-          body: formData,
-        });
-        const data = (await res.json()) as {
-          sessionId?: string;
-          totalPages?: number;
-          error?: string;
-        };
-        if (!res.ok || !data.sessionId || !data.totalPages) {
-          setError(data.error ?? "Could not add document.");
-          return;
-        }
-
-        const sessionId = data.sessionId;
-        const newSlots: WorkspacePageSlot[] = Array.from(
-          { length: data.totalPages },
-          (_, i) => ({
-            id: `imp-${crypto.randomUUID()}`,
-            kind: "imported" as const,
-            page: i + 1,
-            fileName: picked.name,
-            sessionId,
-          })
-        );
-
-        setPageSlots((prev) => {
-          const visible = prev.filter((s) => !hiddenSlotIds.has(s.id));
-          const hidden = prev.filter((s) => hiddenSlotIds.has(s.id));
-          const nextVisible = [...visible];
-          nextVisible.splice(
-            insertAfterIndexRef.current + 1,
-            0,
-            ...newSlots
-          );
-          return [...nextVisible, ...hidden];
-        });
-        setSelectedSlotIds((prev) => {
-          const next = new Set(prev);
-          newSlots.forEach((s) => next.add(s.id));
-          return next;
-        });
-      } catch {
-        setError("Could not add document.");
+    try {
+      const res = await fetch("/api/tools/pdf-session", { method: "POST", body: formData });
+      const data = (await res.json()) as { sessionId?: string; totalPages?: number; error?: string };
+      if (!res.ok || !data.sessionId || !data.totalPages) {
+        setError(data.error ?? "Could not add document.");
+        return;
       }
-    },
-    [hiddenSlotIds]
-  );
 
-  /* ─── export ─── */
+      const sessionId = data.sessionId;
+      const newSlots: WorkspacePageSlot[] = Array.from(
+        { length: data.totalPages },
+        (_, i) => ({
+          id: `imp-${crypto.randomUUID()}`,
+          kind: "imported" as const,
+          page: i + 1,
+          fileName: picked.name,
+          sessionId,
+        })
+      );
 
-  const handleExport = async () => {
+      setPageSlots((prev) => {
+        const visible = prev.filter((s) => !hiddenSlotIds.has(s.id));
+        const hidden = prev.filter((s) => hiddenSlotIds.has(s.id));
+        const nextVisible = [...visible];
+        nextVisible.splice(insertAfterIndexRef.current + 1, 0, ...newSlots);
+        return [...nextVisible, ...hidden];
+      });
+      setSelectedSlotIds((prev) => {
+        const next = new Set(prev);
+        newSlots.forEach((s) => next.add(s.id));
+        return next;
+      });
+    } catch {
+      setError("Could not add document.");
+    }
+  };
+
+  const handleApplyAndDownload = async () => {
     setProcessing(true);
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file, file.name || "document.pdf");
-
-      const hasExtraSlots = visibleSlots.some(
-        (s) => s.kind === "blank" || s.kind === "imported" || s.kind === "duplicate"
-      );
-      const hasRemoved = hiddenSlotIds.size > 0;
-
-      if (hasExtraSlots || hasRemoved) {
-        const composeSlots = visibleSlots.map((slot) => {
-          if (slot.kind === "original")
-            return { kind: "original" as const, page: slot.page };
-          if (slot.kind === "blank") return { kind: "blank" as const };
-          return {
-            kind: "imported" as const,
-            sessionId: (slot as { sessionId: string }).sessionId,
-            page: slot.page,
-          };
-        });
-
-        formData.append("slots", JSON.stringify(composeSlots));
-        const rotMap: Record<number, number> = {};
-        visibleSlots.forEach((slot, idx) => {
-          const deg = rotations[slot.id] ?? 0;
-          if (deg !== 0) rotMap[idx + 1] = deg;
-        });
-        formData.append("rotations", JSON.stringify(rotMap));
-
-        const res = await fetch("/api/tools/compose-pdf", {
-          method: "POST",
-          body: formData,
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(
-            (data as { error?: string }).error || "Failed to export PDF."
-          );
+      const rotationsMap: Record<number, number> = {};
+      for (const slot of visibleSlots) {
+        const deg = rotations[slot.id] ?? 0;
+        if (deg !== 0 && slot.kind === "original") {
+          rotationsMap[slot.page] = deg;
         }
-
-        const blob = await res.blob();
-        setResultUrl(URL.createObjectURL(blob));
-        setCompleted(true);
-        return;
       }
 
-      const rotMap: Record<number, number> = {};
-      visibleSlots.forEach((slot) => {
-        if (slot.kind !== "original") return;
-        const deg = rotations[slot.id] ?? 0;
-        if (deg !== 0) rotMap[slot.page] = deg;
-      });
+      if (Object.keys(rotationsMap).length === 0) {
+        throw new Error("No rotations applied. Rotate at least one page before downloading.");
+      }
 
-      formData.append("rotations", JSON.stringify(rotMap));
+      const formData = new FormData();
+      formData.append("file", file, file.name || "document.pdf");
+      formData.append("rotations", JSON.stringify(rotationsMap));
 
-      const res = await fetch("/api/tools/rotate-pdf", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch("/api/tools/rotate-pdf", { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error || "Failed to rotate PDF."
-        );
+        throw new Error(data.error || "Failed to rotate PDF. Please try again.");
       }
 
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
       setCompleted(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unexpected error occurred."
-      );
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setProcessing(false);
     }
   };
 
-  /* ─── completed view ─── */
-
   if (completed && resultUrl) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-          <Check className="h-7 w-7 text-green-600" />
+      <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
+          <Check className="h-7 w-7 text-pd-brand" />
         </div>
-        <h2 className="text-lg font-bold text-gray-900">PDF ready</h2>
-        <p className="mt-2 text-sm text-gray-500">
+        <h2 className="text-lg font-bold text-pd-foreground">PDF ready</h2>
+        <p className="mt-2 text-sm text-pd-muted">
           Your rotated document is ready to download.
         </p>
-        <a
-          href={resultUrl}
-          download={file.name.replace(/\.pdf$/i, "-rotated.pdf")}
-          className="mt-5 inline-block"
-        >
+        <a href={resultUrl} download={`rotated-${file.name}`} className="mt-5 inline-block">
           <Button size="md" className="gap-2">
             <Download className="h-4 w-4" />
             Download
@@ -408,7 +356,7 @@ export function RotatePdfWorkspace({
             setResultUrl(null);
             onReset();
           }}
-          className="mx-auto mt-3 block text-sm text-gray-400 transition-colors hover:text-gray-700"
+          className="mx-auto mt-3 block text-sm text-pd-muted hover:text-pd-foreground"
         >
           Rotate another file
         </button>
@@ -416,10 +364,21 @@ export function RotatePdfWorkspace({
     );
   }
 
-  /* ─── main UI ─── */
-
   return (
     <>
+      {passwordPrompt && (
+        <PdfPasswordModal
+          fileName={passwordPrompt.fileName}
+          errorMessage={passwordPrompt.errorMsg}
+          loading={passwordPrompt.loading}
+          onSubmit={retryWithPassword}
+          onCancel={() => {
+            setPasswordPrompt(null);
+            onReset();
+          }}
+        />
+      )}
+
       <input
         ref={insertFileRef}
         type="file"
@@ -428,99 +387,105 @@ export function RotatePdfWorkspace({
         onChange={handleInsertDocuments}
       />
 
-      {zoomSlotId !== null &&
-        (() => {
-          const slot = visibleSlots.find((s) => s.id === zoomSlotId);
-          if (!slot) return null;
-          const idx = visibleSlots.indexOf(slot);
-          return (
-            <PageZoomModal
-              pageNum={idx + 1}
-              imageUrl={slotThumbUrl(slot, thumbnails)}
-              rotation={rotations[slot.id] ?? 0}
-              onClose={() => setZoomSlotId(null)}
-            />
-          );
-        })()}
+      {zoomSlotId !== null && (() => {
+        const slot = visibleSlots.find((s) => s.id === zoomSlotId);
+        if (!slot) return null;
+        const idx = visibleSlots.indexOf(slot);
+        return (
+          <PageZoomModal
+            pageNum={idx + 1}
+            totalPages={visibleSlots.length}
+            imageUrl={slotThumbUrl(slot, thumbnails)}
+            rotation={rotations[slot.id] ?? 0}
+            thumbnails={visibleSlots.map((s) => slotThumbUrl(s, thumbnails) ?? "")}
+            onClose={() => setZoomSlotId(null)}
+            onNavigate={(n) => {
+              const target = visibleSlots[n - 1];
+              if (target) setZoomSlotId(target.id);
+            }}
+            onRotateLeft={() => rotateSlot(zoomSlotId, -90)}
+            onRotateRight={() => rotateSlot(zoomSlotId, 90)}
+            onDelete={() => {
+              removeSlot(zoomSlotId);
+              const remaining = visibleSlots.filter((s) => s.id !== zoomSlotId);
+              if (remaining.length === 0) {
+                setZoomSlotId(null);
+                return;
+              }
+              const nextIdx = Math.min(idx, remaining.length - 1);
+              setZoomSlotId(remaining[nextIdx].id);
+            }}
+          />
+        );
+      })()}
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        {/* ── Toolbar — Smallpdf-style clean bar ── */}
-        <div className="flex flex-wrap items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 sm:px-5">
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm">
+      <div className="overflow-hidden rounded-xl border border-pd-border bg-pd-surface shadow-sm">
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-3 border-b border-pd-border bg-pd-background px-3 py-2.5 sm:px-4">
+          <label className="flex cursor-pointer items-center gap-2 text-xs sm:text-sm">
             <input
               type="checkbox"
               checked={allPagesSelected}
-              onChange={(e) => toggleSelectAll(e.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-600"
+              ref={(el) => {
+                if (el) el.indeterminate = somePagesSelected;
+              }}
+              onChange={(e) =>
+                setSelectedSlotIds(
+                  e.target.checked ? new Set(visibleSlots.map((s) => s.id)) : new Set()
+                )
+              }
+              className="accent-pd-brand"
             />
-            <span className="font-medium text-gray-700">Select all</span>
+            <span className="font-medium text-pd-foreground">Select all</span>
           </label>
 
-          <div className="hidden h-6 w-px bg-gray-200 sm:block" />
-
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 rounded-lg border border-pd-border bg-pd-surface p-0.5">
             <button
               type="button"
               onClick={() => rotateSelected(-90)}
               disabled={selectedVisibleCount === 0}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-35"
-              title="Rotate left"
+              className="rounded p-1.5 text-pd-muted hover:bg-pd-background hover:text-pd-foreground disabled:opacity-40"
+              title="Rotate selected left"
             >
               <RotateCcw className="h-4 w-4" />
-              <span className="hidden sm:inline">Left</span>
             </button>
             <button
               type="button"
               onClick={() => rotateSelected(90)}
               disabled={selectedVisibleCount === 0}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-35"
-              title="Rotate right"
+              className="rounded p-1.5 text-pd-muted hover:bg-pd-background hover:text-pd-foreground disabled:opacity-40"
+              title="Rotate selected right"
             >
               <RotateCw className="h-4 w-4" />
-              <span className="hidden sm:inline">Right</span>
             </button>
-
-            <div className="mx-1 hidden h-5 w-px bg-gray-200 sm:block" />
-
             <button
               type="button"
-              onClick={removeSelected}
+              onClick={removeSelectedPages}
               disabled={selectedVisibleCount === 0}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-35"
-              title="Delete selected"
+              className="rounded p-1.5 text-pd-muted hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+              title="Remove selected pages"
             >
               <Trash2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Delete</span>
             </button>
           </div>
 
-          {selectedVisibleCount > 0 && (
-            <span className="text-sm text-gray-400">
-              {selectedVisibleCount} of {visibleSlots.length} selected
-            </span>
-          )}
+          <span className="hidden text-xs text-pd-muted sm:inline">
+            {selectedVisibleCount} of {visibleSlots.length} selected
+          </span>
 
-          <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-sm text-gray-500 lg:inline">
-              {file.name}
-              <span className="ml-1.5 text-gray-400">
-                {totalPages} pages · {formatFileSize(file.size)}
-              </span>
-            </span>
-
+          <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={onChangeFile}
-              className="hidden rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 sm:inline"
+              className="hidden text-xs text-pd-muted hover:text-pd-brand sm:inline"
             >
               Change file
             </button>
-
             <Button
               size="sm"
-              onClick={handleExport}
-              disabled={processing || loadingThumbs || visibleSlots.length === 0}
-              className="gap-2 rounded-lg px-5 py-2 text-sm font-semibold"
+              onClick={handleApplyAndDownload}
+              disabled={processing || loadingThumbs || rotatedCount === 0}
+              className="gap-1.5"
             >
               {processing ? (
                 <>
@@ -530,59 +495,71 @@ export function RotatePdfWorkspace({
               ) : (
                 <>
                   <Download className="h-4 w-4" />
-                  Export
+                  Apply &amp; Download
                 </>
               )}
             </Button>
           </div>
         </div>
 
+        {/* File info bar */}
+        <div className="flex items-center justify-between gap-2 border-b border-pd-border bg-pd-brand-muted/40 px-3 py-2 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <RotateCw className="h-4 w-4 shrink-0 text-pd-brand" />
+            <p className="truncate text-sm font-medium text-pd-foreground">{file.name}</p>
+            <span className="shrink-0 text-xs text-pd-muted">
+              {totalPages} pages · {formatFileSize(file.size)}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onChangeFile}
+            className="shrink-0 text-pd-muted hover:text-pd-foreground sm:hidden"
+            aria-label="Change file"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
         {error && (
-          <div className="px-4 pt-3 sm:px-5">
+          <div className="px-3 pt-3 sm:px-4">
             <ToolErrorBanner message={error} />
           </div>
         )}
 
-        {/* ── Page grid — Smallpdf-style light background ── */}
-        <div className="bg-gray-100 px-4 py-5 sm:px-6 sm:py-6">
+        {/* Page grid */}
+        <div className="bg-[#e8eef5] px-3 py-4 sm:px-4 sm:py-5">
           {loadingThumbs && !thumbnails.some(Boolean) && (
-            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-gray-500">
-              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            <div className="mb-3 flex items-center justify-center gap-2 text-sm text-pd-muted">
+              <Loader2 className="h-4 w-4 animate-spin text-pd-brand" />
               Generating page previews…
             </div>
           )}
-
           {totalPages > 0 && (
             <>
               {truncated && (
-                <p className="mb-3 text-center text-xs text-gray-400">
-                  Showing first {thumbnails.length} of {totalPages} page
-                  previews.
+                <p className="mb-3 text-center text-xs text-pd-muted">
+                  Showing first {thumbnails.length} of {totalPages} page previews.
                 </p>
               )}
-              <p className="mb-4 text-center text-sm text-gray-400">
-                Hover a page to rotate · Click{" "}
-                <strong className="text-blue-600">+</strong> between pages to
-                add documents
+              <p className="mb-3 text-center text-xs text-pd-muted">
+                Click pages to select · Hover for rotate controls · <strong>Apply &amp; Download</strong> when done
               </p>
-
-              <div className="flex flex-wrap items-start justify-center gap-x-0 gap-y-4 sm:gap-x-0">
+              <div className="flex flex-wrap items-start justify-center gap-x-0 gap-y-3 sm:gap-x-0">
                 {visibleSlots.map((slot, index) => (
                   <div key={slot.id} className="flex items-center">
-                    <RotatePageCard
+                    <SplitPageCard
                       pageNum={index + 1}
                       fileName={slotLabel(slot, file.name)}
                       thumb={slotThumbUrl(slot, thumbnails)}
-                      loadingThumb={
-                        loadingThumbs && !slotThumbUrl(slot, thumbnails)
-                      }
+                      loadingThumb={loadingThumbs && !slotThumbUrl(slot, thumbnails)}
                       isBlank={slot.kind === "blank"}
                       rotation={rotations[slot.id] ?? 0}
+                      mode="extract"
                       selected={selectedSlotIds.has(slot.id)}
                       onSelect={() => toggleSlot(slot.id)}
                       onZoom={() => setZoomSlotId(slot.id)}
                       onRotateLeft={() => rotateSlot(slot.id, -90)}
-                      onRotateRight={() => rotateSlot(slot.id, 90)}
                       onDuplicate={() => duplicateSlotAfter(slot.id)}
                       onRemove={() => removeSlot(slot.id)}
                     />
@@ -599,8 +576,11 @@ export function RotatePdfWorkspace({
           )}
         </div>
 
-        <div className="border-t border-gray-200 bg-white px-4 py-2.5 text-center text-xs text-gray-400 sm:px-5">
-          Rotations are applied on export · Files auto-delete after 2 hours
+        <div className="border-t border-pd-border px-3 py-2 text-center text-[11px] text-pd-muted sm:px-4">
+          {rotatedCount > 0
+            ? `${rotatedCount} page${rotatedCount !== 1 ? "s" : ""} rotated · `
+            : ""}
+          Files auto-delete after 2 hours
         </div>
       </div>
     </>

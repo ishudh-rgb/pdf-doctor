@@ -41,19 +41,31 @@ def docx_metrics(docx_path: str) -> dict[str, int]:
 
 
 def validate_docx(docx_path: str, *, image_ok: bool = False) -> bool:
-    """Accept text-rich DOCX; image-only / scanned PDFs pass when image_ok=True."""
-    if not os.path.isfile(docx_path) or os.path.getsize(docx_path) < 2000:
+    """Accept DOCX with meaningful text, images, or tables."""
+    if not os.path.isfile(docx_path) or os.path.getsize(docx_path) < 1500:
         return False
     try:
         with zipfile.ZipFile(docx_path) as archive:
             xml = archive.read("word/document.xml").decode("utf-8", errors="ignore")
+        if "<w:t" not in xml and "<w:drawing" not in xml:
+            return False
         metrics = docx_metrics(docx_path)
-        has_text = metrics["chars"] > 1000
+        chars = metrics["chars"]
         has_images = metrics["media"] > 0 or metrics["drawings"] > 0
-        if has_text:
-            return "<w:t" in xml
-        if image_ok and has_images:
-            return os.path.getsize(docx_path) >= 5000
+        has_tables = metrics["tables"] > 0
+        size = os.path.getsize(docx_path)
+
+        # Normal documents: text with optional images/tables
+        if chars > 200:
+            return True
+        # Mixed short-text + screenshot PDFs (e.g. CTA reports)
+        if has_images and chars > 50 and size >= 3000:
+            return True
+        if has_tables and chars > 50:
+            return True
+        # Scanned / image-only PDFs
+        if image_ok and has_images and size >= 3000:
+            return True
         return False
     except zipfile.BadZipFile:
         return False

@@ -33,7 +33,18 @@ async function renderPdfPagesToPng(fileBuffer: Buffer): Promise<Buffer[]> {
       { timeout: 120_000, maxBuffer: 10 * 1024 * 1024 }
     );
 
-    const result: RenderResult = JSON.parse(stdout.trim());
+    const lines = stdout.trim().split("\n");
+    let jsonLine = "";
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const trimmed = lines[i].trim();
+      if (trimmed.startsWith("{")) {
+        jsonLine = trimmed;
+        break;
+      }
+    }
+    if (!jsonLine) throw new Error("No JSON output from render script");
+
+    const result: RenderResult = JSON.parse(jsonLine);
     if (result.error) throw new Error(result.error);
     if (!result.pages || result.pages.length === 0) {
       throw new Error("No pages rendered from PDF");

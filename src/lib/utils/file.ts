@@ -45,6 +45,8 @@ const VALID_FILE_TYPES: Record<string, string[]> = {
     "application/vnd.ms-powerpoint",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   ],
+  html: ["text/html", "application/xhtml+xml", "image/svg+xml"],
+  txt: ["text/plain", "text/csv", "text/markdown", "application/json", "application/xml", "text/yaml", "text/x-log"],
 };
 
 export function isValidFileType(
@@ -81,6 +83,14 @@ export function isValidFileType(
     return true;
   }
 
+  if (allowedCategories.includes("html") && ["html", "htm", "xhtml", "mhtml", "svg"].includes(ext)) {
+    return true;
+  }
+
+  if (allowedCategories.includes("txt") && ["txt", "text", "log", "csv", "md", "json", "xml", "yaml", "yml", "ini", "cfg", "conf", "env"].includes(ext)) {
+    return true;
+  }
+
   return false;
 }
 
@@ -113,4 +123,15 @@ export function getMimeTypeCategory(mimeType: string): string | null {
     if (types.includes(mimeType)) return category;
   }
   return null;
+}
+
+/**
+ * Sanitize a filename for use in Content-Disposition headers.
+ * Strips characters that could cause header injection or breakage.
+ */
+export function sanitizeFilename(name: string): string {
+  return name
+    .replace(/["\\\r\n]/g, "")
+    .replace(/[^\x20-\x7E]/g, "_")
+    .trim() || "download";
 }

@@ -55,6 +55,16 @@
       "description": "PDF पेजों को विज़ुअली घुमाएँ",
       "longDescription": "अलग-अलग पेज या सभी पेज एक साथ रोटेट करें। दूसरी PDF से पेज जोड़ें। विज़ुअल वर्कस्पेस में तुरंत प्रीव्यू।"
     },
+    "deletePdf": {
+      "name": "PDF पेज हटाएँ",
+      "description": "अपनी PDF से पेज हटाएँ",
+      "longDescription": "एक-एक या कई पेज एक साथ हटाएँ। दूसरी PDF से पेज जोड़ें। विज़ुअल वर्कस्पेस में तुरंत प्रीव्यू।"
+    },
+    "extractPdf": {
+      "name": "PDF पेज निकालें",
+      "description": "अपनी PDF से खास पेज निकालें",
+      "longDescription": "खास पेज चुनें और नई PDF में निकालें। पेज पर क्लिक करें, फिर डाउनलोड करें — विज़ुअल वर्कस्पेस में तुरंत प्रीव्यू।"
+    },
     "compressPdf": {
       "name": "PDF कम्प्रेस करें",
       "description": "PDF फ़ाइल साइज़ कम करें",
@@ -75,10 +85,15 @@
       "description": "इमेज को PDF में बदलें",
       "longDescription": "JPG, PNG और दूसरे इमेज फ़ॉर्मेट को PDF में बदलें। कई इमेज को एक PDF में कम्बाइन करें।"
     },
-    "editPdf": {
-      "name": "PDF एडिट करें",
-      "description": "टेक्स्ट, इमेज, एनोटेशन जोड़ें",
-      "longDescription": "अपनी PDF ऑनलाइन एडिट करें — टेक्स्ट, इमेज, शेप्स, हाइलाइट्स और एनोटेशन जोड़ें।"
+    "htmlToPdf": {
+      "name": "HTML से PDF",
+      "description": "HTML पेज को PDF में बदलें",
+      "longDescription": "HTML फाइल को पिक्सल-परफेक्ट PDF डॉक्यूमेंट में बदलें। CSS, इमेज, SVG और जटिल लेआउट सपोर्ट।"
+    },
+    "txtToPdf": {
+      "name": "TXT से PDF",
+      "description": "टेक्स्ट फाइल को PDF में बदलें",
+      "longDescription": "TXT, LOG, CSV, Markdown, JSON, XML और अन्य टेक्स्ट फाइलों को कस्टमाइज़ेबल फॉन्ट और लेआउट के साथ प्रोफेशनल PDF में बदलें।"
     },
     "signPdf": {
       "name": "PDF साइन करें",

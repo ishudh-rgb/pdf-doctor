@@ -40,7 +40,7 @@ export function MergeFileListRow({
           <img
             src={item.thumbUrl}
             alt={item.file.name}
-            className="h-full w-full object-contain object-top"
+            className="h-full w-full object-contain"
             style={{ transform: `rotate(${rotation}deg)` }}
             draggable={false}
           />

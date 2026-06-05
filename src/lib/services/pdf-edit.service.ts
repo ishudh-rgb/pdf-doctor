@@ -6,6 +6,7 @@ import {
   type RGB,
 } from "pdf-lib";
 import { logError } from "@/lib/db/queries";
+import { safePdfLoad } from "@/lib/pdf/pdf-safe-load";
 import type { PdfFontKey } from "@/lib/edit-pdf/fonts";
 import type {
   ExportImageOp,
@@ -122,7 +123,7 @@ export async function applyEditPdfOperations(
   imageBuffers: Buffer[] = []
 ): Promise<Buffer> {
   try {
-    const pdfDoc = await PDFDocument.load(fileBuffer, { ignoreEncryption: true });
+    const pdfDoc = await safePdfLoad(fileBuffer, "edit-pdf");
     const pages = pdfDoc.getPages();
     const fontCache = new Map<PdfFontKey, Awaited<ReturnType<typeof getFont>>>();
 
@@ -135,7 +136,9 @@ export async function applyEditPdfOperations(
 
     for (const t of operations.texts ?? []) {
       const pageIndex = t.page - 1;
-      if (pageIndex < 0 || pageIndex >= pages.length) continue;
+      if (pageIndex < 0 || pageIndex >= pages.length) {
+        throw new Error(`Text operation targets page ${t.page}, but document only has ${pages.length} pages.`);
+      }
       const page = pages[pageIndex];
       const color = t.color ? hexToRgb(t.color) : rgb(0, 0, 0);
       const f = await font(t.fontKey ?? "Helvetica");
@@ -165,7 +168,9 @@ export async function applyEditPdfOperations(
 
     for (const s of operations.shapes ?? []) {
       const pageIndex = s.page - 1;
-      if (pageIndex < 0 || pageIndex >= pages.length) continue;
+      if (pageIndex < 0 || pageIndex >= pages.length) {
+        throw new Error(`Shape operation targets page ${s.page}, but document only has ${pages.length} pages.`);
+      }
       const page = pages[pageIndex];
       page.drawRectangle({
         x: s.x,
@@ -180,7 +185,9 @@ export async function applyEditPdfOperations(
 
     for (const stroke of operations.strokes ?? []) {
       const pageIndex = stroke.page - 1;
-      if (pageIndex < 0 || pageIndex >= pages.length) continue;
+      if (pageIndex < 0 || pageIndex >= pages.length) {
+        throw new Error(`Stroke operation targets page ${stroke.page}, but document only has ${pages.length} pages.`);
+      }
       const page = pages[pageIndex];
       const color = parseColor(stroke.color);
       for (let i = 1; i < stroke.points.length; i++) {
@@ -195,9 +202,13 @@ export async function applyEditPdfOperations(
     }
 
     for (const imgOp of operations.images ?? []) {
-      if (imgOp.imageIndex >= imageBuffers.length) continue;
+      if (imgOp.imageIndex >= imageBuffers.length) {
+        throw new Error(`Image operation references image index ${imgOp.imageIndex}, but only ${imageBuffers.length} images were provided.`);
+      }
       const pageIndex = imgOp.page - 1;
-      if (pageIndex < 0 || pageIndex >= pages.length) continue;
+      if (pageIndex < 0 || pageIndex >= pages.length) {
+        throw new Error(`Image operation targets page ${imgOp.page}, but document only has ${pages.length} pages.`);
+      }
       const imageBuffer = imageBuffers[imgOp.imageIndex];
       let image;
       if (imageBuffer[0] === 0xff && imageBuffer[1] === 0xd8) {

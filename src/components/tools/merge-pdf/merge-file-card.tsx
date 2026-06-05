@@ -163,10 +163,13 @@ export function MergeFileCard({
                       src={thumb}
                       alt={fileName}
                       className={cn(
-                        "relative z-10 h-full w-full object-contain object-top transition-all duration-200",
+                        "relative z-10 h-full w-full object-contain transition-all duration-200",
                         showImage ? "opacity-100" : "opacity-0"
                       )}
-                      style={{ transform: `rotate(${rotation}deg)` }}
+                      style={{
+                        transform: `rotate(${rotation}deg)${rotation % 180 !== 0 ? " scale(1.414)" : ""}`,
+                        transformOrigin: "center center",
+                      }}
                       draggable={false}
                       loading="lazy"
                       decoding="async"

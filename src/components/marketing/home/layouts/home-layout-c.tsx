@@ -15,6 +15,7 @@ import {
   ToolsByCategory,
   WizardSteps,
 } from "@/components/marketing/home/home-sections";
+import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 
 /** Layout C — Adobe-style: bold visual hero, wizard steps, tabbed categories */
 export function HomeLayoutC() {
@@ -78,6 +79,7 @@ export function HomeLayoutC() {
       <AISection />
       <SecuritySection variant="cards" />
       <PricingSection />
+      <TestimonialsSection />
       <FAQSection />
       <CTASection />
     </>

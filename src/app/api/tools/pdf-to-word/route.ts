@@ -3,7 +3,7 @@ import { pdfToWord } from "@/lib/services/pdf-to-word.service";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
 export const maxDuration = 300;
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename="${originalName}.docx"`,
+        "Content-Disposition": `attachment; filename="${sanitizeFilename(originalName)}.docx"`,
         "Content-Length": String(docxBuffer.length),
         "X-Pdf-Engine": engine,
       },

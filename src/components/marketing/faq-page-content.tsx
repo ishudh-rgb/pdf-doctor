@@ -103,7 +103,7 @@ const faqData: FaqCategory[] = [
       {
         question: "What is included in the Pro plan?",
         answer:
-          "The Pro plan includes 100 tool uses per day, no file size limit, all tools including Edit PDF, Sign PDF, and AI Summarizer, priority processing, no ads, and priority email support.",
+          "The Pro plan includes 100 tool uses per day, no file size limit, all tools including Sign PDF and AI Summarizer, priority processing, no ads, and priority email support.",
       },
       {
         question: "How do I upgrade to Pro?",

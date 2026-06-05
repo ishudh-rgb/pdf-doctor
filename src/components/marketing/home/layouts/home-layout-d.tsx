@@ -15,6 +15,7 @@ import {
   ToolsGrid,
   WorkflowSection,
 } from "@/components/marketing/home/home-sections";
+import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 
 /** Layout D — Notion-style: narrow centered column, calm stacked cards */
 export function HomeLayoutD() {
@@ -73,6 +74,7 @@ export function HomeLayoutD() {
         </div>
       </section>
 
+      <TestimonialsSection />
       <FAQSection />
       <CTASection />
     </div>

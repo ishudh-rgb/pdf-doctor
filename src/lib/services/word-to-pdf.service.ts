@@ -1,6 +1,8 @@
 import mammoth from "mammoth";
 import puppeteer from "puppeteer";
 import { logError } from "@/lib/db/queries";
+import { tryExportWithWord } from "@/lib/services/word-com-export.service";
+import { tryConvertWithLibreOffice } from "@/lib/services/libreoffice-convert.service";
 
 const STYLE_MAP = [
   "p[style-name='Title'] => h1.doc-title:fresh",
@@ -165,9 +167,31 @@ async function renderHtmlToPdf(html: string): Promise<Buffer> {
 
 export async function wordToPdf(fileBuffer: Buffer): Promise<Buffer> {
   try {
+    if (process.platform === "win32") {
+      console.info("[word-to-pdf] Trying Word COM…");
+      const t0 = Date.now();
+      const wordPdf = await tryExportWithWord(fileBuffer);
+      console.info(`[word-to-pdf] Word COM took ${Date.now() - t0}ms, result: ${wordPdf ? wordPdf.length + " bytes" : "null"}`);
+      if (wordPdf && wordPdf.length > 0) {
+        return wordPdf;
+      }
+    }
+
+    console.info("[word-to-pdf] Trying LibreOffice…");
+    const t1 = Date.now();
+    const librePdf = await tryConvertWithLibreOffice(fileBuffer);
+    console.info(`[word-to-pdf] LibreOffice took ${Date.now() - t1}ms, result: ${librePdf ? librePdf.length + " bytes" : "null"}`);
+    if (librePdf && librePdf.length > 0) {
+      return librePdf;
+    }
+
+    console.info("[word-to-pdf] Falling back to Mammoth + Puppeteer…");
+    const t2 = Date.now();
     const htmlBody = await convertDocxToHtml(fileBuffer);
     const html = buildHtmlDocument(htmlBody);
-    return await renderHtmlToPdf(html);
+    const result = await renderHtmlToPdf(html);
+    console.info(`[word-to-pdf] Mammoth+Puppeteer took ${Date.now() - t2}ms`);
+    return result;
   } catch (err) {
     await logError({
       tool_name: "word-to-pdf",

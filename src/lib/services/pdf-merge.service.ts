@@ -1,4 +1,5 @@
 import { PDFDocument } from "pdf-lib";
+import { safePdfLoad } from "@/lib/pdf/pdf-safe-load";
 import { logError } from "@/lib/db/queries";
 
 export async function mergePDFs(fileBuffers: Buffer[]): Promise<Buffer> {
@@ -14,7 +15,7 @@ export async function mergePDFs(fileBuffers: Buffer[]): Promise<Buffer> {
     const mergedPdf = await PDFDocument.create();
 
     for (const buffer of fileBuffers) {
-      const pdf = await PDFDocument.load(buffer, { ignoreEncryption: true });
+      const pdf = await safePdfLoad(buffer, "merge-pdf");
       const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
       for (const page of pages) {
         mergedPdf.addPage(page);

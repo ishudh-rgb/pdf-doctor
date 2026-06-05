@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { FileText } from 'lucide-react';
-import { cn } from '@/lib/utils/cn';
 import { formatFileSize } from '@/lib/utils/file';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
@@ -10,8 +9,8 @@ import {
   ToolDropzone,
   ToolErrorBanner,
   ToolPrimaryButton,
-  ToolSuccessPanel,
 } from '@/components/tools/tool-ui';
+import { PdfResultPreview } from '@/components/tools/pdf-result-preview';
 
 const RELATED_TOOLS = [
   { name: 'PDF to Word', href: '/pdf-to-word' },
@@ -22,7 +21,7 @@ const RELATED_TOOLS = [
 
 const FAQS = [
   { q: 'What Word formats are supported?', a: 'We support both .doc and .docx formats. For best results, use the newer .docx format.' },
-  { q: 'Will the formatting be preserved?', a: 'Yes, most formatting including fonts, images, tables, and styles are preserved during conversion.' },
+  { q: 'Will the formatting be preserved?', a: 'Yes, all formatting including fonts, images, tables, and styles are perfectly preserved using native rendering.' },
   { q: 'Is there a file size limit?', a: 'No — convert Word documents of any size.' },
   { q: 'Can I convert multiple files at once?', a: 'Currently, conversion works one file at a time. You can use our Merge tool to combine the resulting PDFs.' },
 ];
@@ -34,6 +33,7 @@ export default function WordToPdfPage() {
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultFilename, setResultFilename] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState<number | undefined>();
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +80,7 @@ export default function WordToPdfPage() {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
+      setResultSize(blob.size);
       setResultFilename(files[0].name.replace(/\.docx?$/, '.pdf'));
       setProgress(100);
       setCompleted(true);
@@ -90,27 +91,30 @@ export default function WordToPdfPage() {
     }
   };
 
+  const handleReset = () => {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    setCompleted(false);
+    setFiles([]);
+    setResultUrl(null);
+    setResultSize(undefined);
+    setProgress(0);
+  };
+
   return (
     <ToolPageShell
       title="Word to PDF"
       description="Convert Word documents to PDF format"
       relatedTools={mapRelatedTools(RELATED_TOOLS)}
       faqs={mapFaqs(FAQS)}
+      fullWidthWorkspace={completed}
     >
       {completed && resultUrl ? (
-        <ToolSuccessPanel
-          title="Conversion Complete!"
-          description="Your PDF is ready to download."
-          downloadUrl={resultUrl}
-          downloadFilename={resultFilename || 'converted.pdf'}
-          downloadLabel="Download PDF"
+        <PdfResultPreview
+          blobUrl={resultUrl}
+          filename={resultFilename || 'converted.pdf'}
+          fileSize={resultSize}
+          onReset={handleReset}
           resetLabel="Convert another file"
-          onReset={() => {
-            setCompleted(false);
-            setFiles([]);
-            setResultUrl(null);
-            setProgress(0);
-          }}
         />
       ) : (
         <>

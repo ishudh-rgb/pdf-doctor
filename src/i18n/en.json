@@ -55,6 +55,16 @@
       "description": "Rotate PDF pages visually",
       "longDescription": "Rotate individual pages or all pages at once. Add pages from other PDFs. Visual workspace with instant preview."
     },
+    "deletePdf": {
+      "name": "Delete PDF Pages",
+      "description": "Remove pages from your PDF",
+      "longDescription": "Delete individual pages or multiple pages at once. Add pages from other PDFs. Visual workspace with instant preview."
+    },
+    "extractPdf": {
+      "name": "Extract PDF Pages",
+      "description": "Extract specific pages from your PDF",
+      "longDescription": "Select and extract specific pages into a new PDF. Click pages to select, then download — visual workspace with instant preview."
+    },
     "compressPdf": {
       "name": "Compress PDF",
       "description": "Reduce PDF file size",
@@ -75,10 +85,15 @@
       "description": "Convert images to PDF",
       "longDescription": "Convert JPG, PNG, and other image formats to PDF. Combine multiple images into one PDF."
     },
-    "editPdf": {
-      "name": "Edit PDF",
-      "description": "Add text, images, annotations",
-      "longDescription": "Edit your PDFs online — add text, images, shapes, highlights, and annotations."
+    "htmlToPdf": {
+      "name": "HTML to PDF",
+      "description": "Convert HTML pages to PDF",
+      "longDescription": "Convert HTML files to pixel-perfect PDF documents. Full CSS support, images, SVG, and complex layouts."
+    },
+    "txtToPdf": {
+      "name": "TXT to PDF",
+      "description": "Convert text files to PDF",
+      "longDescription": "Convert TXT, LOG, CSV, Markdown, JSON, XML, and other text files to professionally formatted PDF documents with customizable fonts and layouts."
     },
     "signPdf": {
       "name": "Sign PDF",

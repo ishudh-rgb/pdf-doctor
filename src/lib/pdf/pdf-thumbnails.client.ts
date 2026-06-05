@@ -1,16 +1,32 @@
 "use client";
 
-const MAX_THUMBNAIL_PAGES = 60;
+const MAX_THUMBNAIL_PAGES = 500;
 
 function appendPdfToForm(formData: FormData, file: File) {
   formData.append("file", file, file.name || "document.pdf");
 }
 
+export interface PdfSessionResult {
+  sessionId: string;
+  totalPages: number;
+  truncated: boolean;
+  error?: string;
+  /** Set when the PDF requires a password before it can be opened. */
+  passwordRequired?: boolean;
+  /** Set when the supplied password was incorrect. */
+  wrongPassword?: boolean;
+  fileName?: string;
+}
+
 async function createPdfSession(
-  file: File
-): Promise<{ sessionId: string; totalPages: number; truncated: boolean; error?: string }> {
+  file: File,
+  password?: string
+): Promise<PdfSessionResult> {
   const formData = new FormData();
   appendPdfToForm(formData, file);
+  if (password) {
+    formData.append("password", password);
+  }
 
   try {
     const res = await fetch("/api/tools/pdf-session", {
@@ -22,9 +38,29 @@ async function createPdfSession(
       totalPages?: number;
       truncated?: boolean;
       error?: string;
+      code?: string;
+      fileName?: string;
     };
 
     if (!res.ok) {
+      if (data.code === "password_required") {
+        return {
+          sessionId: "",
+          totalPages: 0,
+          truncated: false,
+          passwordRequired: true,
+          fileName: data.fileName ?? file.name,
+        };
+      }
+      if (data.code === "wrong_password") {
+        return {
+          sessionId: "",
+          totalPages: 0,
+          truncated: false,
+          wrongPassword: true,
+          error: data.error ?? "Incorrect password.",
+        };
+      }
       return {
         sessionId: "",
         totalPages: 0,
@@ -59,7 +95,7 @@ async function createPdfSession(
 
 function thumbUrl(sessionId: string, pageNum: number, width?: number): string {
   const base = `/api/tools/pdf-thumb?session=${encodeURIComponent(sessionId)}&page=${pageNum}`;
-  if (width && width !== 140) {
+  if (width && width !== 300) {
     return `${base}&width=${width}`;
   }
   return base;
@@ -67,13 +103,20 @@ function thumbUrl(sessionId: string, pageNum: number, width?: number): string {
 
 export async function loadPdfThumbnailsBatched(
   file: File,
-  onBatch: (thumbnails: string[], totalPages: number, truncated: boolean) => void
-): Promise<{ totalPages: number; error?: string }> {
+  onBatch: (thumbnails: string[], totalPages: number, truncated: boolean) => void,
+  password?: string
+): Promise<{ totalPages: number; error?: string; passwordRequired?: boolean; wrongPassword?: boolean }> {
   if (!file || file.size === 0) {
     return { totalPages: 0, error: "File is empty." };
   }
 
-  const session = await createPdfSession(file);
+  const session = await createPdfSession(file, password);
+  if (session.passwordRequired) {
+    return { totalPages: 0, passwordRequired: true };
+  }
+  if (session.wrongPassword) {
+    return { totalPages: 0, wrongPassword: true, error: session.error };
+  }
   if (!session.sessionId || session.totalPages === 0) {
     return {
       totalPages: 0,
@@ -95,14 +138,37 @@ export async function loadPdfThumbnailsBatched(
 }
 
 /** First-page preview + page count for document cards (merge, file list). */
-export async function loadPdfDocumentPreview(file: File): Promise<{
+export async function loadPdfDocumentPreview(file: File, password?: string): Promise<{
   sessionId: string;
   totalPages: number;
   thumbUrl: string;
   truncated: boolean;
   error?: string;
+  passwordRequired?: boolean;
+  wrongPassword?: boolean;
+  fileName?: string;
 }> {
-  const session = await createPdfSession(file);
+  const session = await createPdfSession(file, password);
+  if (session.passwordRequired) {
+    return {
+      sessionId: "",
+      totalPages: 0,
+      thumbUrl: "",
+      truncated: false,
+      passwordRequired: true,
+      fileName: session.fileName ?? file.name,
+    };
+  }
+  if (session.wrongPassword) {
+    return {
+      sessionId: "",
+      totalPages: 0,
+      thumbUrl: "",
+      truncated: false,
+      wrongPassword: true,
+      error: session.error,
+    };
+  }
   if (!session.sessionId || session.totalPages === 0) {
     return {
       sessionId: "",

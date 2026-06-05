@@ -3,7 +3,7 @@ import { wordToPdf } from "@/lib/services/word-to-pdf.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
 export const maxDuration = 60;
@@ -17,10 +17,15 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id ?? null;
 
-    const isPro = user ? await checkFileSizeLimit(user.id) : false;
-    const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+    const sizeResult = userId
+      ? await checkFileSizeLimit(userId)
+      : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
+    const maxSizeMB = sizeResult.maxSizeMB;
 
-    await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    const usageResult = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"), "word-to-pdf");
+    if (!usageResult.allowed) {
+      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${originalName}.pdf"`,
+        "Content-Disposition": `attachment; filename="${sanitizeFilename(originalName)}.pdf"`,
         "Content-Length": String(pdfBuffer.length),
       },
     });

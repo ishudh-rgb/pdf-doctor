@@ -4,7 +4,7 @@ import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { getPdfjsAssetDirs } from "@/lib/pdf/pdfjs-paths";
 
 const THUMBNAIL_SCALE = 0.52;
-const THUMBNAIL_WIDTH = 140;
+const THUMBNAIL_WIDTH = 300;
 const MAX_RENDER_WIDTH = 1200;
 const JPEG_QUALITY = 82;
 
@@ -96,7 +96,7 @@ export async function renderPdfThumbnailsServer(
   endPage: number;
 }> {
   const totalPages = await getTotalPages(buffer);
-  const maxPages = options.maxPages ?? 60;
+  const maxPages = options.maxPages ?? 500;
   const cappedTotal = Math.min(totalPages, maxPages);
 
   const startPage = Math.max(1, options.startPage ?? 1);
