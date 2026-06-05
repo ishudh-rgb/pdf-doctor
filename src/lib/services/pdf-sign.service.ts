@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, PDFPage, StandardFonts, rgb } from "pdf-lib";
 import { logError } from "@/lib/db/queries";
 
 interface SignaturePosition {
@@ -34,6 +34,29 @@ function normToPdfRect(
   const x = xNorm * pageWidth;
   const y = pageHeight - yNorm * pageHeight - h;
   return { x, y, width: w, height: h };
+}
+
+/** Draw checkmark with lines — StandardFonts cannot encode Unicode ✓ (U+2713). */
+function drawCheckmark(
+  page: PDFPage,
+  rect: { x: number; y: number; width: number; height: number }
+) {
+  const { x, y, width, height } = rect;
+  const thickness = Math.max(1.2, Math.min(width, height) * 0.11);
+  const color = rgb(0, 0, 0);
+
+  page.drawLine({
+    start: { x: x + width * 0.14, y: y + height * 0.48 },
+    end: { x: x + width * 0.38, y: y + height * 0.2 },
+    thickness,
+    color,
+  });
+  page.drawLine({
+    start: { x: x + width * 0.38, y: y + height * 0.2 },
+    end: { x: x + width * 0.86, y: y + height * 0.78 },
+    thickness,
+    color,
+  });
 }
 
 export async function applySignAnnotations(
@@ -76,14 +99,7 @@ export async function applySignAnnotations(
     }
 
     if (ann.type === "check") {
-      const size = Math.min(rect.width, rect.height) * 0.9;
-      page.drawText("✓", {
-        x: rect.x,
-        y: rect.y,
-        size,
-        font,
-        color: rgb(0, 0, 0),
-      });
+      drawCheckmark(page, rect);
     }
   }
 

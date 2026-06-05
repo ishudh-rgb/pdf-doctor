@@ -11,7 +11,6 @@ import {
 import {
   Calendar,
   Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -19,8 +18,6 @@ import {
   MousePointer2,
   PanelLeftClose,
   PanelLeftOpen,
-  PenLine,
-  Plus,
   Redo2,
   Trash2,
   Type,
@@ -42,6 +39,11 @@ import { ToolErrorBanner } from "@/components/tools/tool-ui";
 import { SignatureCreateModal } from "@/components/tools/sign-pdf/signature-create-modal";
 import { SignPageInsertDivider } from "@/components/tools/sign-pdf/sign-page-insert-divider";
 import { SignPageThumb } from "@/components/tools/sign-pdf/sign-page-thumb";
+import {
+  SignImageAnnotation,
+  type ResizeHandle,
+} from "@/components/tools/sign-pdf/sign-image-annotation";
+import { SignSignaturesDropdown } from "@/components/tools/sign-pdf/sign-signatures-dropdown";
 import { SignThumbScrollPanel } from "@/components/tools/sign-pdf/sign-thumb-scroll-panel";
 import {
   createOriginalSlots,
@@ -75,6 +77,8 @@ const DEFAULT_SIG_WIDTH_NORM = 0.22;
 const DEFAULT_SIG_HEIGHT_NORM = 0.08;
 const DEFAULT_TEXT_HEIGHT_NORM = 0.035;
 const DEFAULT_CHECK_SIZE_NORM = 0.035;
+const MIN_ANNOTATION_WIDTH_NORM = 0.04;
+const MIN_ANNOTATION_HEIGHT_NORM = 0.025;
 
 interface SignPdfWorkspaceProps {
   file: File;
@@ -136,7 +140,16 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
     origX: number;
     origY: number;
   } | null>(null);
-  const signaturesRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<{
+    id: string;
+    handle: ResizeHandle;
+    startX: number;
+    startY: number;
+    origX: number;
+    origY: number;
+    origW: number;
+    origH: number;
+  } | null>(null);
   const annotationsRef = useRef(annotations);
   annotationsRef.current = annotations;
 
@@ -265,16 +278,6 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
     });
   }, [fileKey, file]);
 
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (signaturesRef.current && !signaturesRef.current.contains(e.target as Node)) {
-        setSignaturesOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
-
   const placeAnnotation = useCallback(
     (partial: Omit<PlacedAnnotation, "id">) => {
       const id = crypto.randomUUID();
@@ -360,23 +363,121 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
     dragRef.current = { id, startX: e.clientX, startY: e.clientY, origX: xNorm, origY: yNorm };
   };
 
+  const handleResizeStart = (
+    e: ReactMouseEvent,
+    id: string,
+    handle: ResizeHandle,
+    ann: PlacedAnnotation
+  ) => {
+    if (tool !== "select") return;
+    e.stopPropagation();
+    setSelectedId(id);
+    resizeRef.current = {
+      id,
+      handle,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: ann.xNorm,
+      origY: ann.yNorm,
+      origW: ann.widthNorm,
+      origH: ann.heightNorm,
+    };
+  };
+
+  const clampAnnotationBounds = useCallback(
+    (x: number, y: number, w: number, h: number) => {
+      const width = Math.max(MIN_ANNOTATION_WIDTH_NORM, Math.min(w, 1));
+      const height = Math.max(MIN_ANNOTATION_HEIGHT_NORM, Math.min(h, 1));
+      const xNorm = Math.min(Math.max(x, 0), 1 - width);
+      const yNorm = Math.min(Math.max(y, 0), 1 - height);
+      return {
+        xNorm,
+        yNorm,
+        widthNorm: Math.min(width, 1 - xNorm),
+        heightNorm: Math.min(height, 1 - yNorm),
+      };
+    },
+    []
+  );
+
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      const drag = dragRef.current;
       const el = canvasRef.current;
-      if (!drag || !el) return;
+      if (!el) return;
       const rect = el.getBoundingClientRect();
+
+      const resize = resizeRef.current;
+      if (resize) {
+        const dx = (e.clientX - resize.startX) / rect.width;
+        const dy = (e.clientY - resize.startY) / rect.height;
+        const { handle, origX, origY, origW, origH, id } = resize;
+
+        let x = origX;
+        let y = origY;
+        let w = origW;
+        let h = origH;
+
+        if (handle === "se") {
+          w = origW + dx;
+          h = origH + dy;
+        } else if (handle === "sw") {
+          w = origW - dx;
+          h = origH + dy;
+          x = origX + dx;
+        } else if (handle === "ne") {
+          w = origW + dx;
+          h = origH - dy;
+          y = origY + dy;
+        } else if (handle === "nw") {
+          w = origW - dx;
+          h = origH - dy;
+          x = origX + dx;
+          y = origY + dy;
+        }
+
+        if (w < MIN_ANNOTATION_WIDTH_NORM) {
+          if (handle === "sw" || handle === "nw") x = origX + origW - MIN_ANNOTATION_WIDTH_NORM;
+          w = MIN_ANNOTATION_WIDTH_NORM;
+        }
+        if (h < MIN_ANNOTATION_HEIGHT_NORM) {
+          if (handle === "ne" || handle === "nw") y = origY + origH - MIN_ANNOTATION_HEIGHT_NORM;
+          h = MIN_ANNOTATION_HEIGHT_NORM;
+        }
+
+        const bounds = clampAnnotationBounds(x, y, w, h);
+        setAnnotations((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  xNorm: bounds.xNorm,
+                  yNorm: bounds.yNorm,
+                  widthNorm: bounds.widthNorm,
+                  heightNorm: bounds.heightNorm,
+                }
+              : item
+          )
+        );
+        return;
+      }
+
+      const drag = dragRef.current;
+      if (!drag) return;
       const dx = (e.clientX - drag.startX) / rect.width;
       const dy = (e.clientY - drag.startY) / rect.height;
-      const xNorm = Math.min(Math.max(drag.origX + dx, 0), 0.95);
-      const yNorm = Math.min(Math.max(drag.origY + dy, 0), 0.95);
+      const ann = annotationsRef.current.find((item) => item.id === drag.id);
+      const maxX = ann ? 1 - ann.widthNorm : 0.95;
+      const maxY = ann ? 1 - ann.heightNorm : 0.95;
+      const xNorm = Math.min(Math.max(drag.origX + dx, 0), maxX);
+      const yNorm = Math.min(Math.max(drag.origY + dy, 0), maxY);
       setAnnotations((prev) =>
         prev.map((item) => (item.id === drag.id ? { ...item, xNorm, yNorm } : item))
       );
     };
     const onUp = () => {
-      if (dragRef.current) {
+      if (dragRef.current || resizeRef.current) {
         dragRef.current = null;
+        resizeRef.current = null;
         pushAnnotations([...annotationsRef.current]);
       }
     };
@@ -386,7 +487,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [pushAnnotations]);
+  }, [pushAnnotations, clampAnnotationBounds]);
 
   const deleteSelected = () => {
     if (!selectedId) return;
@@ -674,30 +775,154 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
         />
       )}
 
-      <div className="flex h-[calc(100vh-10.5rem)] min-h-[480px] max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-xl border border-pd-border bg-[#f3f4f6] shadow-sm">
-        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-pd-border bg-white px-3 py-2 sm:px-4">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen((v) => !v)}
-            className="rounded-lg p-2 text-pd-muted hover:bg-pd-background lg:hidden"
-          >
-            {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{file.name}</p>
-            <p className="text-xs text-pd-muted">{formatFileSize(file.size)}</p>
+      <div className="flex h-[calc(100vh-10.5rem)] min-h-[480px] max-h-[calc(100vh-8rem)] flex-col rounded-xl border border-pd-border bg-[#f3f4f6] shadow-sm">
+        <div className="relative z-40 flex shrink-0 items-center gap-2 border-b border-pd-border bg-white px-3 py-2 sm:px-4">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="rounded-lg p-2 text-pd-muted hover:bg-pd-background lg:hidden"
+            >
+              {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+            </button>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{file.name}</p>
+              <p className="text-xs text-pd-muted">{formatFileSize(file.size)}</p>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onReset}
-            className="text-xs text-pd-muted hover:text-pd-foreground"
-          >
-            Change file
-          </button>
-          <Button size="sm" onClick={handleExport} disabled={processing || loading}>
-            {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Export
-          </Button>
+
+          {!loading && (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:block">
+              <div className="pointer-events-auto inline-flex w-fit flex-nowrap items-center gap-0.5 rounded-xl border border-pd-border bg-white px-1.5 py-1 shadow-sm">
+                <button
+                  type="button"
+                  title="Select"
+                  onClick={() => setTool("select")}
+                  className={cn(
+                    "rounded-lg p-2",
+                    tool === "select" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
+                  )}
+                >
+                  <MousePointer2 className="h-4 w-4" />
+                </button>
+
+                <SignSignaturesDropdown
+                  open={signaturesOpen}
+                  onOpenChange={setSignaturesOpen}
+                  active={tool === "signature"}
+                  signatureItems={signatureItems}
+                  initialsItems={initialsItems}
+                  onPick={(sig) => {
+                    setPendingSignature(sig);
+                    setTool("signature");
+                  }}
+                  onNewSignature={() => setModalKind("signature")}
+                  onNewInitials={() => setModalKind("initials")}
+                />
+
+                <div className="relative">
+                  <button
+                    type="button"
+                    title="Date"
+                    onClick={() => {
+                      setTool("date");
+                      setShowDatePicker((v) => !v);
+                    }}
+                    className={cn(
+                      "rounded-lg p-2",
+                      tool === "date" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
+                    )}
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </button>
+                  {showDatePicker && (
+                    <div className="absolute left-1/2 top-full z-50 mt-1 -translate-x-1/2 rounded-xl border border-pd-border bg-white p-3 shadow-xl">
+                      <input
+                        type="date"
+                        value={dateIso}
+                        onChange={(e) => e.target.value && setDateIso(e.target.value)}
+                        className="rounded-lg border border-pd-border px-2 py-1 text-sm"
+                      />
+                      <p className="mt-2 text-xs text-pd-muted">Click on the page to place {selectedDate}</p>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  title="Text"
+                  onClick={() => setTool("text")}
+                  className={cn(
+                    "rounded-lg p-2",
+                    tool === "text" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
+                  )}
+                >
+                  <Type className="h-4 w-4" />
+                </button>
+
+                <button
+                  type="button"
+                  title="Checkmark"
+                  onClick={() => setTool("check")}
+                  className={cn(
+                    "rounded-lg p-2",
+                    tool === "check" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
+                  )}
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+
+                <div className="mx-1 h-5 w-px bg-pd-border" />
+
+                <button
+                  type="button"
+                  title="Undo"
+                  disabled={historyIndex <= 0}
+                  onClick={undo}
+                  className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
+                >
+                  <Undo2 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Redo"
+                  disabled={historyIndex >= history.length - 1}
+                  onClick={redo}
+                  className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
+                >
+                  <Redo2 className="h-4 w-4" />
+                </button>
+
+                {selectedId && (
+                  <>
+                    <div className="mx-1 h-5 w-px bg-pd-border" />
+                    <button
+                      type="button"
+                      title="Delete"
+                      onClick={deleteSelected}
+                      className="rounded-lg p-2 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onReset}
+              className="text-xs text-pd-muted hover:text-pd-foreground"
+            >
+              Change file
+            </button>
+            <Button size="sm" onClick={handleExport} disabled={processing || loading}>
+              {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Export
+            </Button>
+          </div>
         </div>
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -764,187 +989,6 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                   className="relative mx-auto shrink-0"
                   style={{ width: canvasWidth, maxWidth: "100%" }}
                 >
-                  <div className="mb-3 flex justify-center">
-                    <div className="inline-flex w-fit flex-nowrap items-center gap-0.5 rounded-xl border border-pd-border bg-white/95 px-1.5 py-1 shadow-lg backdrop-blur-sm">
-                      <button
-                        type="button"
-                        title="Select"
-                        onClick={() => setTool("select")}
-                        className={cn(
-                          "rounded-lg p-2",
-                          tool === "select" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
-                        )}
-                      >
-                        <MousePointer2 className="h-4 w-4" />
-                      </button>
-
-                      <div className="relative" ref={signaturesRef}>
-                        <button
-                          type="button"
-                          onClick={() => setSignaturesOpen((v) => !v)}
-                          className={cn(
-                            "flex items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium",
-                            tool === "signature" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-foreground hover:bg-pd-background"
-                          )}
-                        >
-                          <PenLine className="h-4 w-4" />
-                          Signatures
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        </button>
-                        {signaturesOpen && (
-                          <div className="absolute left-0 top-full z-30 mt-1 w-56 rounded-xl border border-pd-border bg-white py-2 shadow-xl">
-                            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pd-muted">
-                              Signatures
-                            </p>
-                            {signatureItems.map((sig) => (
-                              <button
-                                key={sig.id}
-                                type="button"
-                                onClick={() => {
-                                  setPendingSignature(sig);
-                                  setTool("signature");
-                                  setSignaturesOpen(false);
-                                }}
-                                className="flex w-full items-center gap-2 px-3 py-2 hover:bg-pd-background"
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={sig.dataUrl} alt="" className="h-8 max-w-[100px] object-contain" />
-                              </button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setModalKind("signature");
-                                setSignaturesOpen(false);
-                              }}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-pd-brand hover:bg-pd-brand-muted"
-                            >
-                              <Plus className="h-4 w-4" />
-                              New signature
-                            </button>
-                            <div className="my-1 border-t border-pd-border" />
-                            <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pd-muted">
-                              Initials
-                            </p>
-                            {initialsItems.map((sig) => (
-                              <button
-                                key={sig.id}
-                                type="button"
-                                onClick={() => {
-                                  setPendingSignature(sig);
-                                  setTool("signature");
-                                  setSignaturesOpen(false);
-                                }}
-                                className="flex w-full items-center gap-2 px-3 py-2 hover:bg-pd-background"
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={sig.dataUrl} alt="" className="h-8 max-w-[80px] object-contain" />
-                              </button>
-                            ))}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setModalKind("initials");
-                                setSignaturesOpen(false);
-                              }}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-pd-brand hover:bg-pd-brand-muted"
-                            >
-                              <Plus className="h-4 w-4" />
-                              New initials
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <button
-                          type="button"
-                          title="Date"
-                          onClick={() => {
-                            setTool("date");
-                            setShowDatePicker((v) => !v);
-                          }}
-                          className={cn(
-                            "rounded-lg p-2",
-                            tool === "date" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
-                          )}
-                        >
-                          <Calendar className="h-4 w-4" />
-                        </button>
-                        {showDatePicker && (
-                          <div className="absolute left-0 top-full z-30 mt-1 rounded-xl border border-pd-border bg-white p-3 shadow-xl">
-                            <input
-                              type="date"
-                              value={dateIso}
-                              onChange={(e) => e.target.value && setDateIso(e.target.value)}
-                              className="rounded-lg border border-pd-border px-2 py-1 text-sm"
-                            />
-                            <p className="mt-2 text-xs text-pd-muted">Click on the page to place {selectedDate}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        title="Text"
-                        onClick={() => setTool("text")}
-                        className={cn(
-                          "rounded-lg p-2",
-                          tool === "text" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
-                        )}
-                      >
-                        <Type className="h-4 w-4" />
-                      </button>
-
-                      <button
-                        type="button"
-                        title="Checkmark"
-                        onClick={() => setTool("check")}
-                        className={cn(
-                          "rounded-lg p-2",
-                          tool === "check" ? "bg-pd-brand-muted text-pd-brand" : "text-pd-muted hover:bg-pd-background"
-                        )}
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-
-                      <div className="mx-1 h-5 w-px bg-pd-border" />
-
-                      <button
-                        type="button"
-                        title="Undo"
-                        disabled={historyIndex <= 0}
-                        onClick={undo}
-                        className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
-                      >
-                        <Undo2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        title="Redo"
-                        disabled={historyIndex >= history.length - 1}
-                        onClick={redo}
-                        className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
-                      >
-                        <Redo2 className="h-4 w-4" />
-                      </button>
-
-                      {selectedId && (
-                        <>
-                          <div className="mx-1 h-5 w-px bg-pd-border" />
-                          <button
-                            type="button"
-                            title="Delete"
-                            onClick={deleteSelected}
-                            className="rounded-lg p-2 text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
                   {tool === "signature" && pendingSignature && (
                     <p className="mb-2 text-center text-xs text-pd-brand">
                       Click on the page to place your {pendingSignature.kind}
@@ -982,23 +1026,13 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                       const selected = selectedId === ann.id;
                       if (ann.type === "image" && ann.dataUrl) {
                         return (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <SignImageAnnotation
                             key={ann.id}
-                            src={ann.dataUrl}
-                            alt=""
-                            draggable={false}
-                            className={cn(
-                              "absolute cursor-move object-contain",
-                              selected && "ring-2 ring-pd-brand ring-offset-1"
-                            )}
-                            style={{
-                              left: `${ann.xNorm * 100}%`,
-                              top: `${ann.yNorm * 100}%`,
-                              width: `${ann.widthNorm * 100}%`,
-                              height: `${ann.heightNorm * 100}%`,
-                            }}
-                            onMouseDown={(e) => handleOverlayMouseDown(e, ann.id, ann.xNorm, ann.yNorm)}
+                            ann={ann}
+                            selected={selected}
+                            onSelect={setSelectedId}
+                            onDragStart={handleOverlayMouseDown}
+                            onResizeStart={handleResizeStart}
                           />
                         );
                       }

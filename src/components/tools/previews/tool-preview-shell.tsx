@@ -32,10 +32,10 @@ export function ToolPreviewShell({
         <Eye className="h-4 w-4 text-pd-brand" />
         <h3 className="text-sm font-semibold text-pd-foreground">{title}</h3>
       </div>
-      <div className={cn("flex flex-col", stretch ? "min-h-0 flex-1 justify-center" : "min-h-[260px] justify-center")}>
+      <div className={cn("flex flex-col", stretch ? "min-h-0 flex-1" : "min-h-[260px] justify-center")}>
         {children}
       </div>
-      {footer}
+      {footer ? <div className="mt-3 shrink-0">{footer}</div> : null}
       {hint ? <p className="mt-3 shrink-0 text-center text-xs text-pd-muted">{hint}</p> : null}
     </div>
   );
@@ -43,7 +43,7 @@ export function ToolPreviewShell({
 
 export function PreviewStatGrid({ items }: { items: { label: string; value: string }[] }) {
   return (
-    <div className="mt-4 grid shrink-0 grid-cols-3 gap-2 text-center text-xs">
+    <div className="grid shrink-0 grid-cols-3 gap-2 text-center text-xs">
       {items.map((item) => (
         <div key={item.label} className="rounded-lg border border-gray-100 bg-white px-2 py-2">
           <p className="text-gray-500">{item.label}</p>

@@ -15,6 +15,8 @@ export interface ImageWatermarkOptions {
   type: "image";
   opacity?: number;
   rotation?: number;
+  /** Fraction of page width (0.1–0.75). Default 0.35 */
+  imageScale?: number;
   pages?: "all" | number[];
 }
 
@@ -93,7 +95,8 @@ export async function addWatermarkToPDF(
         if (!shouldApplyWatermark(index, options.pages)) return;
 
         const { width, height } = page.getSize();
-        const targetWidth = width * 0.35;
+        const imageScale = Math.min(0.75, Math.max(0.1, options.imageScale ?? 0.35));
+        const targetWidth = width * imageScale;
         const scale = targetWidth / image.width;
         const targetHeight = image.height * scale;
 
