@@ -109,13 +109,14 @@ export default function UnlockPdfPage() {
         />
       ) : (
         <>
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
             <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div>
               <p className="mb-1 text-sm font-semibold text-amber-800">Safe Unlock</p>
-              <p className="text-sm text-amber-700">
-                This tool only removes password protection from PDFs that you own and can already open.
-                You must provide the correct password. We do not crack, bypass, or brute-force passwords.
+              <p className="text-sm leading-snug text-amber-700">
+                Removes protection only from PDFs you own — enter the correct password to unlock.
+                <br />
+                We do not crack, bypass, or brute-force passwords.
               </p>
             </div>
           </div>
@@ -128,8 +129,6 @@ export default function UnlockPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
-            onCloudFiles={(incoming) => handleFiles(incoming)}
-            onCloudError={setError}
           />
           <input
             ref={fileInputRef}
@@ -141,7 +140,7 @@ export default function UnlockPdfPage() {
 
           {files.length > 0 && (
             <>
-              <div className="mt-4 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">
+              <div className="mt-3 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">
                 <Unlock className="h-4 w-4 shrink-0 text-pd-brand" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-pd-foreground">{files[0].name}</p>
@@ -149,7 +148,7 @@ export default function UnlockPdfPage() {
                 </div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-3">
                 <label className="mb-2 block text-sm font-semibold text-pd-foreground">PDF Password</label>
                 <div className="relative">
                   <input
