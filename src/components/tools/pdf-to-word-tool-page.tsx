@@ -11,6 +11,7 @@ import {
   ToolSuccessPanel,
 } from "@/components/tools/tool-ui";
 import { mapRelatedTools } from "@/components/tools/tool-helpers";
+import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 
 interface RelatedTool {
   name: string;
@@ -20,12 +21,14 @@ interface RelatedTool {
 
 function clientTimeoutMs(fileSizeBytes: number): number {
   const sizeMb = fileSizeBytes / (1024 * 1024);
-  return Math.min(900_000, Math.max(300_000, 120_000 + Math.ceil(sizeMb) * 60_000));
+  return Math.min(1_800_000, Math.max(900_000, 120_000 + Math.ceil(sizeMb) * 120_000));
 }
 
 function progressLabel(percent: number): string {
   if (percent >= 100) return "Finishing download…";
   if (percent >= 92) return "Finalizing Word document…";
+  if (percent >= 87) return `Merging sections… ${percent}%`;
+  if (percent >= 10 && percent < 20) return `Processing sections… ${percent}%`;
   if (percent >= 5) return `Converting to Word… ${percent}%`;
   return "Preparing conversion…";
 }
@@ -44,6 +47,12 @@ export function PdfToWordToolPage({
   const [resultFilename, setResultFilename] = useState<string | null>(null);
   const [resultSize, setResultSize] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [pdfPassword, setPdfPassword] = useState<string | null>(null);
+  const [passwordPrompt, setPasswordPrompt] = useState<{
+    fileName: string;
+    errorMsg?: string;
+    loading?: boolean;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetResult = useCallback(() => {
@@ -61,13 +70,14 @@ export function PdfToWordToolPage({
       const selected = Array.from(newFiles)[0];
       if (selected) {
         setFile(selected);
+        setPdfPassword(null);
         resetResult();
       }
     },
     [resetResult]
   );
 
-  const handleConvert = async () => {
+  const runConversion = async (password?: string | null) => {
     if (!file) return;
     setProcessing(true);
     setProgress(0);
@@ -85,7 +95,10 @@ export function PdfToWordToolPage({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("options", JSON.stringify({}));
+      formData.append(
+        "options",
+        JSON.stringify(password ? { password } : {})
+      );
 
       const startRes = await fetch("/api/tools/pdf-to-word", {
         method: "POST",
@@ -95,13 +108,32 @@ export function PdfToWordToolPage({
       });
 
       if (!startRes.ok) {
-        const err = (await startRes.json().catch(() => ({}))) as { error?: string };
+        const err = (await startRes.json().catch(() => ({}))) as {
+          error?: string;
+          code?: string;
+        };
+        if (err.code === "PASSWORD_REQUIRED" || err.code === "WRONG_PASSWORD") {
+          setPasswordPrompt({
+            fileName: file.name,
+            errorMsg:
+              err.code === "WRONG_PASSWORD"
+                ? err.error || "Incorrect password."
+                : undefined,
+            loading: false,
+          });
+          return;
+        }
         throw new Error(err.error || "Conversion failed. Please try again.");
       }
 
       const { jobId } = (await startRes.json()) as { jobId?: string };
       if (!jobId) {
         throw new Error("Server did not start conversion. Please retry.");
+      }
+
+      if (password) {
+        setPdfPassword(password);
+        setPasswordPrompt(null);
       }
 
       while (true) {
@@ -123,7 +155,24 @@ export function PdfToWordToolPage({
         setProgress(Math.min(99, Math.max(0, status.progress ?? 0)));
 
         if (status.status === "error") {
-          throw new Error(status.error || "Conversion failed.");
+          const errText = status.error || "Conversion failed.";
+          if (
+            errText === "PASSWORD_REQUIRED" ||
+            errText.includes("PASSWORD_REQUIRED") ||
+            errText.includes("password-protected")
+          ) {
+            setPasswordPrompt({ fileName: file.name, loading: false });
+            return;
+          }
+          if (errText === "WRONG_PASSWORD" || /incorrect password/i.test(errText)) {
+            setPasswordPrompt({
+              fileName: file.name,
+              errorMsg: "Incorrect password.",
+              loading: false,
+            });
+            return;
+          }
+          throw new Error(errText);
         }
 
         if (status.status === "done") {
@@ -168,14 +217,19 @@ export function PdfToWordToolPage({
     }
   };
 
+  const handleConvert = async () => {
+    await runConversion(pdfPassword);
+  };
+
   const extraFields: ReactNode = (
     <div className="flex items-start gap-2 rounded-lg bg-pd-brand-muted/50 p-3 text-sm text-pd-foreground">
       <Info className="mt-0.5 h-4 w-4 shrink-0 text-pd-brand" />
-      <p>For scanned PDFs, OCR will be used to extract text.</p>
+      <p>For scanned PDFs, OCR will be used to extract text. Password-protected PDFs will ask for your password.</p>
     </div>
   );
 
   return (
+    <>
     <ToolPageShell
       title="PDF to Word"
       description="Convert PDF documents to editable Word format"
@@ -253,5 +307,20 @@ export function PdfToWordToolPage({
         </>
       )}
     </ToolPageShell>
+    {passwordPrompt && (
+      <PdfPasswordModal
+        fileName={passwordPrompt.fileName}
+        errorMessage={passwordPrompt.errorMsg}
+        loading={passwordPrompt.loading}
+        onCancel={() => setPasswordPrompt(null)}
+        onSubmit={(password) => {
+          setPasswordPrompt((prev) =>
+            prev ? { ...prev, loading: true, errorMsg: undefined } : prev
+          );
+          void runConversion(password);
+        }}
+      />
+    )}
+  </>
   );
 }

@@ -4,7 +4,7 @@
 |-------|-------|
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
-| **Saved** | 2026-06-12 — full website + **PDF-to-Word v2** (job polling, live progress, drawing-heavy fast path) + Sign PDF + Hero variants + all tools |
+| **Saved** | 2026-06-13 — PDF-to-Word v3: chunked mega-PDF, password unlock, disk jobs, encrypted PDF repair + all tools |
 
 ## Locked design (100% — do not change without unlock)
 
@@ -36,34 +36,38 @@
 | SVG icons | `public/*.svg` |
 | Watermark logo | `scripts/templates/watermark-logo.png` |
 
-## PDF-to-Word pipeline v2 (100% in git) — CURRENT STAGE
+## PDF-to-Word pipeline v3 (100% in git) — CURRENT STAGE
 
 | Component | Path |
 |-----------|------|
 | Python conversion | `scripts/pdf-to-docx.py` |
+| Chunk range worker | `scripts/pdf-to-docx-range.py` |
 | Layout transform | `scripts/smallpdf_transform.py` |
 | Python setup | `scripts/setup-pdf2docx.ps1` |
 | pdf2docx spawn service | `src/lib/services/pdf-to-word-pdf2docx.service.ts` |
-| Job store (in-memory) | `src/lib/services/pdf-to-word-jobs.service.ts` |
+| Job store (disk output) | `src/lib/services/pdf-to-word-jobs.service.ts` |
 | Engine router | `src/lib/services/pdf-to-word.service.ts` |
+| Password helper | `src/lib/pdf/pdf-password.server.ts` |
 | ConvertAPI (optional) | `src/lib/services/pdf-to-word-convertapi.service.ts` |
 | Node fallback | `src/lib/services/pdf-to-word-node.service.ts` |
 | POST API (job + direct) | `src/app/api/tools/pdf-to-word/route.ts` |
 | Status polling API | `src/app/api/tools/pdf-to-word/status/route.ts` |
-| Binary download API | `src/app/api/tools/pdf-to-word/download/route.ts` |
-| Dedicated UI page | `src/components/tools/pdf-to-word-tool-page.tsx` |
+| Binary download API (stream) | `src/app/api/tools/pdf-to-word/download/route.ts` |
+| Dedicated UI + password modal | `src/components/tools/pdf-to-word-tool-page.tsx` |
 | Tool route | `src/app/(tools)/pdf-to-word/page.tsx` |
 
 ### PDF-to-Word behaviour (at this S1 save)
 
-- **Engine priority:** ConvertAPI (if `CONVERTAPI_SECRET`) → pdf2docx → Node extractor
-- **Job-based conversion:** client POST with `X-Pdf-To-Word-Job: 1` → poll status every 400ms → binary download (no base64)
-- **Live progress:** Python emits `PROGRESS pct=N` on stderr; phase logs `[1/4]`–`[4/4]` + page logs + heartbeat during long analyze
-- **Windows fix:** `multi_processing` disabled on `win32` (pool workers hang on cv2 import)
-- **Drawing-heavy PDFs:** auto-detect (600+ vector paths/page) → fast image render path (~30s for 38-page vector PDFs)
-- **Text PDFs:** normal pdf2docx path (~2–30s depending on pages)
-- **CONFIDENTIAL Founder PDFs:** `smallpdf_transform.py` watermarks + tables + native lists (unchanged)
-- **UI:** circular progress meter, OCR info banner for scanned PDFs, file size on success
+- **Engine priority:** ConvertAPI (if `CONVERTAPI_SECRET`) → pdf2docx → Node extractor (Node skipped for 8MB+ files)
+- **Job-based conversion:** disk temp files, stream download, no base64 / no full DOCX in Node heap
+- **Live progress:** `PROGRESS pct=N`, phase logs, heartbeat, per-chunk updates for large PDFs
+- **Windows fix:** no pdf2docx multiprocessing on win32; chunk workers via subprocess + ThreadPool
+- **Mega PDFs (400+ pages):** 100-page chunks, parallel subprocess workers, DOCX merge, up to 30 min timeout
+- **Drawing-heavy PDFs (≤150 pages):** fast image render path
+- **Password-protected PDFs:** `resolvePdfBuffer` + `PdfPasswordModal` + Python `prepare_input_pdf` decrypt/repair
+- **Encrypted error handling:** friendly messages for `document closed or encrypted`
+- **CONFIDENTIAL Founder PDFs:** `smallpdf_transform.py` watermarks (unchanged)
+- **UI:** progress meter, password modal, OCR info banner, file size on success
 
 ### Watermark templates (text + logo assets)
 

@@ -41,6 +41,8 @@ echo.
 REM Open browser ~6 seconds after start
 start "" cmd /c "timeout /t 6 /nobreak >nul && start http://localhost:3000"
 
+set NODE_OPTIONS=--max-old-space-size=4096
+
 call npm run dev
 
 echo.

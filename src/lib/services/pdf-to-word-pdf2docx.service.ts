@@ -38,7 +38,8 @@ function runCommand(
   command: string,
   args: string[],
   timeoutMs: number,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  pdfPassword?: string
 ): Promise<{ code: number; stderr: string }> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -49,6 +50,7 @@ function runCommand(
         PYTHONIOENCODING: "utf-8",
         OPENBLAS_NUM_THREADS: "1",
         OMP_NUM_THREADS: "1",
+        ...(pdfPassword ? { PDF_INPUT_PASSWORD: pdfPassword } : {}),
       },
     });
 
@@ -122,12 +124,18 @@ export async function isPdf2docxAvailable(): Promise<boolean> {
 
 /**
  * Convert PDF to DOCX using pdf2docx (PyMuPDF + python-docx).
- * Matches commercial tools (Smallpdf/iLovePDF) for layout, tables, and fonts.
+ * When outputPath is set the result stays on disk (no full-file Buffer read).
  */
 export async function pdfToWordPdf2docx(
   fileBuffer: Buffer,
-  options: { timeoutMs?: number; onProgress?: (percent: number) => void } = {}
-): Promise<Buffer> {
+  options: {
+    timeoutMs?: number;
+    onProgress?: (percent: number) => void;
+    inputPath?: string;
+    outputPath?: string;
+    pdfPassword?: string;
+  } = {}
+): Promise<Buffer | void> {
   const python = await resolvePdf2docxPython();
   if (!python) {
     throw new Error("Python not found. Install Python 3 and run: pip install pdf2docx");
@@ -135,35 +143,56 @@ export async function pdfToWordPdf2docx(
 
   const timeoutMs = options.timeoutMs ?? 120_000;
   const onProgress = options.onProgress;
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pdfdoctor-pdf2docx-"));
-  const pdfPath = path.join(tmpDir, "input.pdf");
-  const docxPath = path.join(tmpDir, "output.docx");
+  const diskOnly = Boolean(options.outputPath);
+  const tmpDir =
+    options.inputPath && options.outputPath
+      ? path.dirname(options.inputPath)
+      : await fs.mkdtemp(path.join(os.tmpdir(), "pdfdoctor-pdf2docx-"));
+  const pdfPath = options.inputPath ?? path.join(tmpDir, "input.pdf");
+  const docxPath = options.outputPath ?? path.join(tmpDir, "output.docx");
+  const ownsTmpDir = !options.inputPath;
 
   try {
     onProgress?.(1);
-    await fs.writeFile(pdfPath, fileBuffer);
+    if (!options.inputPath) {
+      await fs.writeFile(pdfPath, fileBuffer);
+    }
     onProgress?.(2);
 
     const result = await runCommand(
       python,
       [SCRIPT_PATH, pdfPath, docxPath],
       timeoutMs,
-      onProgress
+      onProgress,
+      options.pdfPassword
     );
 
     if (result.code !== 0) {
+      const errText = result.stderr;
+      const errLine =
+        errText.match(/^ERROR PASSWORD_REQUIRED.*/m)?.[0] ??
+        errText.match(/^ERROR .+$/m)?.[0] ??
+        errText.match(/Conversion produced invalid DOCX/)?.[0] ??
+        errText.match(/ValueError: document closed or encrypted/)?.[0] ??
+        errText.trim().split("\n").filter(Boolean).pop();
       throw new Error(
-        result.stderr.trim() ||
-          `pdf2docx failed with exit code ${result.code}`
+        errLine || `pdf2docx failed with exit code ${result.code}`
       );
     }
 
     onProgress?.(96);
+    if (diskOnly) {
+      onProgress?.(99);
+      return;
+    }
+
     const rawDocx = await fs.readFile(docxPath);
     onProgress?.(99);
     return rawDocx;
   } finally {
-    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    if (ownsTmpDir) {
+      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    }
   }
 }
 

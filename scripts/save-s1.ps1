@@ -48,6 +48,7 @@ if (Test-Path $refDocx) {
 $pyFiles = @(
   "scripts\smallpdf_transform.py",
   "scripts\pdf-to-docx.py",
+  "scripts\pdf-to-docx-range.py",
   "scripts\setup-pdf2docx.ps1",
   "scripts\smallpdf_normalize.py",
   "scripts\smallpdf-rotation.py"
@@ -97,12 +98,12 @@ if (Test-Path $snapDoc) {
 git add -A
 $status = git status --porcelain
 if ($status) {
-  $msg = "S1: Full snapshot - Only4PDF + PDF-to-Word v2 + Sign PDF + Hero variants. Revert: scripts/revert-to-s1.ps1"
+  $msg = "S1: Only4PDF snapshot - PDF-to-Word v3 chunked conversion, password unlock, disk jobs, encrypted PDF repair. Revert: scripts/revert-to-s1.ps1"
   git commit -m $msg
 }
 
 $null = git tag -d S1 2>&1
-git tag -a S1 -m "S1 Only4PDF complete snapshot - PDF-to-Word v2 + all tools"
+git tag -a S1 -m "S1 Only4PDF snapshot - PDF-to-Word v3 + all tools"
 
 $null = git branch -D s1-backup 2>&1
 git branch s1-backup

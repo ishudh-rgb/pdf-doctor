@@ -1,3 +1,4 @@
+import fs from "fs/promises";
 import type { PdfToWordEngine } from "@/lib/services/pdf-to-word.service";
 
 export type PdfToWordJobStatus = "running" | "done" | "error";
@@ -7,7 +8,9 @@ export type PdfToWordJob = {
   status: PdfToWordJobStatus;
   filename: string;
   engine?: PdfToWordEngine;
-  buffer?: Buffer;
+  /** DOCX on disk — avoids holding large files in Node heap */
+  outputPath?: string;
+  workDir?: string;
   error?: string;
   createdAt: number;
 };
@@ -24,18 +27,24 @@ function jobStore(): JobStore {
   return globalStore.__pdfToWordJobs;
 }
 
-function purgeExpiredJobs() {
+async function cleanupJobFiles(job: PdfToWordJob) {
+  if (!job.workDir) return;
+  await fs.rm(job.workDir, { recursive: true, force: true }).catch(() => {});
+}
+
+async function purgeExpiredJobs() {
   const store = jobStore();
   const now = Date.now();
   for (const [id, job] of store.entries()) {
     if (now - job.createdAt > JOB_TTL_MS) {
+      await cleanupJobFiles(job);
       store.delete(id);
     }
   }
 }
 
 export function createPdfToWordJob(filename: string): string {
-  purgeExpiredJobs();
+  void purgeExpiredJobs();
   const id = crypto.randomUUID();
   jobStore().set(id, {
     progress: 0,
@@ -54,31 +63,40 @@ export function updatePdfToWordJobProgress(jobId: string, progress: number) {
 
 export function completePdfToWordJob(
   jobId: string,
-  payload: { buffer: Buffer; engine: PdfToWordEngine }
+  payload: { outputPath: string; workDir: string; engine: PdfToWordEngine }
 ) {
   const job = jobStore().get(jobId);
   if (!job) return;
   job.status = "done";
   job.progress = 100;
-  job.buffer = payload.buffer;
+  job.outputPath = payload.outputPath;
+  job.workDir = payload.workDir;
   job.engine = payload.engine;
 }
 
-export function failPdfToWordJob(jobId: string, error: string) {
+export function failPdfToWordJob(jobId: string, error: string, workDir?: string) {
   const job = jobStore().get(jobId);
   if (!job) return;
   job.status = "error";
   job.error = error;
+  if (workDir) {
+    job.workDir = workDir;
+    void cleanupJobFiles(job);
+  }
 }
 
 export function getPdfToWordJob(jobId: string): PdfToWordJob | undefined {
-  purgeExpiredJobs();
+  void purgeExpiredJobs();
   return jobStore().get(jobId);
 }
 
-export function consumePdfToWordJob(jobId: string): PdfToWordJob | undefined {
+export async function consumePdfToWordJob(jobId: string): Promise<PdfToWordJob | undefined> {
   const job = getPdfToWordJob(jobId);
-  if (!job || job.status !== "done" || !job.buffer) return undefined;
+  if (!job || job.status !== "done" || !job.outputPath) return undefined;
   jobStore().delete(jobId);
   return job;
+}
+
+export async function releasePdfToWordJob(job: PdfToWordJob) {
+  await cleanupJobFiles(job);
 }

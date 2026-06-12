@@ -60,7 +60,8 @@ async function main() {
     t.rows.forEach((r) => console.log("  |", r.join(" | ")));
   }
 
-  const { buffer: docx, engine } = await pdfToWord(buffer);
+  const { buffer: docx, engine } = await pdfToWord({ buffer });
+  if (!docx) throw new Error("No DOCX output");
   const out = path.join(process.cwd(), "test-pdf-to-word-output.docx");
   fs.writeFileSync(out, docx);
   console.log(`Saved ${out} (${docx.length} bytes) via ${engine}`);

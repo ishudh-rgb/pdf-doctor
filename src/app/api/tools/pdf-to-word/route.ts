@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { pdfToWord } from "@/lib/services/pdf-to-word.service";
+import fs from "fs/promises";
+import os from "os";
+import path from "path";
+import { pdfToWord, mapPdfToWordError } from "@/lib/services/pdf-to-word.service";
 import {
   completePdfToWordJob,
   createPdfToWordJob,
@@ -11,6 +14,7 @@ import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
+import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 
 export const maxDuration = 600;
 
@@ -18,38 +22,90 @@ function wantsJobMode(request: NextRequest): boolean {
   return request.headers.get("x-pdf-to-word-job") === "1";
 }
 
+function parsePassword(formData: FormData): string | undefined {
+  const raw = formData.get("options");
+  if (typeof raw !== "string" || !raw.trim()) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as { password?: unknown };
+    return typeof parsed.password === "string" && parsed.password.length > 0
+      ? parsed.password
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function passwordErrorResponse(message: string) {
+  const mapped = mapPdfToWordError(message);
+  if (mapped === "PASSWORD_REQUIRED") {
+    return NextResponse.json(
+      {
+        error: "This PDF is password-protected. Enter the password to convert.",
+        code: "PASSWORD_REQUIRED",
+      },
+      { status: 422 }
+    );
+  }
+  if (mapped === "WRONG_PASSWORD") {
+    return NextResponse.json(
+      { error: "Incorrect password. Please try again.", code: "WRONG_PASSWORD" },
+      { status: 422 }
+    );
+  }
+  return null;
+}
+
+async function preparePdfInput(
+  buffer: Buffer,
+  password?: string
+): Promise<Buffer> {
+  return await resolvePdfBuffer(buffer, password);
+}
+
 async function runConversionJob(
   jobId: string,
-  buffer: Buffer,
+  inputPath: string,
+  workDir: string,
+  outputPath: string,
   fileName: string,
-  originalName: string,
   meta: {
     userId: string | null;
     sessionId: string;
     ipAddress: string | null;
     startTime: number;
+    fileSize: number;
+    pdfPassword?: string;
   }
 ) {
   try {
-    const result = await pdfToWord(buffer, {
+    const inputStat = await fs.stat(inputPath);
+    const result = await pdfToWord({
       fileName,
+      inputPath,
+      outputPath,
+      pdfPassword: meta.pdfPassword,
       onProgress: (percent) => updatePdfToWordJobProgress(jobId, percent),
     });
 
-    completePdfToWordJob(jobId, result);
+    completePdfToWordJob(jobId, {
+      outputPath: result.outputPath ?? outputPath,
+      workDir,
+      engine: result.engine,
+    });
 
     void logToolUsage({
       userId: meta.userId,
       sessionId: meta.sessionId,
       toolSlug: "pdf-to-word",
       ipAddress: meta.ipAddress,
-      fileSize: buffer.length,
+      fileSize: inputStat.size,
       processingTimeMs: Date.now() - meta.startTime,
       status: "completed",
     }).catch(() => {});
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to convert PDF to Word";
-    failPdfToWordJob(jobId, message);
+    const raw = error instanceof Error ? error.message : "Failed to convert PDF to Word";
+    const message = mapPdfToWordError(raw);
+    failPdfToWordJob(jobId, message, workDir);
     await logError({
       user_id: meta.userId,
       tool_name: "pdf-to-word",
@@ -104,28 +160,52 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const originalName = file.name.replace(/\.pdf$/i, "");
     const outputFilename = `${sanitizeFilename(originalName)}.docx`;
+    const pdfPassword = parsePassword(formData);
+
+    let prepared: Buffer;
+    try {
+      prepared = await preparePdfInput(buffer, pdfPassword);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const passwordResponse = passwordErrorResponse(message);
+      if (passwordResponse) return passwordResponse;
+      throw err;
+    }
 
     if (wantsJobMode(request)) {
       const jobId = createPdfToWordJob(outputFilename);
-      void runConversionJob(jobId, buffer, file.name, originalName, {
+      const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "pdfdoctor-ptw-job-"));
+      const inputPath = path.join(workDir, "input.pdf");
+      const outputPath = path.join(workDir, outputFilename);
+      await fs.writeFile(inputPath, prepared);
+
+      void runConversionJob(jobId, inputPath, workDir, outputPath, file.name, {
         userId,
         sessionId: request.headers.get("x-session-id") || "anonymous",
         ipAddress: request.headers.get("x-forwarded-for"),
         startTime,
+        fileSize: prepared.length,
+        pdfPassword,
       });
       return NextResponse.json({ jobId });
     }
 
-    const { buffer: docxBuffer, engine } = await pdfToWord(buffer, {
+    const { buffer: docxBuffer, engine } = await pdfToWord({
+      buffer: prepared,
       fileName: file.name,
+      pdfPassword,
     });
+
+    if (!docxBuffer) {
+      throw new Error("Conversion failed to produce a Word file");
+    }
 
     void logToolUsage({
       userId,
       sessionId: request.headers.get("x-session-id") || "anonymous",
       toolSlug: "pdf-to-word",
       ipAddress: request.headers.get("x-forwarded-for"),
-      fileSize: buffer.length,
+      fileSize: prepared.length,
       processingTimeMs: Date.now() - startTime,
       status: "completed",
     }).catch(() => {});
@@ -141,7 +221,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to convert PDF to Word";
+    const raw = error instanceof Error ? error.message : "Failed to convert PDF to Word";
+    const message = mapPdfToWordError(raw);
 
     await logError({
       user_id: userId,
@@ -150,6 +231,22 @@ export async function POST(request: NextRequest) {
       error_message: message,
       stack_trace: error instanceof Error ? error.stack : undefined,
     }).catch(() => {});
+
+    if (message === "PASSWORD_REQUIRED") {
+      return NextResponse.json(
+        {
+          error: "This PDF is password-protected. Enter the password to convert.",
+          code: "PASSWORD_REQUIRED",
+        },
+        { status: 422 }
+      );
+    }
+    if (message === "WRONG_PASSWORD") {
+      return NextResponse.json(
+        { error: "Incorrect password. Please try again.", code: "WRONG_PASSWORD" },
+        { status: 422 }
+      );
+    }
 
     if (message.includes("usage limit") || message.includes("limit reached")) {
       return NextResponse.json({ error: message }, { status: 429 });
