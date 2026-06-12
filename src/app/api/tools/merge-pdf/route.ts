@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mergePDFs } from "@/lib/services/pdf-merge.service";
+import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -64,8 +65,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let passwords: Array<string | null> = [];
+    const passwordsRaw = formData.get("passwords");
+    if (typeof passwordsRaw === "string" && passwordsRaw.trim()) {
+      try {
+        const parsed = JSON.parse(passwordsRaw) as unknown;
+        if (Array.isArray(parsed)) {
+          passwords = parsed.map((value) =>
+            typeof value === "string" && value.length > 0 ? value : null
+          );
+        }
+      } catch {
+        // Ignore malformed password payload — treat as unlocked PDFs.
+      }
+    }
+
     const buffers = await Promise.all(
-      files.map(async (file) => Buffer.from(await file.arrayBuffer()))
+      files.map(async (file, index) => {
+        const raw = Buffer.from(await file.arrayBuffer());
+        const password = passwords[index] ?? null;
+        try {
+          return await resolvePdfBuffer(raw, password);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Failed to open PDF";
+          if (msg === "PASSWORD_REQUIRED") {
+            throw new Error(
+              `${file.name} is password-protected. Enter its password and try again.`
+            );
+          }
+          if (msg === "WRONG_PASSWORD") {
+            throw new Error(`Incorrect password for ${file.name}. Please try again.`);
+          }
+          throw err;
+        }
+      })
     );
 
     const mergedPdf = await mergePDFs(buffers);

@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils/cn";
 import {
   CATEGORY_FALLBACK_LABELS,
   ICON_MAP,
-  TOOL_ACCENT,
   TOOL_CATEGORIES,
   TOOL_KEYS,
 } from "@/components/marketing/home/home-shared";
+import { ToolIconTile } from "@/components/tools/tool-icon-tile";
 
 type FilterId = "all" | (typeof TOOL_CATEGORIES)[number]["id"];
 
@@ -87,7 +87,6 @@ export function ToolsFilterGrid({ ariaLabel, className }: ToolsFilterGridProps) 
       >
         {visibleTools.map((tool) => {
           const Icon = ICON_MAP[tool.icon];
-          const accent = TOOL_ACCENT[tool.slug] ?? "bg-pd-brand";
           const name = t(tool.nameKey);
 
           return (
@@ -106,14 +105,7 @@ export function ToolsFilterGrid({ ariaLabel, className }: ToolsFilterGridProps) 
                 </span>
               )}
 
-              <div
-                className={cn(
-                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white shadow-sm transition-transform group-hover:scale-105",
-                  accent
-                )}
-              >
-                {Icon && <Icon className="h-5 w-5" strokeWidth={2.25} />}
-              </div>
+              {Icon && <ToolIconTile slug={tool.slug} icon={Icon} size="lg" />}
 
               <h3 className="mt-3 text-sm font-bold leading-snug text-pd-foreground sm:text-[15px]">
                 {name}

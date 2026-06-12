@@ -8,7 +8,7 @@ import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 export function AboutPageContent() {
   return (
     <MarketingPageShell
-      title="About PDF Doctor"
+      title="About Only4PDF"
       description="We believe working with PDFs should be simple, fast, and accessible to everyone — no expensive software or steep learning curves required."
       eyebrow="Company"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
@@ -17,21 +17,21 @@ export function AboutPageContent() {
         <div>
           <h2 className="text-2xl font-bold text-pd-foreground">Our Mission</h2>
           <p className="mt-4 leading-relaxed text-pd-muted">
-            PDF Doctor was created to solve a simple problem: everyday PDF tasks shouldn&apos;t
+            Only4PDF was created to solve a simple problem: everyday PDF tasks shouldn&apos;t
             require desktop software, subscriptions, or technical knowledge.
           </p>
         </div>
         <div>
           <h2 className="text-2xl font-bold text-pd-foreground">Built for Everyone</h2>
           <p className="mt-4 leading-relaxed text-pd-muted">
-            From students and freelancers to small business owners and enterprise teams, PDF Doctor
+            From students and freelancers to small business owners and enterprise teams, Only4PDF
             is designed for anyone who works with documents.
           </p>
         </div>
       </div>
 
       <section className="mt-16">
-        <h2 className="text-center text-2xl font-bold text-pd-foreground">Why Choose PDF Doctor?</h2>
+        <h2 className="text-center text-2xl font-bold text-pd-foreground">Why Choose Only4PDF?</h2>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Zap, title: "Lightning Fast", desc: "Process PDFs in seconds without compromising quality." },
@@ -56,7 +56,7 @@ export function AboutPageContent() {
       <section className="mt-16 rounded-2xl bg-pd-brand p-8 text-center text-white sm:p-12">
         <h2 className="text-2xl font-bold sm:text-3xl">Ready to Get Started?</h2>
         <p className="mx-auto mt-3 max-w-xl text-white/85">
-          Try PDF Doctor for free — no signup needed for basic tools.
+          Try Only4PDF for free — no signup needed for basic tools.
         </p>
         <Link href="/#tools" className="mt-6 inline-block">
           <Button size="lg" variant="secondary" className="bg-white text-pd-brand hover:bg-white/90">

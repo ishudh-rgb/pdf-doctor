@@ -21,14 +21,14 @@ const faqData: FaqCategory[] = [
     name: "General",
     questions: [
       {
-        question: "What is PDF Doctor?",
+        question: "What is Only4PDF?",
         answer:
-          "PDF Doctor is a free online PDF toolkit that lets you merge, split, compress, convert, edit, sign, protect, unlock, scan, and summarize PDF documents. It's designed to be fast, secure, and easy to use — no desktop software required.",
+          "Only4PDF is a free online PDF toolkit that lets you merge, split, compress, convert, edit, sign, protect, unlock, scan, and summarize PDF documents. It's designed to be fast, secure, and easy to use — no desktop software required.",
       },
       {
-        question: "Is PDF Doctor free to use?",
+        question: "Is Only4PDF free to use?",
         answer:
-          "Yes! PDF Doctor offers a generous free tier with 5 tool uses per day and no file size limit. For power users who need more, our Pro plan offers 100 daily uses, AI tools, priority processing, and more.",
+          "Yes! Only4PDF offers a generous free tier with 5 tool uses per day and no file size limit. For power users who need more, our Pro plan offers 100 daily uses, AI tools, priority processing, and more.",
       },
       {
         question: "Do I need to create an account?",
@@ -38,7 +38,7 @@ const faqData: FaqCategory[] = [
       {
         question: "What file formats are supported?",
         answer:
-          "PDF Doctor primarily works with PDF files. Depending on the tool, we also support DOCX, DOC (Word documents), JPG, JPEG, and PNG (images). Each tool page specifies its accepted file formats.",
+          "Only4PDF primarily works with PDF files. Depending on the tool, we also support DOCX, DOC (Word documents), JPG, JPEG, and PNG (images). Each tool page specifies its accepted file formats.",
       },
     ],
   },
@@ -138,17 +138,17 @@ const faqData: FaqCategory[] = [
       {
         question: "What browsers are supported?",
         answer:
-          "PDF Doctor works on Chrome, Firefox, Edge, Safari, and Opera. We recommend using the latest version for the best experience.",
+          "Only4PDF works on Chrome, Firefox, Edge, Safari, and Opera. We recommend using the latest version for the best experience.",
       },
       {
         question: "Is there a mobile app?",
         answer:
-          "PDF Doctor is a responsive web application optimized for mobile browsers. We don't currently have a native mobile app.",
+          "Only4PDF is a responsive web application optimized for mobile browsers. We don't currently have a native mobile app.",
       },
       {
-        question: "Can I use PDF Doctor offline?",
+        question: "Can I use Only4PDF offline?",
         answer:
-          "No, PDF Doctor requires an internet connection as all file processing happens on our secure cloud servers.",
+          "No, Only4PDF requires an internet connection as all file processing happens on our secure cloud servers.",
       },
     ],
   },
@@ -164,7 +164,7 @@ export function FaqPageContent() {
   return (
     <MarketingPageShell
       title="Frequently Asked Questions"
-      description="Find answers to common questions about PDF Doctor."
+      description="Find answers to common questions about Only4PDF."
       eyebrow="Help center"
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "FAQ" }]}
     >

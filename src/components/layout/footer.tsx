@@ -52,7 +52,7 @@ export function Footer() {
                 <FileText className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-900">
-                PDF <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Doctor</span>
+                Only<span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">4</span>PDF
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-gray-500">
@@ -71,7 +71,7 @@ export function Footer() {
             <div className="mt-4 flex flex-col gap-2">
               <div className="flex items-center gap-2 text-[12px] text-gray-400">
                 <Mail className="h-3.5 w-3.5" />
-                <span>support@pdfdoctor.in</span>
+                <span>support@only4pdf.in</span>
               </div>
               <div className="flex items-center gap-2 text-[12px] text-gray-400">
                 <MapPin className="h-3.5 w-3.5" />
@@ -148,7 +148,7 @@ export function Footer() {
 
             {/* Quick stats */}
             <div className="mt-6 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Why PDF Doctor?</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Why Only4PDF?</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-lg font-extrabold text-blue-600">12+</p>
@@ -174,7 +174,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-200 pt-6 sm:flex-row">
           <p className="text-[13px] text-gray-400">
-            © {new Date().getFullYear()} PDF Doctor. All rights reserved.
+            © {new Date().getFullYear()} Only4PDF. All rights reserved.
           </p>
           <p className="flex items-center gap-1 text-[12px] text-gray-400">
             Made with <Heart className="h-3 w-3 fill-rose-500 text-rose-500" /> in India for the world

@@ -3,6 +3,8 @@
 import { CheckCircle2, Download, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
+import { RelatedToolCard } from "@/components/tools/related-tool-card";
+import { mapRelatedTools } from "@/components/tools/tool-helpers";
 
 interface ResultViewProps {
   fileName: string;
@@ -75,18 +77,19 @@ export function ResultView({
       {/* Related tools */}
       {relatedTools && relatedTools.length > 0 && (
         <div className="mt-8 w-full border-t border-gray-100 pt-6">
-          <p className="mb-3 text-center text-sm font-medium text-gray-700">
-            Need more? Try these tools:
+          <p className="mb-4 text-center text-sm font-semibold text-gray-800">
+            Need more? Try these tools
           </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {relatedTools.map((tool) => (
-              <a
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {mapRelatedTools(relatedTools).map((tool) => (
+              <RelatedToolCard
                 key={tool.name}
+                name={tool.name}
                 href={tool.href}
-                className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
-              >
-                {tool.name}
-              </a>
+                slug={tool.slug}
+                icon={tool.icon}
+                className="p-3"
+              />
             ))}
           </div>
         </div>

@@ -71,7 +71,7 @@ export async function pdfToPpt(fileBuffer: Buffer): Promise<Buffer> {
 
     const pptx = new PptxGenJS();
     pptx.layout = "LAYOUT_16x9";
-    pptx.author = "PDF Doctor";
+    pptx.author = "Only4PDF";
     pptx.title = "PDF Export";
 
     for (const imgBuffer of pageImages) {

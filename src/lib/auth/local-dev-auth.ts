@@ -83,7 +83,7 @@ function hashPassword(password: string, salt: string): string {
 }
 
 function toPublicUser(user: LocalUserRecord): LocalDevUser {
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@pdfdoctor.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@only4pdf.com";
   return {
     id: user.id,
     email: user.email,

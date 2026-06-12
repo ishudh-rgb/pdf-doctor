@@ -11,9 +11,11 @@ import { pdfToWordNode } from "@/lib/services/pdf-to-word-node.service";
 
 export type PdfToWordEngine = "convertapi" | "pdf2docx" | "node";
 
+let pdf2docxReadyCache: boolean | null = null;
+
 function estimateTimeoutMs(fileBuffer: Buffer): number {
   const sizeMb = fileBuffer.length / (1024 * 1024);
-  return Math.min(900_000, 90_000 + Math.ceil(sizeMb) * 20_000);
+  return Math.min(900_000, 120_000 + Math.ceil(sizeMb) * 45_000);
 }
 
 /**
@@ -24,15 +26,24 @@ function estimateTimeoutMs(fileBuffer: Buffer): number {
  */
 export async function pdfToWord(
   fileBuffer: Buffer,
-  options: { fileName?: string } = {}
+  options: {
+    fileName?: string;
+    onProgress?: (percent: number) => void;
+  } = {}
 ): Promise<{ buffer: Buffer; engine: PdfToWordEngine }> {
   const fileName = options.fileName ?? "document.pdf";
+  const onProgress = options.onProgress;
   const timeoutMs = estimateTimeoutMs(fileBuffer);
-  const pdf2docxReady = await isPdf2docxAvailable();
+  if (pdf2docxReadyCache === null) {
+    pdf2docxReadyCache = await isPdf2docxAvailable();
+  }
+  const pdf2docxReady = pdf2docxReadyCache;
 
   if (isConvertApiAvailable()) {
     try {
+      onProgress?.(5);
       const buffer = await pdfToWordConvertApi(fileBuffer, fileName);
+      onProgress?.(99);
       return { buffer, engine: "convertapi" };
     } catch (err) {
       console.warn("[pdf-to-word] ConvertAPI failed, trying pdf2docx:", err);
@@ -41,7 +52,7 @@ export async function pdfToWord(
 
   if (pdf2docxReady) {
     try {
-      const buffer = await pdfToWordPdf2docx(fileBuffer, { timeoutMs });
+      const buffer = await pdfToWordPdf2docx(fileBuffer, { timeoutMs, onProgress });
       return { buffer, engine: "pdf2docx" };
     } catch (err) {
       console.warn("[pdf-to-word] pdf2docx failed, falling back to Node extractor:", err instanceof Error ? err.message : err);

@@ -10,10 +10,11 @@ const JPEG_QUALITY = 82;
 
 type PdfDoc = Awaited<ReturnType<typeof loadPdfDocument>>;
 
-function pdfDocumentOptions(data: Uint8Array) {
+function pdfDocumentOptions(data: Uint8Array, password?: string) {
   const { standardFontDataUrl, cMapUrl } = getPdfjsAssetDirs();
   return {
     data,
+    password,
     verbosity: pdfjs.VerbosityLevel.ERRORS,
     standardFontDataUrl,
     cMapUrl,
@@ -22,14 +23,14 @@ function pdfDocumentOptions(data: Uint8Array) {
   };
 }
 
-export async function loadPdfDocument(buffer: Buffer) {
+export async function loadPdfDocument(buffer: Buffer, password?: string) {
   const data = new Uint8Array(buffer);
   try {
-    return await pdfjs.getDocument(pdfDocumentOptions(data)).promise;
+    return await pdfjs.getDocument(pdfDocumentOptions(data, password)).promise;
   } catch (first) {
     console.warn("[pdf-thumbnails] load retry disableFontFace:", first);
     return pdfjs.getDocument({
-      ...pdfDocumentOptions(data),
+      ...pdfDocumentOptions(data, password),
       disableFontFace: true,
     }).promise;
   }
@@ -163,8 +164,8 @@ export async function renderPdfThumbnailsServer(
   };
 }
 
-export async function getTotalPages(buffer: Buffer): Promise<number> {
-  const parser = new PDFParse({ data: buffer });
+export async function getTotalPages(buffer: Buffer, password?: string): Promise<number> {
+  const parser = new PDFParse({ data: buffer, password });
   try {
     const info = await parser.getInfo();
     if (info.total > 0) return info.total;
@@ -174,7 +175,7 @@ export async function getTotalPages(buffer: Buffer): Promise<number> {
     await parser.destroy();
   }
 
-  const doc = await loadPdfDocument(buffer);
+  const doc = await loadPdfDocument(buffer, password);
   try {
     return doc.numPages;
   } finally {

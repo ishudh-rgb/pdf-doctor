@@ -16,11 +16,11 @@ export default function PdfToPptPage() {
       downloadLabel="Download PPTX"
       outputExtension="pptx"
       apiPath="/api/tools/pdf-to-ppt"
-      showOutputSize
       relatedTools={[
         { name: "PowerPoint to PDF", href: "/ppt-to-pdf" },
         { name: "PDF to Word", href: "/pdf-to-word" },
         { name: "PDF to Excel", href: "/pdf-to-excel" },
+        { name: "Compress PDF", href: "/compress-pdf" },
       ]}
     />
   );

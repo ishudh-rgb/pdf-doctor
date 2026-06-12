@@ -47,7 +47,7 @@ import {
   type ExportStrokeOp,
   type TextStyle,
 } from "@/components/tools/edit-pdf/edit-pdf-types";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 
 const CANVAS_RENDER_WIDTH = 880;
 const DEFAULT_IMAGE_WIDTH_NORM = 0.22;
@@ -97,6 +97,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
   const [processing, setProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [passwordPrompt, setPasswordPrompt] = useState<{
     file: File;
@@ -670,6 +671,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
       }
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed.");
@@ -731,20 +733,21 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
 
   if (completed && resultUrl) {
     return (
-      <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
-          <Check className="h-7 w-7 text-pd-brand" />
-        </div>
-        <h2 className="text-lg font-bold text-pd-foreground">PDF exported</h2>
-        <p className="mt-2 text-sm text-pd-muted">Your edited document is ready.</p>
-        <a href={resultUrl} download="edited.pdf" className="mt-5 inline-block">
-          <Button size="md"><Download className="h-4 w-4" />Download PDF</Button>
-        </a>
-        <button type="button" onClick={() => { setCompleted(false); setResultUrl(null); onReset(); }}
-          className="mx-auto mt-3 block text-sm text-pd-muted hover:text-pd-foreground">
-          Edit another file
-        </button>
-      </div>
+      <ToolWorkspaceReadyPanel
+        title="PDF exported"
+        description="Your edited document is ready."
+        downloadUrl={resultUrl}
+        downloadFilename="edited.pdf"
+        downloadLabel="Download PDF"
+        resultSizeBytes={resultSize}
+        resetLabel="Edit another file"
+        onReset={() => {
+          setCompleted(false);
+          setResultUrl(null);
+          setResultSize(0);
+          onReset();
+        }}
+      />
     );
   }
 

@@ -33,6 +33,7 @@ export default function UnlockPdfPage() {
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultFilename, setResultFilename] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -77,6 +78,7 @@ export default function UnlockPdfPage() {
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
       setResultFilename(files[0].name.replace('.pdf', '-unlocked.pdf'));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -99,11 +101,13 @@ export default function UnlockPdfPage() {
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || 'unlocked.pdf'}
           downloadLabel="Download Unlocked PDF"
+          resultSizeBytes={resultSize}
           resetLabel="Unlock another file"
           onReset={() => {
             setCompleted(false);
             setFiles([]);
             setResultUrl(null);
+            setResultSize(0);
             setPassword('');
           }}
         />

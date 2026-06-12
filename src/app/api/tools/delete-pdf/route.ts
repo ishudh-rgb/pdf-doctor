@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { createToolRoute } from "@/lib/api/tool-route";
+import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { deletePdfPages } from "@/lib/services/pdf-delete.service";
 
 export const maxDuration = 60;
@@ -11,9 +12,25 @@ export const POST = async (request: NextRequest) => {
     contentType: "application/pdf",
     outputExtension: "pdf",
     convert: async (buffer, _file, formData) => {
+      const password = (formData.get("password") as string | null) || null;
+      let unlocked: Buffer;
+      try {
+        unlocked = await resolvePdfBuffer(buffer, password);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to open PDF";
+        if (msg === "PASSWORD_REQUIRED") {
+          throw new Error(
+            "This PDF is password-protected. Enter the password to continue."
+          );
+        }
+        if (msg === "WRONG_PASSWORD") {
+          throw new Error("Incorrect password. Please try again.");
+        }
+        throw err;
+      }
       const keepRaw = formData.get("pagesToKeep") as string | null;
       const pagesToKeep: number[] = keepRaw ? JSON.parse(keepRaw) : [];
-      return deletePdfPages(buffer, pagesToKeep);
+      return deletePdfPages(unlocked, pagesToKeep);
     },
     outputName: (name) => name.replace(/\.pdf$/i, "-pages-removed"),
   });

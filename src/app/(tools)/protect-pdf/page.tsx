@@ -55,6 +55,7 @@ export default function ProtectPdfPage() {
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultFilename, setResultFilename] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -119,6 +120,7 @@ export default function ProtectPdfPage() {
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
       setResultFilename(files[0].name.replace(/\.pdf$/i, '-protected.pdf'));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
@@ -146,11 +148,13 @@ export default function ProtectPdfPage() {
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || 'protected.pdf'}
           downloadLabel="Download Protected PDF"
+          resultSizeBytes={resultSize}
           resetLabel="Protect another file"
           onReset={() => {
             setCompleted(false);
             setFiles([]);
             setResultUrl(null);
+            setResultSize(0);
             setPassword('');
             setConfirmPassword('');
           }}
@@ -165,8 +169,6 @@ export default function ProtectPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
-            onCloudFiles={(incoming) => handleFiles(incoming)}
-            onCloudError={setError}
           />
           <input
             ref={fileInputRef}

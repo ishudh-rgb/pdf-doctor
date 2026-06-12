@@ -7,7 +7,15 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   experimental: {
-    proxyClientMaxBodySize: "2gb",
+    // Large PDF uploads; 2gb caused dev proxy/memory pressure — 200mb is enough for pro files
+    proxyClientMaxBodySize: "200mb",
+  },
+  webpack: (config, { dev }) => {
+    // Avoid webpack pack-file cache OOM on Windows after heavy PDF tool builds (~2gb .next/cache)
+    if (dev) {
+      config.cache = { type: "memory" };
+    }
+    return config;
   },
   images: {
     remotePatterns: [

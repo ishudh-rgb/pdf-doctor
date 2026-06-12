@@ -5,8 +5,10 @@ import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
+import { createPdfSession, buildOwnerHash } from "@/lib/pdf/pdf-session-store";
+import { probePdfAccess } from "@/lib/pdf/pdf-password.server";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const ALLOWED_EXTENSIONS = ["html", "htm", "xhtml", "mhtml", "svg"];
 
@@ -68,6 +70,11 @@ export async function POST(request: NextRequest) {
 
     const originalName = file.name.replace(/\.(html?|xhtml|mhtml|svg)$/i, "");
 
+    const ownerHash = buildOwnerHash(userId, request.headers.get("x-forwarded-for"));
+    const probe = await probePdfAccess(pdfBuffer);
+    const totalPages = probe.status === "ok" ? probe.pages : 0;
+    const previewSessionId = await createPdfSession(pdfBuffer, ownerHash);
+
     const processingTime = Date.now() - startTime;
     await logToolUsage({
       userId,
@@ -85,6 +92,8 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${sanitizeFilename(originalName)}.pdf"`,
         "Content-Length": String(pdfBuffer.length),
+        "X-Pdf-Session-Id": previewSessionId,
+        "X-Pdf-Total-Pages": String(totalPages),
       },
     });
   } catch (error) {

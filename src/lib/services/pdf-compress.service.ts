@@ -3,57 +3,61 @@ import { PDFParse } from "pdf-parse";
 import sharp from "sharp";
 import { logError } from "@/lib/db/queries";
 
+type RasterOptions = { scale: number; quality: number };
+
+const RASTER_PRESETS: Record<"basic" | "strong", RasterOptions[]> = {
+  basic: [
+    { scale: 1.0, quality: 70 },
+    { scale: 0.92, quality: 62 },
+  ],
+  strong: [
+    { scale: 0.88, quality: 48 },
+    { scale: 0.75, quality: 38 },
+    { scale: 0.65, quality: 30 },
+  ],
+};
+
+function pickSmallestBuffer(
+  originalSize: number,
+  candidates: (Buffer | null | undefined)[]
+): Buffer | null {
+  const valid = candidates.filter(
+    (b): b is Buffer => b !== null && b !== undefined && b.length > 0 && b.length < originalSize
+  );
+  if (valid.length === 0) return null;
+  return valid.reduce((best, current) => (current.length < best.length ? current : best));
+}
+
 export async function compressPDF(
   fileBuffer: Buffer,
-  level: "basic" | "strong" = "basic"
+  level: "basic" | "strong" = "basic",
+  password?: string
 ): Promise<{ buffer: Buffer; originalSize: number; compressedSize: number }> {
   const originalSize = fileBuffer.length;
 
   try {
     const structural = await compressStructurally(fileBuffer, level);
+    const rasterAttempts: Buffer[] = [];
 
-    let rasterized: Buffer | null = null;
-    try {
-      rasterized = await compressByRasterizing(
-        fileBuffer,
-        level === "strong"
-          ? { scale: 1.25, quality: 45 }
-          : { scale: 1.75, quality: 72 }
-      );
-    } catch (rasterErr) {
-      await logError({
-        tool_name: "compress-pdf",
-        error_type: "RASTERIZE_FALLBACK",
-        error_message: rasterErr instanceof Error ? rasterErr.message : String(rasterErr),
-      }).catch(() => {});
+    for (const preset of RASTER_PRESETS[level]) {
+      try {
+        const rasterized = await compressByRasterizing(fileBuffer, preset, password);
+        if (rasterized.length < originalSize) {
+          rasterAttempts.push(rasterized);
+        }
+      } catch (rasterErr) {
+        await logError({
+          tool_name: "compress-pdf",
+          error_type: "RASTERIZE_ATTEMPT",
+          error_message: rasterErr instanceof Error ? rasterErr.message : String(rasterErr),
+        }).catch(() => {});
+      }
     }
 
-    if (level === "strong") {
-      const candidates = [structural, rasterized].filter(
-        (b): b is Buffer => b !== null && b.length < originalSize
-      );
-      if (candidates.length > 0) {
-        const best = candidates.reduce((a, b) => (a.length <= b.length ? a : b));
-        return { buffer: best, originalSize, compressedSize: best.length };
-      }
-    } else {
-      const structuralSaved =
-        (originalSize - structural.length) / originalSize >= 0.02;
-      if (structuralSaved) {
-        return {
-          buffer: structural,
-          originalSize,
-          compressedSize: structural.length,
-        };
-      }
+    const best = pickSmallestBuffer(originalSize, [structural, ...rasterAttempts]);
 
-      if (rasterized && rasterized.length < originalSize) {
-        return {
-          buffer: rasterized,
-          originalSize,
-          compressedSize: rasterized.length,
-        };
-      }
+    if (best) {
+      return { buffer: best, originalSize, compressedSize: best.length };
     }
 
     return {
@@ -94,8 +98,8 @@ async function compressStructurally(
   pdfDoc.setAuthor("");
   pdfDoc.setSubject("");
   pdfDoc.setKeywords([]);
-  pdfDoc.setProducer("PDF Doctor");
-  pdfDoc.setCreator("PDF Doctor");
+  pdfDoc.setProducer("Only4PDF");
+  pdfDoc.setCreator("Only4PDF");
 
   const compressedBytes = await pdfDoc.save({
     useObjectStreams: true,
@@ -108,24 +112,29 @@ async function compressStructurally(
 
 async function compressByRasterizing(
   fileBuffer: Buffer,
-  options: { scale: number; quality: number }
+  options: RasterOptions,
+  password?: string
 ): Promise<Buffer> {
-  const parser = new PDFParse({ data: fileBuffer });
+  const parser = new PDFParse({ data: fileBuffer, password });
 
   try {
-    const screenshots = await parser.getScreenshot({
-      scale: options.scale,
-      imageBuffer: true,
-    });
-
-    if (!screenshots.pages.length) {
-      return fileBuffer;
+    const info = await parser.getInfo();
+    const totalPages = info.total;
+    if (totalPages <= 0) {
+      throw new Error("Could not read PDF pages for compression.");
     }
 
     const pdfDoc = await PDFDocument.create();
 
-    for (const page of screenshots.pages) {
-      if (!page.data || !page.width || !page.height) continue;
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      const shot = await parser.getScreenshot({
+        partial: [pageNum],
+        scale: options.scale,
+        imageBuffer: true,
+      });
+
+      const page = shot.pages.find((p) => p.pageNumber === pageNum) ?? shot.pages[0];
+      if (!page?.data || !page.width || !page.height) continue;
 
       const jpeg = await sharp(Buffer.from(page.data))
         .jpeg({ quality: options.quality, mozjpeg: true })
@@ -142,7 +151,7 @@ async function compressByRasterizing(
     }
 
     if (pdfDoc.getPageCount() === 0) {
-      return fileBuffer;
+      throw new Error("Rasterization produced no pages.");
     }
 
     return Buffer.from(

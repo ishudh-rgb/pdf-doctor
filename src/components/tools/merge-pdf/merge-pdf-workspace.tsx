@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { loadPdfDocumentPreview } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PageZoomModal } from "@/components/tools/split-pdf/page-zoom-modal";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
 import { SplitPageCard } from "@/components/tools/split-pdf/split-page-card";
@@ -39,6 +39,7 @@ import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 interface MergePdfWorkspaceProps {
   initialFiles: File[];
   onReset: () => void;
+  onFilesChange?: (files: File[]) => void;
 }
 
 function isPdfFile(file: File) {
@@ -64,7 +65,11 @@ function sortPageSlots(slots: MergePageSlot[], order: MergeSortOrder): MergePage
   });
 }
 
-export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspaceProps) {
+export function MergePdfWorkspace({
+  initialFiles,
+  onReset,
+  onFilesChange,
+}: MergePdfWorkspaceProps) {
   const [items, setItems] = useState<MergeFileItem[]>(() =>
     initialFiles.filter(isPdfFile).map(createMergeFileItem)
   );
@@ -82,8 +87,10 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
   const insertAfterFileIndexRef = useRef<number | null>(null);
   const insertAfterPageIndexRef = useRef<number | null>(null);
+  const insertModeRef = useRef<"files" | "pages">("files");
   const insertFileRef = useRef<HTMLInputElement>(null);
   const [passwordPrompt, setPasswordPrompt] = useState<{
     itemId: string;
@@ -102,11 +109,14 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
           item.id === id ? { ...item, loadingThumb: false } : item
         )
       );
-      setPasswordPrompt({
-        itemId: id,
-        file,
-        fileName: preview.fileName ?? file.name,
-      });
+      setPasswordPrompt((prev) =>
+        prev ??
+        {
+          itemId: id,
+          file,
+          fileName: preview.fileName ?? file.name,
+        }
+      );
       return;
     }
 
@@ -130,11 +140,18 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
               pageCount: preview.totalPages,
               thumbUrl: preview.thumbUrl || undefined,
               sessionId: preview.sessionId || undefined,
+              ...(password ? { password } : {}),
             }
           : item
       )
     );
-    if (preview.error) setError(preview.error);
+    if (preview.error) {
+      setError(preview.error);
+    } else {
+      setError((prev) =>
+        prev && /password/i.test(prev) ? null : prev
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -145,13 +162,24 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
     }
   }, [items, loadPreview]);
 
+  useEffect(() => {
+    if (passwordPrompt) return;
+    const locked = items.find((item) => item.pageCount === 0 && !item.loadingThumb);
+    if (!locked) return;
+    setPasswordPrompt({
+      itemId: locked.id,
+      file: locked.file,
+      fileName: locked.file.name,
+    });
+  }, [items, passwordPrompt]);
+
   const allItemsLoaded = items.length > 0 && items.every((i) => !i.loadingThumb && i.pageCount > 0);
 
   useEffect(() => {
     if (!allItemsLoaded || pageSlotsCustomized) return;
     const built = buildPageSlotsFromItems(items);
     setPageSlots(built);
-    setSelectedPageIds(new Set(built.map((s) => s.id)));
+    setSelectedPageIds(new Set());
   }, [items, allItemsLoaded, pageSlotsCustomized]);
 
   useEffect(() => {
@@ -159,9 +187,6 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
       const next = new Set<string>();
       for (const id of prev) {
         if (items.some((i) => i.id === id)) next.add(id);
-      }
-      if (next.size === 0 && items.length > 0) {
-        items.forEach((i) => next.add(i.id));
       }
       return next;
     });
@@ -184,9 +209,22 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
   const toolbarSelectedCount = viewTab === "pages" ? selectedPageCount : selectedFileCount;
   const toolbarTotalCount = viewTab === "pages" ? pageSlots.length : items.length;
 
-  const addFilesAt = async (newFiles: File[], afterFileIndex: number | null) => {
+  const skipParentSyncRef = useRef(true);
+
+  useEffect(() => {
+    if (skipParentSyncRef.current) {
+      skipParentSyncRef.current = false;
+      return;
+    }
+    onFilesChange?.(items.map((item) => item.file));
+  }, [items, onFilesChange]);
+
+  const addFilesAt = (newFiles: File[], afterFileIndex: number | null) => {
     const pdfs = newFiles.filter(isPdfFile);
-    if (pdfs.length === 0) return;
+    if (pdfs.length === 0) {
+      setError("Please select PDF files only.");
+      return;
+    }
 
     const newItems = pdfs.map(createMergeFileItem);
     setItems((prev) => {
@@ -195,24 +233,18 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
       next.splice(afterFileIndex + 1, 0, ...newItems);
       return next;
     });
-    setSelectedFileIds((prev) => {
-      const next = new Set(prev);
-      newItems.forEach((i) => next.add(i.id));
-      return next;
-    });
     setPageSlotsCustomized(false);
     setError(null);
     setCompleted(false);
     setResultUrl(null);
-
-    for (const item of newItems) {
-      await loadPreview(item.id, item.file);
-    }
   };
 
   const insertPagesFromFiles = async (newFiles: File[], afterPageIndex: number | null) => {
     const pdfs = newFiles.filter(isPdfFile);
-    if (pdfs.length === 0) return;
+    if (pdfs.length === 0) {
+      setError("Please select PDF files only.");
+      return;
+    }
 
     const newItems: MergeFileItem[] = [];
     const newSlots: MergePageSlot[] = [];
@@ -248,30 +280,25 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
     setItems((prev) => [...prev, ...newItems]);
     setPageSlots((prev) => {
       const next = [...prev];
-      const at = afterPageIndex === null ? next.length - 1 : afterPageIndex;
-      next.splice(at + 1, 0, ...newSlots);
+      const at =
+        afterPageIndex === null || afterPageIndex < 0
+          ? next.length
+          : afterPageIndex + 1;
+      next.splice(at, 0, ...newSlots);
       return next;
     });
     setPageSlotsCustomized(true);
-    setSelectedPageIds((prev) => {
-      const next = new Set(prev);
-      newSlots.forEach((s) => next.add(s.id));
-      return next;
-    });
-    setSelectedFileIds((prev) => {
-      const next = new Set(prev);
-      newItems.forEach((i) => next.add(i.id));
-      return next;
-    });
   };
 
   const openFileInsertAt = (index: number | null) => {
+    insertModeRef.current = "files";
     insertAfterFileIndexRef.current = index;
     insertAfterPageIndexRef.current = null;
     insertFileRef.current?.click();
   };
 
   const openPageInsertAt = (index: number | null) => {
+    insertModeRef.current = "pages";
     insertAfterPageIndexRef.current = index;
     insertAfterFileIndexRef.current = null;
     insertFileRef.current?.click();
@@ -279,17 +306,23 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
 
   const handleInsertFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const list = e.target.files;
-    e.target.value = "";
     if (!list?.length) return;
 
     const files = Array.from(list);
-    if (insertAfterPageIndexRef.current !== null || viewTab === "pages") {
-      await insertPagesFromFiles(files, insertAfterPageIndexRef.current);
-    } else {
-      await addFilesAt(files, insertAfterFileIndexRef.current);
-    }
+    const mode = insertModeRef.current;
+    const afterFileIndex = insertAfterFileIndexRef.current;
+    const afterPageIndex = insertAfterPageIndexRef.current;
+
+    e.target.value = "";
     insertAfterFileIndexRef.current = null;
     insertAfterPageIndexRef.current = null;
+
+    if (mode === "pages") {
+      await insertPagesFromFiles(files, afterPageIndex);
+      return;
+    }
+
+    addFilesAt(files, afterFileIndex);
   };
 
   const insertBlankPageAfter = (pageIndex: number) => {
@@ -400,7 +433,25 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
     setSelectedFileIds(new Set());
   };
 
+  const promptNextLockedFile = () => {
+    const locked = items.find((item) => item.pageCount === 0);
+    if (!locked) return false;
+    setPasswordPrompt({
+      itemId: locked.id,
+      file: locked.file,
+      fileName: locked.file.name,
+    });
+    setError("Enter the password for all PDF files before exporting.");
+    return true;
+  };
+
   const handleExport = async () => {
+    if (!allItemsLoaded) {
+      if (promptNextLockedFile()) return;
+      setError("Please wait for all files to finish loading.");
+      return;
+    }
+
     if (pageSlots.length > 0) {
       const mainId = findMainFileItemId(pageSlots);
       const mainSlot = pageSlots.find(
@@ -411,12 +462,17 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
         return;
       }
 
+      const mainItem = items.find((item) => item.id === mainId);
+
       setProcessing(true);
       setError(null);
       try {
         const formData = new FormData();
         formData.append("file", mainSlot.file, mainSlot.file.name);
         formData.append("slots", JSON.stringify(pageSlotsToComposeSlots(pageSlots, mainId)));
+        if (mainItem?.password) {
+          formData.append("password", mainItem.password);
+        }
 
         const res = await fetch("/api/tools/compose-pdf", { method: "POST", body: formData });
         if (!res.ok) {
@@ -427,6 +483,7 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
         }
         const blob = await res.blob();
         setResultUrl(URL.createObjectURL(blob));
+        setResultSize(blob.size);
         setCompleted(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -445,6 +502,10 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
     try {
       const formData = new FormData();
       items.forEach((item) => formData.append("files", item.file, item.file.name));
+      formData.append(
+        "passwords",
+        JSON.stringify(items.map((item) => item.password ?? null))
+      );
       formData.append("options", JSON.stringify({}));
 
       const res = await fetch("/api/tools/merge-pdf", { method: "POST", body: formData });
@@ -456,6 +517,7 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
       }
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -468,29 +530,21 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
 
   if (completed && resultUrl) {
     return (
-      <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
-          <Check className="h-7 w-7 text-pd-brand" />
-        </div>
-        <h2 className="text-lg font-bold text-pd-foreground">PDFs merged</h2>
-        <p className="mt-2 text-sm text-pd-muted">Your merged document is ready to download.</p>
-        <a href={resultUrl} download="merged.pdf" className="mt-5 inline-block">
-          <span className="inline-flex items-center justify-center rounded-lg bg-pd-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-pd-brand/90">
-            Download Merged PDF
-          </span>
-        </a>
-        <button
-          type="button"
-          onClick={() => {
-            setCompleted(false);
-            setResultUrl(null);
-            onReset();
-          }}
-          className="mx-auto mt-3 block text-sm text-pd-muted hover:text-pd-foreground"
-        >
-          Merge more files
-        </button>
-      </div>
+      <ToolWorkspaceReadyPanel
+        title="PDFs merged"
+        description="Your merged document is ready to download."
+        downloadUrl={resultUrl}
+        downloadFilename="merged.pdf"
+        downloadLabel="Download Merged PDF"
+        resultSizeBytes={resultSize}
+        resetLabel="Merge more files"
+        onReset={() => {
+          setCompleted(false);
+          setResultUrl(null);
+          setResultSize(0);
+          onReset();
+        }}
+      />
     );
   }
 
@@ -544,9 +598,8 @@ export function MergePdfWorkspace({ initialFiles, onReset }: MergePdfWorkspacePr
             loadPreview(passwordPrompt.itemId, passwordPrompt.file, pw);
           }}
           onCancel={() => {
-            const id = passwordPrompt.itemId;
             setPasswordPrompt(null);
-            setItems((prev) => prev.filter((i) => i.id !== id));
+            setError("Password is required to add this PDF. Remove the file or try again.");
           }}
         />
       )}

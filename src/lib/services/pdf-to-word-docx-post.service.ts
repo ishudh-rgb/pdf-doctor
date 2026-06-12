@@ -21,7 +21,7 @@ export async function postProcessDocx(buffer: Buffer): Promise<Buffer> {
     await zip.generateAsync({
       type: "nodebuffer",
       compression: "DEFLATE",
-      compressionOptions: { level: 6 },
+      compressionOptions: { level: 1 },
     })
   );
 }

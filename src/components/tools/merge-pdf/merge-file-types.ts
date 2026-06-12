@@ -5,6 +5,8 @@ export interface MergeFileItem {
   sessionId?: string;
   pageCount: number;
   loadingThumb: boolean;
+  /** Password used to unlock this file for preview/export. */
+  password?: string;
 }
 
 export type MergePageSlot =
@@ -36,6 +38,7 @@ export function duplicateMergeFileItem(item: MergeFileItem): MergeFileItem {
     sessionId: item.sessionId,
     pageCount: item.pageCount,
     loadingThumb: false,
+    password: item.password,
   };
 }
 

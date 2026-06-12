@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
@@ -18,6 +19,9 @@ import {
   Search,
   HelpCircle,
   Crown,
+  Star,
+  Users,
+  Infinity,
 } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils/cn";
@@ -34,6 +38,7 @@ import {
   TOOL_CATEGORIES,
   TOOL_KEYS,
 } from "@/components/marketing/home/home-shared";
+import { ToolIconTile } from "@/components/tools/tool-icon-tile";
 
 const WorkflowVisual = dynamic(
   () =>
@@ -108,9 +113,7 @@ export function ToolsGrid({
                 Pro
               </span>
             )}
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pd-brand-muted text-pd-brand transition-transform group-hover:scale-110">
-              {Icon && <Icon className="h-5 w-5" />}
-            </div>
+            {Icon && <ToolIconTile slug={tool.slug} icon={Icon} size="lg" />}
             <h3 className="mt-3 font-semibold text-pd-foreground">{t(tool.nameKey)}</h3>
             {!compact && (
               <p className="mt-1 text-sm leading-relaxed text-pd-muted">{t(tool.descKey)}</p>
@@ -144,9 +147,7 @@ export function ToolsByCategory() {
                     href={`/${tool.slug}`}
                     className="group flex items-center gap-3 rounded-xl border border-pd-border bg-pd-surface p-4 transition hover:border-pd-brand/40"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-pd-brand-muted text-pd-brand">
-                      {Icon && <Icon className="h-5 w-5" />}
-                    </div>
+                    {Icon && <ToolIconTile slug={tool.slug} icon={Icon} size="sm" />}
                     <div>
                       <p className="font-semibold text-pd-foreground">{t(tool.nameKey)}</p>
                       <p className="text-xs text-pd-muted">{t(tool.descKey)}</p>
@@ -178,7 +179,7 @@ export function PopularToolChips() {
             href={`/${slug}`}
             className="inline-flex items-center gap-2 rounded-full border border-pd-border bg-pd-surface px-4 py-2 text-sm font-medium text-pd-foreground transition hover:border-pd-brand hover:text-pd-brand"
           >
-            {Icon && <Icon className="h-4 w-4 text-pd-brand" />}
+            {Icon && <ToolIconTile slug={slug} icon={Icon} size="sm" className="!h-8 !w-8 !rounded-lg" />}
             {t(tool.nameKey)}
           </Link>
         );
@@ -326,30 +327,149 @@ export function SecuritySection({ variant = "dark" }: { variant?: "dark" | "card
   );
 }
 
+const PRICING_LEFT_BENEFITS = [
+  {
+    icon: Upload,
+    title: "Start free in seconds",
+    desc: "No signup · Works in your browser",
+    accent: "text-pd-brand",
+    bg: "bg-pd-brand-muted",
+  },
+  {
+    icon: Infinity,
+    title: "No file size limit",
+    desc: "Upload large PDFs others block",
+    accent: "text-amber-600",
+    bg: "bg-amber-50",
+  },
+  {
+    icon: Shield,
+    title: "Secure by default",
+    desc: "256-bit TLS · Auto-delete in 2h",
+    accent: "text-pd-success",
+    bg: "bg-emerald-50",
+  },
+  {
+    icon: Star,
+    title: "4.9★ · 10,000+ users",
+    desc: "Trusted across 50+ countries",
+    accent: "text-amber-600",
+    bg: "bg-amber-50",
+  },
+] as const;
+
+const PRICING_RIGHT_BENEFITS = [
+  {
+    icon: Sparkles,
+    title: "AI PDF Summarizer",
+    desc: "Read less, understand faster",
+    accent: "text-violet-600",
+    bg: "bg-violet-50",
+  },
+  {
+    icon: Zap,
+    title: "100 uses per day",
+    desc: "20× more than the free plan",
+    accent: "text-pd-brand",
+    bg: "bg-pd-brand-muted",
+  },
+  {
+    icon: Users,
+    title: "Built for power users",
+    desc: "Batch jobs · Priority speed",
+    accent: "text-indigo-600",
+    bg: "bg-indigo-50",
+  },
+  {
+    icon: Crown,
+    title: "Most popular upgrade",
+    desc: "Unlock every PDF tool",
+    accent: "text-pd-brand",
+    bg: "bg-pd-brand-muted",
+  },
+] as const;
+
+function PricingAsideBenefit({
+  icon: Icon,
+  title,
+  desc,
+  accent,
+  bg,
+  align = "left",
+}: {
+  icon: React.ElementType;
+  title: string;
+  desc: string;
+  accent: string;
+  bg: string;
+  align?: "left" | "right";
+}) {
+  return (
+    <div
+      className={cn(
+        "flex w-full gap-3 rounded-xl border border-pd-border/80 bg-white/90 p-3.5 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-pd-brand/25 hover:shadow-md lg:max-w-[220px]",
+        align === "right" && "lg:flex-row-reverse lg:text-right"
+      )}
+    >
+      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", bg)}>
+        <Icon className={cn("h-4 w-4", accent)} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-pd-foreground">{title}</p>
+        <p className="mt-0.5 text-[11px] leading-snug text-pd-muted">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function PricingAsideColumn({
+  benefits,
+  align,
+}: {
+  benefits: typeof PRICING_LEFT_BENEFITS | typeof PRICING_RIGHT_BENEFITS;
+  align: "left" | "right";
+}) {
+  return (
+    <div
+      className={cn(
+        "hidden flex-col gap-3 lg:flex",
+        align === "left" ? "items-end" : "items-start"
+      )}
+    >
+      {benefits.map((item) => (
+        <PricingAsideBenefit key={item.title} {...item} align={align} />
+      ))}
+    </div>
+  );
+}
+
 export function PricingSection({ centered = true }: { centered?: boolean }) {
   const { t } = useTranslation();
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-pd-background via-slate-50/50 to-pd-background py-14 sm:py-18">
       <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "28px 28px" }} />
-      <div className={`pd-container relative ${centered ? "max-w-4xl" : ""}`}>
+      <div className={cn("pd-container relative", centered && "max-w-6xl")}>
         <SectionHeading
           eyebrow={t("landing.pricingEyebrow")}
           title={t("landing.pricingTitle")}
           description={t("landing.pricingDesc")}
         />
 
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+        <div className="mt-10 grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr] lg:gap-8 xl:gap-10">
+          <PricingAsideColumn benefits={PRICING_LEFT_BENEFITS} align="left" />
+
+          <div className="mx-auto grid w-full max-w-sm items-stretch gap-4 sm:max-w-2xl sm:grid-cols-2 sm:gap-5">
           {/* Free Plan */}
           <div className={cn(
-            "group relative overflow-hidden rounded-2xl border border-white/70 bg-white",
+            "group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/70 bg-white",
             "shadow-[0_2px_20px_-6px_rgba(0,0,0,0.07)]",
             "transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.12)]"
           )}>
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-white to-white opacity-80" />
             <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-emerald-400/10 blur-2xl" />
 
-            <div className="relative z-10 p-6">
+            <div className="relative z-10 flex flex-1 flex-col p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md ring-1 ring-white/20">
                   <Zap className="h-5 w-5 text-white" />
@@ -378,17 +498,22 @@ export function PricingSection({ centered = true }: { centered?: boolean }) {
                 ))}
               </ul>
 
-              <Link href="#tools" className="mt-6 block">
-                <Button variant="outline" className="w-full rounded-xl border-gray-200 py-2.5 font-semibold transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700">
-                  {t("landing.pricingFreeCta")}
-                </Button>
-              </Link>
+              <div className="mt-auto flex justify-center pt-5">
+                <Link href="#tools">
+                  <Button
+                    variant="outline"
+                    className="rounded-xl border-gray-200 px-6 py-2.5 text-sm font-semibold transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                  >
+                    {t("landing.pricingFreeCta")}
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 
           {/* Pro Plan */}
           <div className={cn(
-            "group relative overflow-hidden rounded-2xl border-2 border-pd-brand/30 bg-white",
+            "group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border-2 border-pd-brand/30 bg-white",
             "shadow-[0_4px_24px_-6px_rgba(37,99,235,0.15)]",
             "transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_-8px_rgba(37,99,235,0.2)]"
           )}>
@@ -396,7 +521,7 @@ export function PricingSection({ centered = true }: { centered?: boolean }) {
             <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-blue-400/15 blur-2xl" />
             <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-indigo-400/10 blur-2xl" />
 
-            <div className="relative z-10 p-6">
+            <div className="relative z-10 flex flex-1 flex-col p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md ring-1 ring-white/20">
@@ -430,13 +555,27 @@ export function PricingSection({ centered = true }: { centered?: boolean }) {
                 ))}
               </ul>
 
-              <Link href="/pricing" className="mt-6 block">
-                <Button className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 py-2.5 font-semibold text-white shadow-md shadow-blue-200 transition-all hover:shadow-lg hover:shadow-blue-300">
-                  {t("landing.pricingProCta")}
-                </Button>
-              </Link>
+              <div className="mt-auto flex justify-center pt-5">
+                <Link href="/pricing">
+                  <Button className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-200 transition-all hover:shadow-lg hover:shadow-blue-300">
+                    {t("landing.pricingProCta")}
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
+          </div>
+
+          <PricingAsideColumn benefits={PRICING_RIGHT_BENEFITS} align="right" />
+        </div>
+
+        {/* Mobile / tablet — key benefits below cards */}
+        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-3 lg:hidden">
+          {[...PRICING_LEFT_BENEFITS.slice(0, 2), ...PRICING_RIGHT_BENEFITS.slice(0, 2)].map(
+            (item) => (
+              <PricingAsideBenefit key={item.title} {...item} align="left" />
+            )
+          )}
         </div>
       </div>
     </section>
@@ -444,20 +583,73 @@ export function PricingSection({ centered = true }: { centered?: boolean }) {
 }
 
 const FAQ_COLORS = [
-  { num: "bg-gradient-to-br from-blue-500 to-indigo-600", glow: "bg-blue-400/20", ring: "group-open:ring-blue-200" },
-  { num: "bg-gradient-to-br from-emerald-500 to-teal-600", glow: "bg-emerald-400/20", ring: "group-open:ring-emerald-200" },
-  { num: "bg-gradient-to-br from-amber-500 to-orange-600", glow: "bg-amber-400/20", ring: "group-open:ring-amber-200" },
-  { num: "bg-gradient-to-br from-rose-500 to-pink-600", glow: "bg-rose-400/20", ring: "group-open:ring-rose-200" },
-  { num: "bg-gradient-to-br from-violet-500 to-purple-600", glow: "bg-violet-400/20", ring: "group-open:ring-violet-200" },
-  { num: "bg-gradient-to-br from-cyan-500 to-sky-600", glow: "bg-cyan-400/20", ring: "group-open:ring-cyan-200" },
-  { num: "bg-gradient-to-br from-fuchsia-500 to-pink-600", glow: "bg-fuchsia-400/20", ring: "group-open:ring-fuchsia-200" },
-];
+  {
+    num: "bg-gradient-to-br from-blue-500 to-indigo-600",
+    glow: "bg-blue-400/25",
+    ring: "ring-blue-200/80",
+    panel: "from-blue-50/90 to-indigo-50/50",
+  },
+  {
+    num: "bg-gradient-to-br from-emerald-500 to-teal-600",
+    glow: "bg-emerald-400/25",
+    ring: "ring-emerald-200/80",
+    panel: "from-emerald-50/90 to-teal-50/50",
+  },
+  {
+    num: "bg-gradient-to-br from-amber-500 to-orange-600",
+    glow: "bg-amber-400/25",
+    ring: "ring-amber-200/80",
+    panel: "from-amber-50/90 to-orange-50/50",
+  },
+  {
+    num: "bg-gradient-to-br from-rose-500 to-pink-600",
+    glow: "bg-rose-400/25",
+    ring: "ring-rose-200/80",
+    panel: "from-rose-50/90 to-pink-50/50",
+  },
+  {
+    num: "bg-gradient-to-br from-violet-500 to-purple-600",
+    glow: "bg-violet-400/25",
+    ring: "ring-violet-200/80",
+    panel: "from-violet-50/90 to-purple-50/50",
+  },
+  {
+    num: "bg-gradient-to-br from-cyan-500 to-sky-600",
+    glow: "bg-cyan-400/25",
+    ring: "ring-cyan-200/80",
+    panel: "from-cyan-50/90 to-sky-50/50",
+  },
+  {
+    num: "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+    glow: "bg-fuchsia-400/25",
+    ring: "ring-fuchsia-200/80",
+    panel: "from-fuchsia-50/90 to-pink-50/50",
+  },
+] as const;
 
 export function FAQSection() {
   const { t } = useTranslation();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const hasOpen = openIndex !== null;
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-pd-surface via-pd-background to-pd-surface pd-section sm:py-28">
-      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "28px 28px" }} />
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/4 top-20 h-56 w-56 rounded-full bg-pd-brand/10 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-16 right-1/4 h-48 w-48 rounded-full bg-indigo-400/10 blur-3xl"
+      />
+
       <div className="pd-container relative max-w-3xl">
         <div className="mb-3 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-pd-brand-muted px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-pd-brand">
@@ -467,44 +659,108 @@ export function FAQSection() {
         </div>
         <SectionHeading title={t("landing.faqTitle")} />
 
-        <div className="mt-12 space-y-3">
-          {FAQ_KEYS.map((key, i) => {
-            const color = FAQ_COLORS[i % FAQ_COLORS.length];
-            return (
-              <details
-                key={key}
-                className={cn(
-                  "group overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] transition-all duration-300",
-                  "hover:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.1)]",
-                  "open:ring-2 open:shadow-[0_6px_24px_-6px_rgba(0,0,0,0.1)]",
-                  color.ring
-                )}
-              >
-                <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 [&::-webkit-details-marker]:hidden">
-                  <div className={cn(
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-md transition-transform duration-300 group-hover:scale-110",
-                    color.num
-                  )}>
-                    {i + 1}
-                  </div>
-                  <span className="flex-1 text-[15px] font-semibold text-gray-800">
-                    {t(`landing.${key}q`)}
-                  </span>
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-all duration-300 group-open:rotate-45 group-open:bg-pd-brand group-open:text-white">
-                    +
-                  </span>
-                </summary>
-                <div className="relative px-5 pb-5">
-                  <div className={cn("absolute -left-4 top-0 h-full w-20 rounded-full blur-3xl opacity-30", color.glow)} />
-                  <div className="relative ml-[52px] rounded-xl bg-gray-50/80 px-4 py-3">
-                    <p className="text-sm leading-relaxed text-gray-600">
-                      {t(`landing.${key}a`)}
-                    </p>
+        <div className="mt-12">
+          <div className="space-y-4">
+            {FAQ_KEYS.map((key, i) => {
+              const color = FAQ_COLORS[i % FAQ_COLORS.length];
+              const isOpen = openIndex === i;
+              const isBehind = hasOpen && !isOpen;
+
+              return (
+                <div
+                  key={key}
+                  className={cn(
+                    "relative isolate rounded-2xl border bg-white/95 backdrop-blur-sm transition-all duration-500 ease-out",
+                    isOpen
+                      ? cn(
+                          "z-10 -translate-y-1 scale-[1.01] border-pd-brand/25 shadow-[0_30px_60px_-28px_rgba(37,99,235,0.45)] ring-2",
+                          color.ring
+                        )
+                      : isBehind
+                        ? "z-[1] scale-[0.99] border-pd-border/50 opacity-85 shadow-sm"
+                        : "z-[1] border-white/90 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 hover:border-pd-brand/15 hover:shadow-[0_16px_32px_-16px_rgba(37,99,235,0.2)]"
+                  )}
+                >
+                  {isOpen && (
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br opacity-60",
+                        color.panel
+                      )}
+                    />
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setOpenIndex(isOpen ? null : i)}
+                    className="relative z-10 flex w-full cursor-pointer items-center gap-4 px-5 py-4 text-left"
+                    aria-expanded={isOpen}
+                  >
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-500",
+                        color.num,
+                        isOpen ? "scale-110 shadow-xl" : "shadow-md"
+                      )}
+                    >
+                      {i + 1}
+                    </div>
+                    <span
+                      className={cn(
+                        "flex-1 text-[15px] font-semibold transition-colors duration-300",
+                        isOpen ? "text-pd-foreground" : "text-gray-700"
+                      )}
+                    >
+                      {t(`landing.${key}q`)}
+                    </span>
+                    <span
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-lg font-light transition-all duration-500",
+                        isOpen
+                          ? "rotate-45 bg-pd-brand text-white shadow-md shadow-pd-brand/30"
+                          : "bg-gray-100 text-gray-400"
+                      )}
+                    >
+                      +
+                    </span>
+                  </button>
+
+                  <div
+                    className={cn(
+                      "relative grid transition-all duration-500 ease-out",
+                      isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                    )}
+                  >
+                    <div className="overflow-hidden">
+                      <div
+                        className={cn(
+                          "relative px-5 pb-5 transition-all duration-500",
+                          isOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "absolute -left-2 top-0 h-full w-24 rounded-full blur-3xl",
+                            color.glow
+                          )}
+                        />
+                        <div
+                          className={cn(
+                            "relative ml-[52px] rounded-xl border border-white/70 bg-gradient-to-br px-4 py-3.5 shadow-inner",
+                            color.panel
+                          )}
+                        >
+                          <p className="text-sm leading-relaxed text-gray-600">
+                            {t(`landing.${key}a`)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </details>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

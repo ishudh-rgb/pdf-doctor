@@ -16,11 +16,11 @@ export default function PdfToExcelPage() {
       downloadLabel="Download XLSX"
       outputExtension="xlsx"
       apiPath="/api/tools/pdf-to-excel"
-      showOutputSize
       relatedTools={[
         { name: "Excel to PDF", href: "/excel-to-pdf" },
         { name: "PDF to Word", href: "/pdf-to-word" },
         { name: "PDF to PPT", href: "/pdf-to-ppt" },
+        { name: "Compress PDF", href: "/compress-pdf" },
       ]}
     />
   );

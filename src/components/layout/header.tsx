@@ -247,7 +247,7 @@ export function Header() {
             <FileText className="h-4 w-4 text-white" />
           </div>
           <span className="pd-logo-text text-xl font-bold text-pd-foreground">
-            PDF <span className="text-pd-brand">Doctor</span>
+            Only<span className="text-pd-brand">4</span>PDF
           </span>
         </Link>
 
@@ -359,7 +359,7 @@ export function Header() {
                 <FileText className="h-4 w-4 text-white" />
               </div>
               <span className="text-xl font-bold text-pd-foreground">
-                PDF <span className="text-pd-brand">Doctor</span>
+                Only<span className="text-pd-brand">4</span>PDF
               </span>
             </Link>
             <button

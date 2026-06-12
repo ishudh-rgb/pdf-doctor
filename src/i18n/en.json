@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "PDF Doctor",
+    "name": "Only4PDF",
     "tagline": "Your Complete PDF Toolkit",
     "description": "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs."
   },
@@ -199,7 +199,7 @@
     "features": "Features",
     "faq": {
       "title": "Frequently Asked Questions",
-      "q1": "Can I use PDF Doctor for free?",
+      "q1": "Can I use Only4PDF for free?",
       "a1": "Yes! Our basic tools are free to use with a limit of 5 uses per day. There is no file size limit — upload PDFs of any size. No signup required for most tools.",
       "q2": "What payment methods do you accept?",
       "a2": "We accept all major payment methods through Razorpay — credit cards, debit cards, UPI, net banking, and wallets.",
@@ -214,9 +214,9 @@
 
   "auth": {
     "loginTitle": "Welcome Back",
-    "loginSubtitle": "Log in to your PDF Doctor account",
+    "loginSubtitle": "Log in to your Only4PDF account",
     "signupTitle": "Create Account",
-    "signupSubtitle": "Get started with PDF Doctor",
+    "signupSubtitle": "Get started with Only4PDF",
     "email": "Email Address",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -406,7 +406,7 @@
   },
 
   "footer": {
-    "description": "PDF Doctor is a free online PDF toolkit. Merge, split, compress, convert, edit, sign, and protect your PDFs — all from your browser.",
+    "description": "Only4PDF is a free online PDF toolkit. Merge, split, compress, convert, edit, sign, and protect your PDFs — all from your browser.",
     "tools": "PDF Tools",
     "company": "Company",
     "about": "About Us",
@@ -424,17 +424,17 @@
     "reportBug": "Report a Bug",
     "featureRequest": "Feature Request",
     "madeInIndia": "Made with ❤️ in India",
-    "allRightsReserved": "© {year} PDF Doctor. All rights reserved."
+    "allRightsReserved": "© {year} Only4PDF. All rights reserved."
   },
 
   "seo": {
-    "homeTitle": "PDF Doctor — Free Online PDF Tools | Merge, Split, Compress, Convert",
+    "homeTitle": "Only4PDF — Free Online PDF Tools | Merge, Split, Compress, Convert",
     "homeDescription": "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs. No signup required. Fast, secure, and easy to use.",
-    "pricingTitle": "Pricing — PDF Doctor | Affordable PDF Tool Plans",
+    "pricingTitle": "Pricing — Only4PDF | Affordable PDF Tool Plans",
     "pricingDescription": "Choose the right plan for your PDF needs. Start free with basic tools or upgrade to Pro for unlimited access, AI features, and more.",
-    "dashboardTitle": "Dashboard — PDF Doctor",
-    "loginTitle": "Log In — PDF Doctor",
-    "signupTitle": "Create Account — PDF Doctor"
+    "dashboardTitle": "Dashboard — Only4PDF",
+    "loginTitle": "Log In — Only4PDF",
+    "signupTitle": "Create Account — Only4PDF"
   },
 
   "cta": {
@@ -453,7 +453,7 @@
   },
 
   "features": {
-    "title": "Why Choose PDF Doctor?",
+    "title": "Why Choose Only4PDF?",
     "subtitle": "The simplest way to handle all your PDF tasks",
     "fast": {
       "title": "Lightning Fast",
@@ -550,14 +550,14 @@
     "toolsCategoryScan": "Scan PDF",
     "toolsOpen": "Open tool",
     "toolsViewAll": "View all tools",
-    "whyChooseTitle": "Why Choose PDF Doctor?",
+    "whyChooseTitle": "Why Choose Only4PDF?",
     "whyChooseDesc": "Trusted by students, professionals, and teams across India — built for speed, privacy, and simplicity.",
     "whyChoose_users_title": "People Trust Us",
-    "whyChoose_users_desc": "Thousands of users rely on PDF Doctor every day to merge, convert, compress, and manage documents without installing software.",
+    "whyChoose_users_desc": "Thousands of users rely on Only4PDF every day to merge, convert, compress, and manage documents without installing software.",
     "whyChoose_business_title": "Teams & Businesses Trust Us",
     "whyChoose_business_desc": "From freelancers to small businesses — fast processing, clear pricing, and reliable results for everyday document work.",
     "whyChoose_everywhere_title": "Works Everywhere You Do",
-    "whyChoose_everywhere_desc": "Use PDF Doctor on desktop, tablet, or phone — any modern browser. No downloads, no plugins, no learning curve.",
+    "whyChoose_everywhere_desc": "Use Only4PDF on desktop, tablet, or phone — any modern browser. No downloads, no plugins, no learning curve.",
     "whyChoose_support_title": "Help When You Need It",
     "whyChoose_support_desc": "Questions about a tool or your account? Reach our support team anytime — we're here to help you finish your PDF tasks.",
     "whyChoose_encryption_title": "256-Bit TLS Encryption",
@@ -598,17 +598,17 @@
     "pricingProCta": "Upgrade to Pro",
     "pricingSeeAll": "See full pricing",
     "faqTitle": "Frequently Asked Questions",
-    "ctaTitle": "Start Using PDF Doctor Today",
-    "ctaDesc": "Join thousands of users who trust PDF Doctor for all their PDF needs — no signup required.",
+    "ctaTitle": "Start Using Only4PDF Today",
+    "ctaDesc": "Join thousands of users who trust Only4PDF for all their PDF needs — no signup required.",
     "ctaButton": "Get Started — It's Free",
     "secureBadge": "256-bit TLS",
     "autoDeleteBadge": "After 2 hours",
     "secureLabel": "Secure",
     "autoDeleteLabel": "Auto-delete",
-    "faq1q": "How does PDF Doctor work?",
-    "faq1a": "Upload your PDF file, choose the tool you need, and let PDF Doctor handle the rest. All processing happens securely on our servers, and your files are automatically deleted after 2 hours.",
-    "faq2q": "Is PDF Doctor free?",
-    "faq2a": "Yes! PDF Doctor offers a generous free tier with 5 tool uses per day and no file size limit. For power users, our Pro plan unlocks more daily uses, AI tools, and priority processing.",
+    "faq1q": "How does Only4PDF work?",
+    "faq1a": "Upload your PDF file, choose the tool you need, and let Only4PDF handle the rest. All processing happens securely on our servers, and your files are automatically deleted after 2 hours.",
+    "faq2q": "Is Only4PDF free?",
+    "faq2a": "Yes! Only4PDF offers a generous free tier with 5 tool uses per day and no file size limit. For power users, our Pro plan unlocks more daily uses, AI tools, and priority processing.",
     "faq3q": "Are my files safe?",
     "faq3a": "Absolutely. Files are transmitted over encrypted connections, processed in isolated environments, and automatically deleted after 2 hours (24 hours for Pro users). We never share or sell your data.",
     "faq4q": "What is the file size limit?",

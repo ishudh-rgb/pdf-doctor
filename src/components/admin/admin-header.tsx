@@ -26,7 +26,7 @@ export function AdminHeader({ onMenuClick, className }: AdminHeaderProps) {
         </button>
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-pd-brand" />
-          <h1 className="text-lg font-semibold text-pd-foreground">PDF Doctor Admin</h1>
+          <h1 className="text-lg font-semibold text-pd-foreground">Only4PDF Admin</h1>
         </div>
       </div>
 
@@ -44,7 +44,7 @@ export function AdminHeader({ onMenuClick, className }: AdminHeaderProps) {
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-medium text-pd-foreground">Admin</p>
-            <p className="text-xs text-pd-muted">admin@pdfdoctor.com</p>
+            <p className="text-xs text-pd-muted">admin@only4pdf.com</p>
           </div>
         </div>
       </div>

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
-  Check,
   Loader2,
   Minus,
   Plus,
@@ -20,7 +19,7 @@ import {
   splitAfterFromEachPage,
   splitAfterFromEveryN,
 } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { ExtractToolbar } from "@/components/tools/split-pdf/extract-toolbar";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
@@ -64,6 +63,8 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultFilename, setResultFilename] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
+  const [pdfPassword, setPdfPassword] = useState<string | null>(null);
   const [passwordPrompt, setPasswordPrompt] = useState<{
     file: File;
     fileName: string;
@@ -127,6 +128,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
     setHiddenSlotIds(new Set());
     setPageSlots([]);
     setRotations({});
+    setPdfPassword(null);
 
     loadPdfThumbnailsBatched(file, (thumbs, total, trunc) => {
         if (requestId !== loadRequestRef.current) return;
@@ -195,6 +197,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
         return;
       }
+      setPdfPassword(pw);
       setPasswordPrompt(null);
       if (result.error) setError(result.error);
     });
@@ -220,11 +223,12 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
 
   const outputPdfCount = useMemo(() => {
     if (tab === "extract") {
-      if (selectedVisibleCount === 0) return 0;
+      if (totalPages === 0) return 0;
+      if (selectedVisibleCount === 0) return 1;
       return separatePdfs ? selectedVisibleCount : 1;
     }
     return rangesFromSplitAfter(splitVisibleSlots.length, splitCutPositions).length;
-  }, [tab, selectedVisibleCount, separatePdfs, splitVisibleSlots.length, splitCutPositions]);
+  }, [tab, totalPages, selectedVisibleCount, separatePdfs, splitVisibleSlots.length, splitCutPositions]);
 
   const toggleSplitAfter = (afterSlotIndex: number) => {
     setManualSplits(true);
@@ -418,10 +422,19 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
     try {
       const formData = new FormData();
       formData.append("file", file, file.name || "document.pdf");
+      if (pdfPassword) {
+        formData.append("password", pdfPassword);
+      }
 
       if (tab === "extract") {
         const selected = visibleSlots.filter((s) => selectedSlotIds.has(s.id));
-        if (selected.length === 0) throw new Error("Select at least one page to extract.");
+        if (selected.length === 0) {
+          setResultUrl(URL.createObjectURL(file));
+          setResultFilename(file.name || "document.pdf");
+          setResultSize(file.size);
+          setCompleted(true);
+          return;
+        }
 
         const composeSlots = selected.map((slot) => {
           if (slot.kind === "original") return { kind: "original" as const, page: slot.page };
@@ -447,6 +460,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         const blob = await res.blob();
         setResultUrl(URL.createObjectURL(blob));
         setResultFilename(isZip ? "extracted-pages.zip" : "extracted.pdf");
+        setResultSize(blob.size);
         setCompleted(true);
         return;
       }
@@ -468,9 +482,12 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Failed to split PDF. Please try again.");
         }
+        const contentType = res.headers.get("content-type") || "";
+        const isZip = contentType.includes("application/zip");
         const blob = await res.blob();
         setResultUrl(URL.createObjectURL(blob));
-        setResultFilename("split-pages.zip");
+        setResultFilename(isZip ? "split-pages.zip" : "split.pdf");
+        setResultSize(blob.size);
         setCompleted(true);
         return;
       }
@@ -506,6 +523,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
       setResultFilename(isZip ? "split-pages.zip" : "split.pdf");
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -525,31 +543,23 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
 
   if (completed && resultUrl) {
     return (
-      <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
-          <Check className="h-7 w-7 text-pd-brand" />
-        </div>
-        <h2 className="text-lg font-bold text-pd-foreground">PDF ready</h2>
-        <p className="mt-2 text-sm text-pd-muted">
-          {resultFilename?.endsWith(".zip")
+      <ToolWorkspaceReadyPanel
+        description={
+          resultFilename?.endsWith(".zip")
             ? "Each part is in a ZIP file."
-            : "Your document is ready to download."}
-        </p>
-        <a href={resultUrl} download={resultFilename || "split.pdf"} className="mt-5 inline-block">
-          <Button size="md">Download</Button>
-        </a>
-        <button
-          type="button"
-          onClick={() => {
-            setCompleted(false);
-            setResultUrl(null);
-            onReset();
-          }}
-          className="mx-auto mt-3 block text-sm text-pd-muted hover:text-pd-foreground"
-        >
-          Split another file
-        </button>
-      </div>
+            : "Your document is ready to download."
+        }
+        downloadUrl={resultUrl}
+        downloadFilename={resultFilename || "split.pdf"}
+        resultSizeBytes={resultSize}
+        resetLabel="Split another file"
+        onReset={() => {
+          setCompleted(false);
+          setResultUrl(null);
+          setResultSize(0);
+          onReset();
+        }}
+      />
     );
   }
 
@@ -709,7 +719,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
               <Button
                 size="sm"
                 onClick={handleFinish}
-                disabled={processing || loadingThumbs || outputPdfCount === 0}
+                disabled={processing || loadingThumbs || totalPages === 0}
                 className="gap-1.5"
               >
                 {processing ? (

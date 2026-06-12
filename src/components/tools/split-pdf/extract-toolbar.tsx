@@ -104,7 +104,7 @@ export function ExtractToolbar({
         <Button
           size="sm"
           onClick={onFinish}
-          disabled={disabled || processing || selectedCount === 0}
+          disabled={disabled || processing}
           className="gap-1.5"
         >
           {processing ? "Processing…" : finishLabel}

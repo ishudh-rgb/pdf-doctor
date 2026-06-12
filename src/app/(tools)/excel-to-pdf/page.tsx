@@ -16,13 +16,13 @@ export default function ExcelToPdfPage() {
       downloadLabel="Download PDF"
       outputExtension="pdf"
       apiPath="/api/tools/excel-to-pdf"
-      showOutputSize
       fetchTimeoutMs={180_000}
       progressCap={97}
       relatedTools={[
         { name: "PDF to Excel", href: "/pdf-to-excel" },
         { name: "Word to PDF", href: "/word-to-pdf" },
         { name: "Compress PDF", href: "/compress-pdf" },
+        { name: "Merge PDF", href: "/merge-pdf" },
       ]}
     />
   );

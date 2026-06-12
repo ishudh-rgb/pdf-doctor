@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
 import { SplitPageCard } from "@/components/tools/split-pdf/split-page-card";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
@@ -47,6 +47,7 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
   const [passwordPrompt, setPasswordPrompt] = useState<{
     file: File;
     fileName: string;
@@ -97,7 +98,6 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
       if (total > 0) {
         const slots = createOriginalSlots(total);
         setPageSlots(slots);
-        setSelectedSlotIds(new Set(slots.map((s) => s.id)));
         setError(null);
       }
     })
@@ -144,7 +144,6 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
       if (total > 0) {
         const slots = createOriginalSlots(total);
         setPageSlots(slots);
-        setSelectedSlotIds(new Set(slots.map((s) => s.id)));
         setError(null);
       }
     }, pw).then((result) => {
@@ -310,7 +309,10 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
       }
 
       if (Object.keys(rotationsMap).length === 0) {
-        throw new Error("No rotations applied. Rotate at least one page before downloading.");
+        setResultUrl(URL.createObjectURL(file));
+        setResultSize(file.size);
+        setCompleted(true);
+        return;
       }
 
       const formData = new FormData();
@@ -325,6 +327,7 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
 
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -335,32 +338,19 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
 
   if (completed && resultUrl) {
     return (
-      <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
-          <Check className="h-7 w-7 text-pd-brand" />
-        </div>
-        <h2 className="text-lg font-bold text-pd-foreground">PDF ready</h2>
-        <p className="mt-2 text-sm text-pd-muted">
-          Your rotated document is ready to download.
-        </p>
-        <a href={resultUrl} download={`rotated-${file.name}`} className="mt-5 inline-block">
-          <Button size="md" className="gap-2">
-            <Download className="h-4 w-4" />
-            Download
-          </Button>
-        </a>
-        <button
-          type="button"
-          onClick={() => {
-            setCompleted(false);
-            setResultUrl(null);
-            onReset();
-          }}
-          className="mx-auto mt-3 block text-sm text-pd-muted hover:text-pd-foreground"
-        >
-          Rotate another file
-        </button>
-      </div>
+      <ToolWorkspaceReadyPanel
+        description="Your rotated document is ready to download."
+        downloadUrl={resultUrl}
+        downloadFilename={`rotated-${file.name}`}
+        resultSizeBytes={resultSize}
+        resetLabel="Rotate another file"
+        onReset={() => {
+          setCompleted(false);
+          setResultUrl(null);
+          setResultSize(0);
+          onReset();
+        }}
+      />
     );
   }
 
@@ -484,7 +474,7 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
             <Button
               size="sm"
               onClick={handleApplyAndDownload}
-              disabled={processing || loadingThumbs || rotatedCount === 0}
+              disabled={processing || loadingThumbs || totalPages === 0}
               className="gap-1.5"
             >
               {processing ? (

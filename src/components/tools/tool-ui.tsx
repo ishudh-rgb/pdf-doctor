@@ -1,11 +1,27 @@
 "use client";
 
-import { Loader2, Download, AlertCircle, Upload, FileUp } from "lucide-react";
+import { Loader2, Download, AlertCircle, Upload, FileUp, Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/ui/circular-progress";
-import { CloudSourceButtons } from "@/components/upload/cloud-source-buttons";
 
+export function ToolResultSizeBadge({
+  sizeBytes,
+  className,
+}: {
+  sizeBytes: number;
+  className?: string;
+}) {
+  return (
+    <p className={cn("mt-2 text-xs text-pd-muted", className)}>
+      Output size{" "}
+      <span className="font-semibold tabular-nums text-pd-foreground">
+        {formatFileSize(sizeBytes)}
+      </span>
+    </p>
+  );
+}
 interface ToolDropzoneProps {
   hint?: string;
   subHint?: string;
@@ -14,11 +30,6 @@ interface ToolDropzoneProps {
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
   onChooseFiles: () => void;
-  onCloudFiles?: (files: File[]) => void;
-  onCloudError?: (message: string) => void;
-  acceptExtensions?: string[];
-  mimeTypes?: string;
-  multiple?: boolean;
   chooseLabel?: string;
   className?: string;
 }
@@ -31,16 +42,11 @@ export function ToolDropzone({
   onDragLeave,
   onDrop,
   onChooseFiles,
-  onCloudFiles,
-  onCloudError,
-  acceptExtensions = [".pdf"],
-  mimeTypes = "application/pdf",
-  multiple = false,
   chooseLabel = "Select file",
   className,
 }: ToolDropzoneProps) {
   return (
-    <div className={cn("w-full space-y-2.5", className)}>
+    <div className={cn("w-full", className)}>
       <div
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -69,17 +75,6 @@ export function ToolDropzone({
         <p className="mt-2 text-sm text-pd-muted">{hint}</p>
         {subHint && <p className="mt-1 text-xs text-pd-muted/90">{subHint}</p>}
       </div>
-
-      {onCloudFiles && (
-        <CloudSourceButtons
-          variant="inline"
-          onFilesSelected={onCloudFiles}
-          onError={onCloudError}
-          acceptExtensions={acceptExtensions}
-          mimeTypes={mimeTypes}
-          multiple={multiple}
-        />
-      )}
     </div>
   );
 }
@@ -99,6 +94,7 @@ interface ToolSuccessPanelProps {
   downloadUrl: string;
   downloadFilename: string;
   downloadLabel: string;
+  resultSizeBytes?: number;
   onReset: () => void;
   resetLabel?: string;
   children?: React.ReactNode;
@@ -110,6 +106,7 @@ export function ToolSuccessPanel({
   downloadUrl,
   downloadFilename,
   downloadLabel,
+  resultSizeBytes,
   onReset,
   resetLabel = "Process another file",
   children,
@@ -121,7 +118,55 @@ export function ToolSuccessPanel({
       </div>
       <h2 className="text-lg font-bold text-pd-foreground">{title}</h2>
       {description && <p className="mt-2 text-sm text-pd-muted">{description}</p>}
+      {resultSizeBytes !== undefined && resultSizeBytes > 0 && (
+        <ToolResultSizeBadge sizeBytes={resultSizeBytes} />
+      )}
       {children}
+      <a href={downloadUrl} download={downloadFilename} className="mt-5 inline-block">
+        <Button size="md">{downloadLabel}</Button>
+      </a>
+      <button
+        type="button"
+        onClick={onReset}
+        className="mx-auto mt-3 block text-sm text-pd-muted transition hover:text-pd-foreground"
+      >
+        {resetLabel}
+      </button>
+    </div>
+  );
+}
+
+interface ToolWorkspaceReadyPanelProps {
+  title?: string;
+  description: string;
+  downloadUrl: string;
+  downloadFilename: string;
+  downloadLabel?: string;
+  resultSizeBytes?: number;
+  resetLabel: string;
+  onReset: () => void;
+}
+
+export function ToolWorkspaceReadyPanel({
+  title = "PDF ready",
+  description,
+  downloadUrl,
+  downloadFilename,
+  downloadLabel = "Download",
+  resultSizeBytes,
+  resetLabel,
+  onReset,
+}: ToolWorkspaceReadyPanelProps) {
+  return (
+    <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
+        <Check className="h-7 w-7 text-pd-brand" />
+      </div>
+      <h2 className="text-lg font-bold text-pd-foreground">{title}</h2>
+      <p className="mt-2 text-sm text-pd-muted">{description}</p>
+      {resultSizeBytes !== undefined && resultSizeBytes > 0 && (
+        <ToolResultSizeBadge sizeBytes={resultSizeBytes} />
+      )}
       <a href={downloadUrl} download={downloadFilename} className="mt-5 inline-block">
         <Button size="md">{downloadLabel}</Button>
       </a>

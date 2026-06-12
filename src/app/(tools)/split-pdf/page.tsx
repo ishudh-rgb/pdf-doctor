@@ -64,8 +64,6 @@ export default function SplitPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
-            onCloudFiles={(incoming) => handleFiles(incoming)}
-            onCloudError={setUploadError}
           />
           <input
             ref={fileInputRef}

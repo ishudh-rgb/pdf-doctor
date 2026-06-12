@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { compressPDF } from "@/lib/services/pdf-compress.service";
+import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -51,9 +52,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid compression level" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const password = (formData.get("password") as string | null) || null;
+    let buffer: Buffer;
+
+    try {
+      buffer = await resolvePdfBuffer(Buffer.from(await file.arrayBuffer()), password);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to open PDF";
+      if (msg === "PASSWORD_REQUIRED") {
+        return NextResponse.json(
+          { error: "This PDF is password-protected. Enter the password to compress." },
+          { status: 400 }
+        );
+      }
+      if (msg === "WRONG_PASSWORD") {
+        return NextResponse.json(
+          { error: "Incorrect password. Please try again." },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+
     const originalSize = buffer.length;
-    const result = await compressPDF(buffer, level as "basic" | "strong");
+    const result = await compressPDF(buffer, level as "basic" | "strong", password ?? undefined);
     const compressedSize = result.compressedSize;
     const savedPercent = Math.round(((originalSize - compressedSize) / originalSize) * 100);
 

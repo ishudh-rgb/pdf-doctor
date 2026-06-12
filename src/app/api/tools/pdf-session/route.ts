@@ -1,42 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPdfSession, buildOwnerHash } from "@/lib/pdf/pdf-session-store";
-import { getTotalPages } from "@/lib/pdf/pdf-thumbnails.server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { createClient } from "@/lib/supabase/server";
+import { probePdfAccess } from "@/lib/pdf/pdf-password.server";
 import { unlockPDF } from "@/lib/services/pdf-security.service";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-function looksEncrypted(buffer: Buffer): boolean {
-  return buffer.includes(Buffer.from("/Encrypt"));
-}
-
-async function tryLoadPages(
-  buffer: Buffer,
-  skipEncryptCheck = false
-): Promise<{ pages: number; encrypted: boolean }> {
-  if (!skipEncryptCheck && looksEncrypted(buffer)) {
-    return { pages: 0, encrypted: true };
-  }
-
-  try {
-    const pages = await getTotalPages(buffer);
-    return { pages, encrypted: false };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
-    const isEnc =
-      msg.includes("encrypt") ||
-      msg.includes("password") ||
-      msg.includes("decrypt") ||
-      msg.includes("cannot transfer");
-    if (isEnc) {
-      return { pages: 0, encrypted: true };
-    }
-    throw err;
-  }
-}
+const WRONG_PASSWORD_MSG = "Incorrect password. Please try again.";
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,39 +35,57 @@ export async function POST(request: NextRequest) {
     }
 
     let buffer = Buffer.from(await file.arrayBuffer());
+    const withoutPassword = await probePdfAccess(buffer);
 
-    let result = await tryLoadPages(buffer);
+    if (withoutPassword.status === "unreadable") {
+      return NextResponse.json({ error: withoutPassword.message }, { status: 400 });
+    }
 
-    if (result.encrypted && password) {
+    let totalPages = withoutPassword.status === "ok" ? withoutPassword.pages : 0;
+
+    if (withoutPassword.status === "password_required") {
+      if (!password) {
+        return NextResponse.json(
+          { error: "This PDF is password-protected.", code: "password_required", fileName: file.name },
+          { status: 400 }
+        );
+      }
+
+      const withPassword = await probePdfAccess(buffer, password);
+      if (withPassword.status === "wrong_password") {
+        return NextResponse.json(
+          { error: WRONG_PASSWORD_MSG, code: "wrong_password" },
+          { status: 400 }
+        );
+      }
+      if (withPassword.status !== "ok") {
+        return NextResponse.json(
+          { error: withPassword.status === "unreadable" ? withPassword.message : WRONG_PASSWORD_MSG },
+          { status: 400 }
+        );
+      }
+
       try {
-        buffer = await unlockPDF(buffer, password);
+        buffer = Buffer.from(await unlockPDF(buffer, password));
+        const unlocked = await probePdfAccess(buffer);
+        if (unlocked.status === "ok") {
+          totalPages = unlocked.pages;
+        } else {
+          totalPages = withPassword.pages;
+        }
       } catch (unlockErr) {
-        const msg = unlockErr instanceof Error ? unlockErr.message : "Wrong password";
+        const msg = unlockErr instanceof Error ? unlockErr.message : WRONG_PASSWORD_MSG;
         return NextResponse.json(
-          { error: msg, code: "wrong_password" },
-          { status: 400 }
-        );
-      }
-
-      try {
-        result = await tryLoadPages(buffer, true);
-      } catch (parseErr) {
-        console.error("[pdf-session] parse after unlock failed:", parseErr);
-        return NextResponse.json(
-          { error: "Could not read PDF after unlocking. The file may be corrupted." },
+          {
+            error: msg.includes("Incorrect password") ? msg : WRONG_PASSWORD_MSG,
+            code: "wrong_password",
+          },
           { status: 400 }
         );
       }
     }
 
-    if (result.encrypted) {
-      return NextResponse.json(
-        { error: "This PDF is password-protected.", code: "password_required", fileName: file.name },
-        { status: 400 }
-      );
-    }
-
-    if (result.pages === 0) {
+    if (totalPages === 0) {
       return NextResponse.json({ error: "Could not read this PDF." }, { status: 400 });
     }
 
@@ -102,8 +93,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       sessionId,
-      totalPages: result.pages,
-      truncated: result.pages > 500,
+      totalPages,
+      truncated: totalPages > 500,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to open PDF";

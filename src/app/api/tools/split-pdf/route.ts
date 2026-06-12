@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { splitPDF, splitAllPages, extractPages } from "@/lib/services/pdf-split.service";
+import { buildPdfBuffersDownloadResponse } from "@/lib/pdf/pdf-buffers-response";
+import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -49,7 +51,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const password = (formData.get("password") as string | null) || null;
+    let buffer: Buffer;
+
+    try {
+      buffer = await resolvePdfBuffer(Buffer.from(await file.arrayBuffer()), password);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to open PDF";
+      if (msg === "PASSWORD_REQUIRED") {
+        return NextResponse.json(
+          { error: "This PDF is password-protected. Enter the password to continue." },
+          { status: 400 }
+        );
+      }
+      if (msg === "WRONG_PASSWORD") {
+        return NextResponse.json(
+          { error: "Incorrect password. Please try again." },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+
     let result: Buffer | Buffer[];
     let filename = "split.pdf";
 
@@ -102,27 +125,22 @@ export async function POST(request: NextRequest) {
     }).catch(() => {});
 
     if (Array.isArray(result)) {
-      const { buildZip } = await import("@/lib/services/zip-builder");
-      const filesMap: Record<string, Buffer> = {};
       const rangeParts =
         mode === "range" && ranges
           ? ranges.split(",").map((r) => r.trim())
           : [];
-      result.forEach((pdfBuffer, index) => {
+      const zipEntryNames = result.map((_, index) => {
         const label = rangeParts[index] ?? String(index + 1);
         const safeName = label.replace(/[^0-9,-]/g, "") || String(index + 1);
-        filesMap[`page-${safeName}.pdf`] = pdfBuffer;
+        return `page-${safeName}.pdf`;
       });
-      const zipBuffer = await buildZip(filesMap);
 
-      return new NextResponse(new Uint8Array(zipBuffer), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/zip",
-          "Content-Disposition": 'attachment; filename="split-pages.zip"',
-          "Content-Length": String(zipBuffer.length),
-        },
-      });
+      return buildPdfBuffersDownloadResponse(
+        result,
+        "split.pdf",
+        "split-pages.zip",
+        zipEntryNames
+      );
     }
 
     return new NextResponse(new Uint8Array(result), {

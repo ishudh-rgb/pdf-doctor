@@ -3,9 +3,9 @@ import Link from "next/link";
 import { LegalPageContent } from "@/components/marketing/legal-page-content";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | PDF Doctor",
+  title: "Privacy Policy | Only4PDF",
   description:
-    "Learn how PDF Doctor handles your data, files, and personal information. Your privacy is our priority.",
+    "Learn how Only4PDF handles your data, files, and personal information. Your privacy is our priority.",
 };
 
 export default function PrivacyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  When you use PDF Doctor, we may collect the following types of
+                  When you use Only4PDF, we may collect the following types of
                   information:
                 </p>
                 <ul className="list-disc space-y-2 pl-5">
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
                   </li>
                   <li>
                     <strong>No Human Access:</strong> Your files are processed
-                    automatically. No PDF Doctor employee views or accesses your
+                    automatically. No Only4PDF employee views or accesses your
                     file contents.
                   </li>
                   <li>
@@ -125,8 +125,8 @@ export default function PrivacyPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  We work with trusted third-party services to operate PDF
-                  Doctor:
+                  We work with trusted third-party services to operate
+                  Only4PDF:
                 </p>
                 <ul className="list-disc space-y-2 pl-5">
                   <li>
@@ -195,10 +195,10 @@ export default function PrivacyPage() {
                 <p>
                   To exercise any of these rights, please contact us at{" "}
                   <a
-                    href="mailto:support@pdfdoctor.com"
+                    href="mailto:support@only4pdf.com"
                     className="text-blue-600 hover:underline"
                   >
-                    support@pdfdoctor.com
+                    support@only4pdf.com
                   </a>
                   .
                 </p>
@@ -211,7 +211,7 @@ export default function PrivacyPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  PDF Doctor is not intended for use by children under the age of
+                  Only4PDF is not intended for use by children under the age of
                   13. We do not knowingly collect personal information from
                   children under 13. If we become aware that a child under 13
                   has provided us with personal information, we will take steps
@@ -232,7 +232,7 @@ export default function PrivacyPage() {
                   encourage you to review this page periodically for any changes.
                 </p>
                 <p>
-                  Continued use of PDF Doctor after changes are posted
+                  Continued use of Only4PDF after changes are posted
                   constitutes your acceptance of the revised policy.
                 </p>
               </div>
@@ -251,16 +251,16 @@ export default function PrivacyPage() {
                   <li>
                     Email:{" "}
                     <a
-                      href="mailto:support@pdfdoctor.com"
+                      href="mailto:support@only4pdf.com"
                       className="text-blue-600 hover:underline"
                     >
-                      support@pdfdoctor.com
+                      support@only4pdf.com
                     </a>
                   </li>
                   <li>
                     Contact Page:{" "}
                     <Link href="/contact" className="text-blue-600 hover:underline">
-                      pdfdoctor.com/contact
+                      only4pdf.com/contact
                     </Link>
                   </li>
                 </ul>

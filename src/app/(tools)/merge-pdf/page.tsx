@@ -69,8 +69,6 @@ export default function MergePdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
-            onCloudFiles={(incoming) => handleFiles(incoming)}
-            onCloudError={setUploadError}
             multiple
           />
           <input
@@ -90,6 +88,7 @@ export default function MergePdfPage() {
         <div className="w-full">
           <MergePdfWorkspace
             initialFiles={sessionFiles}
+            onFilesChange={setSessionFiles}
             onReset={() => setSessionFiles(null)}
           />
         </div>

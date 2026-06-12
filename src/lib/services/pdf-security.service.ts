@@ -1,5 +1,10 @@
 import { encryptPDF } from "@pdfsmaller/pdf-encrypt";
 import { decryptPDF } from "@pdfsmaller/pdf-decrypt";
+import {
+  isWrongPasswordMessage,
+  probePdfAccess,
+  unlockWithMuhammara,
+} from "@/lib/pdf/pdf-password.server";
 
 export interface PDFEncryptionAdapter {
   encrypt(fileBuffer: Buffer, password: string): Promise<Buffer>;
@@ -78,26 +83,36 @@ export async function unlockPDF(
     throw new Error("Password is required to unlock a PDF.");
   }
 
-  try {
-    if (adapter) {
-      return adapter.decrypt(fileBuffer, password);
-    }
+  if (adapter) {
+    return adapter.decrypt(fileBuffer, password);
+  }
 
+  const attempts: string[] = [];
+
+  try {
     const decrypted = await decryptPDF(fileBuffer, password);
     return Buffer.from(decrypted);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    const lower = message.toLowerCase();
-
-    if (
-      lower.includes("password") ||
-      lower.includes("incorrect") ||
-      lower.includes("decrypt") ||
-      lower.includes("invalid")
-    ) {
-      throw new Error("Incorrect password. Please try again.");
-    }
-
-    throw new Error(`Failed to unlock PDF: ${message}`);
+    attempts.push(err instanceof Error ? err.message : String(err));
   }
+
+  try {
+    return await unlockWithMuhammara(fileBuffer, password);
+  } catch (err) {
+    attempts.push(err instanceof Error ? err.message : String(err));
+  }
+
+  const access = await probePdfAccess(fileBuffer, password);
+  if (access.status === "wrong_password") {
+    throw new Error("Incorrect password. Please try again.");
+  }
+  if (access.status === "ok") {
+    return fileBuffer;
+  }
+
+  if (attempts.some(isWrongPasswordMessage)) {
+    throw new Error("Incorrect password. Please try again.");
+  }
+
+  throw new Error("Incorrect password. Please try again.");
 }

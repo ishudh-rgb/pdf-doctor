@@ -1,13 +1,7 @@
 import { cn } from "@/lib/utils/cn";
 import { PrivacyBadge } from "@/components/common/privacy-badge";
 import { ToolPageShell } from "@/components/layout/tool-page-shell";
-
-interface RelatedTool {
-  name: string;
-  href: string;
-  icon: React.ReactNode;
-  iconColor: string;
-}
+import type { MappedRelatedTool } from "@/components/tools/tool-helpers";
 
 interface FAQ {
   question: string;
@@ -18,7 +12,7 @@ interface ToolPageLayoutProps {
   title: string;
   description: string;
   children: React.ReactNode;
-  relatedTools?: RelatedTool[];
+  relatedTools?: MappedRelatedTool[];
   faqs?: FAQ[];
   seoContent?: React.ReactNode;
   className?: string;

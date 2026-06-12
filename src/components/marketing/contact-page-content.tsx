@@ -155,8 +155,8 @@ export function ContactPageContent() {
               icon: Mail,
               title: "Email Us",
               body: (
-                <a href="mailto:support@pdfdoctor.com" className="text-sm text-pd-brand hover:underline">
-                  support@pdfdoctor.com
+                <a href="mailto:support@only4pdf.com" className="text-sm text-pd-brand hover:underline">
+                  support@only4pdf.com
                 </a>
               ),
             },

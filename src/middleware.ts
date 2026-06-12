@@ -5,7 +5,7 @@ import { getLocalDevUserIdFromRequestEdge } from "@/lib/auth/local-dev-session-e
 
 const PROTECTED_ROUTES = ["/dashboard", "/admin"];
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@pdfdoctor.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@only4pdf.com";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

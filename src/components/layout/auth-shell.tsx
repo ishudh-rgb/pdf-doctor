@@ -46,10 +46,11 @@ export function AuthShell({ children, title, subtitle }: AuthShellProps) {
                 layoutStyle === "C" ? "text-white" : "text-pd-foreground"
               )}
             >
-              PDF{" "}
+              Only
               <span className={layoutStyle === "C" ? "text-white/90" : "text-pd-brand"}>
-                Doctor
+                4
               </span>
+              PDF
             </span>
           </Link>
 
@@ -77,7 +78,7 @@ export function AuthShell({ children, title, subtitle }: AuthShellProps) {
             <div className="mt-8 overflow-hidden rounded-2xl border border-pd-border bg-pd-surface p-2 shadow-lg">
               <Image
                 src="/images/hero-product-main.webp"
-                alt="PDF Doctor product preview"
+                alt="Only4PDF product preview"
                 width={800}
                 height={500}
                 loading="lazy"

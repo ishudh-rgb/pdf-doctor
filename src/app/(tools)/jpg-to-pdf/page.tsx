@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Plus, Trash2, RotateCw, Copy, ZoomIn, ArrowRight, Loader2 } from 'lucide-react';
+import { Plus, Trash2, RotateCw, Copy, ZoomIn, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { formatFileSize } from '@/lib/utils/file';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
@@ -12,6 +12,8 @@ import {
   ToolErrorBanner,
 } from '@/components/tools/tool-ui';
 import { Button } from '@/components/ui/button';
+import { CircularProgress } from '@/components/ui/circular-progress';
+import { useConversionProgress } from '@/hooks/use-conversion-progress';
 
 const RELATED_TOOLS = [
   { name: 'PDF to Word', href: '/pdf-to-word' },
@@ -30,6 +32,16 @@ const FAQS = [
 type PageSize = 'a4' | 'letter' | 'auto';
 type Orientation = 'portrait' | 'landscape';
 type Margin = 'none' | 'small' | 'medium';
+
+function isImageFile(file: File) {
+  const name = file.name.toLowerCase();
+  return (
+    file.type === 'image/jpeg' ||
+    file.type === 'image/png' ||
+    file.type === 'image/webp' ||
+    /\.(jpe?g|png|webp)$/i.test(name)
+  );
+}
 
 function OptionPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -65,19 +77,46 @@ export default function JpgToPdfPage() {
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addMoreRef = useRef<HTMLInputElement>(null);
+  const insertAfterIndexRef = useRef<number | null>(null);
+  const { progress, start: startProgress, complete: completeProgress, stop: stopProgress, reset: resetProgress } =
+    useConversionProgress({ cap: 92 });
 
-  const handleFiles = useCallback((newFiles: FileList | File[]) => {
-    const imageFiles = Array.from(newFiles).filter(f =>
-      f.type === 'image/jpeg' || f.type === 'image/png' || f.type === 'image/webp'
-    );
-    if (imageFiles.length === 0) return;
+  const insertFilesAt = useCallback((newFiles: FileList | File[], afterIndex: number | null) => {
+    const imageFiles = Array.from(newFiles).filter(isImageFile);
+    if (imageFiles.length === 0) {
+      setError('Please select JPG, PNG, or WebP images only.');
+      return;
+    }
 
     const newPreviews = imageFiles.map(f => URL.createObjectURL(f));
-    setFiles(prev => [...prev, ...imageFiles]);
-    setPreviews(prev => [...prev, ...newPreviews]);
+    const insertAt =
+      afterIndex === null || afterIndex < 0 ? null : afterIndex + 1;
+
+    setFiles(prev => {
+      if (insertAt === null) return [...prev, ...imageFiles];
+      const next = [...prev];
+      next.splice(insertAt, 0, ...imageFiles);
+      return next;
+    });
+    setPreviews(prev => {
+      if (insertAt === null) return [...prev, ...newPreviews];
+      const next = [...prev];
+      next.splice(insertAt, 0, ...newPreviews);
+      return next;
+    });
     setError(null);
     setCompleted(false);
     setResultUrl(null);
+  }, []);
+
+  const handleFiles = useCallback(
+    (newFiles: FileList | File[]) => insertFilesAt(newFiles, null),
+    [insertFilesAt]
+  );
+
+  const openInsertAt = useCallback((afterIndex: number | null) => {
+    insertAfterIndexRef.current = afterIndex;
+    addMoreRef.current?.click();
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -116,6 +155,7 @@ export default function JpgToPdfPage() {
     if (files.length === 0) return;
     setProcessing(true);
     setError(null);
+    startProgress();
 
     try {
       const formData = new FormData();
@@ -131,6 +171,7 @@ export default function JpgToPdfPage() {
       }
 
       const blob = await res.blob();
+      completeProgress();
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
       setResultFilename('images.pdf');
@@ -138,12 +179,14 @@ export default function JpgToPdfPage() {
       setCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      stopProgress();
     } finally {
       setProcessing(false);
     }
   };
 
   const reset = () => {
+    resetProgress();
     previews.forEach(p => URL.revokeObjectURL(p));
     setFiles([]);
     setPreviews([]);
@@ -190,7 +233,11 @@ export default function JpgToPdfPage() {
             accept="image/jpeg,image/png,image/webp"
             multiple
             className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
+            onChange={(e) => {
+              const picked = Array.from(e.target.files ?? []);
+              e.target.value = '';
+              if (picked.length > 0) handleFiles(picked);
+            }}
           />
         </>
       ) : (
@@ -199,7 +246,7 @@ export default function JpgToPdfPage() {
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
             <button
               type="button"
-              onClick={() => addMoreRef.current?.click()}
+              onClick={() => openInsertAt(files.length > 0 ? files.length - 1 : null)}
               className="flex items-center gap-1.5 rounded-lg bg-pd-brand/10 px-3 py-1.5 text-xs font-semibold text-pd-brand transition hover:bg-pd-brand/20"
             >
               <Plus className="h-3.5 w-3.5" /> Add more
@@ -210,7 +257,14 @@ export default function JpgToPdfPage() {
               accept="image/jpeg,image/png,image/webp"
               multiple
               className="hidden"
-              onChange={(e) => { if (e.target.files) handleFiles(e.target.files); e.target.value = ''; }}
+              onChange={(e) => {
+                const picked = Array.from(e.target.files ?? []);
+                e.target.value = '';
+                if (picked.length === 0) return;
+                const afterIndex = insertAfterIndexRef.current;
+                insertAfterIndexRef.current = null;
+                insertFilesAt(picked, afterIndex);
+              }}
             />
 
             <span className="h-5 w-px bg-slate-200" />
@@ -245,7 +299,7 @@ export default function JpgToPdfPage() {
               >
                 {processing ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <CircularProgress value={progress} size={28} strokeWidth={2.5} className="text-white" />
                     Converting…
                   </>
                 ) : (
@@ -302,7 +356,7 @@ export default function JpgToPdfPage() {
                 <div className="flex items-center px-1">
                   <button
                     type="button"
-                    onClick={() => addMoreRef.current?.click()}
+                    onClick={() => openInsertAt(index)}
                     className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition-transform hover:scale-110 hover:bg-emerald-600"
                     title="Add image here"
                   >
@@ -316,7 +370,7 @@ export default function JpgToPdfPage() {
             <div className="w-[160px] sm:w-[180px]">
               <button
                 type="button"
-                onClick={() => addMoreRef.current?.click()}
+                onClick={() => openInsertAt(files.length > 0 ? files.length - 1 : null)}
                 className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 transition-colors hover:border-pd-brand hover:bg-pd-brand/5 hover:text-pd-brand"
                 style={{ aspectRatio: pageSize === 'auto' ? '0.707' : pageAspect }}
               >

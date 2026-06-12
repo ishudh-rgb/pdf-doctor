@@ -1,7 +1,4 @@
 import { spawn } from "child_process";
-import {
-  postProcessDocx,
-} from "@/lib/services/pdf-to-word-docx-post.service";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
@@ -40,7 +37,8 @@ const SCRIPT_PATH = path.join(process.cwd(), "scripts", "pdf-to-docx.py");
 function runCommand(
   command: string,
   args: string[],
-  timeoutMs: number
+  timeoutMs: number,
+  onProgress?: (percent: number) => void
 ): Promise<{ code: number; stderr: string }> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -56,7 +54,13 @@ function runCommand(
 
     let stderr = "";
     child.stderr?.on("data", (chunk: Buffer) => {
-      stderr += chunk.toString();
+      const text = chunk.toString();
+      stderr += text;
+      if (onProgress) {
+        for (const match of text.matchAll(/PROGRESS pct=(\d+)/g)) {
+          onProgress(Number(match[1]));
+        }
+      }
     });
 
     const timer = setTimeout(() => {
@@ -78,7 +82,7 @@ function runCommand(
 
 async function pythonWorks(command: string): Promise<boolean> {
   try {
-    const result = await runCommand(command, ["--version"], 8000);
+    const result = await runCommand(command, ["--version"], 2500);
     return result.code === 0;
   } catch {
     return false;
@@ -122,7 +126,7 @@ export async function isPdf2docxAvailable(): Promise<boolean> {
  */
 export async function pdfToWordPdf2docx(
   fileBuffer: Buffer,
-  options: { timeoutMs?: number } = {}
+  options: { timeoutMs?: number; onProgress?: (percent: number) => void } = {}
 ): Promise<Buffer> {
   const python = await resolvePdf2docxPython();
   if (!python) {
@@ -130,17 +134,21 @@ export async function pdfToWordPdf2docx(
   }
 
   const timeoutMs = options.timeoutMs ?? 120_000;
+  const onProgress = options.onProgress;
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "pdfdoctor-pdf2docx-"));
   const pdfPath = path.join(tmpDir, "input.pdf");
   const docxPath = path.join(tmpDir, "output.docx");
 
   try {
+    onProgress?.(1);
     await fs.writeFile(pdfPath, fileBuffer);
+    onProgress?.(2);
 
     const result = await runCommand(
       python,
       [SCRIPT_PATH, pdfPath, docxPath],
-      timeoutMs
+      timeoutMs,
+      onProgress
     );
 
     if (result.code !== 0) {
@@ -150,9 +158,15 @@ export async function pdfToWordPdf2docx(
       );
     }
 
+    onProgress?.(96);
     const rawDocx = await fs.readFile(docxPath);
-    return await postProcessDocx(rawDocx);
+    onProgress?.(99);
+    return rawDocx;
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
 }
+
+void resolvePdf2docxPython().then((python) => {
+  if (python) void isPdf2docxAvailable();
+});

@@ -7,6 +7,8 @@ import { LanguageProvider } from "@/i18n";
 import { LangSync } from "@/components/i18n/lang-sync";
 import { DesignPreviewProvider } from "@/components/design/design-preview-provider";
 import { DesignPreviewLab } from "@/components/design/design-preview-lab";
+import { HeroVariantProvider } from "@/components/marketing/hero-variant-provider";
+import { HeroVariantSwitch } from "@/components/marketing/hero-variant-switch";
 import {
   DEFAULT_BRAND_THEME,
   DEFAULT_LAYOUT_STYLE,
@@ -36,8 +38,8 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
 
 export const metadata: Metadata = {
   title: {
-    default: "PDF Doctor - Every PDF Tool You Need",
-    template: "%s | PDF Doctor",
+    default: "Only4PDF - Every PDF Tool You Need",
+    template: "%s | Only4PDF",
   },
   description:
     "Free online PDF tools to compress, convert, merge, split, edit, and sign PDFs. Fast, secure, and easy to use — right in your browser.",
@@ -51,14 +53,14 @@ export const metadata: Metadata = {
     "PDF to Word",
     "free PDF editor",
     "online PDF tools",
-    "PDF Doctor",
+    "Only4PDF",
   ],
   openGraph: {
-    title: "PDF Doctor - Every PDF Tool You Need",
+    title: "Only4PDF - Every PDF Tool You Need",
     description:
       "Free online PDF tools to compress, convert, merge, split, edit, and sign PDFs.",
     type: "website",
-    siteName: "PDF Doctor",
+    siteName: "Only4PDF",
   },
   robots: {
     index: true,
@@ -83,17 +85,20 @@ export default function RootLayout({
           Skip to main content
         </a>
         <DesignPreviewProvider>
-          <LanguageProvider>
-            <LangSync />
-            <AuthProvider>
-              <Header />
-              <main id="main-content" className="flex-1">
-                {children}
-              </main>
-              <Footer />
-              <DesignPreviewLab />
-            </AuthProvider>
-          </LanguageProvider>
+          <HeroVariantProvider>
+            <LanguageProvider>
+              <LangSync />
+              <AuthProvider>
+                <Header />
+                <main id="main-content" className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+                <DesignPreviewLab />
+                <HeroVariantSwitch />
+              </AuthProvider>
+            </LanguageProvider>
+          </HeroVariantProvider>
         </DesignPreviewProvider>
       </body>
     </html>

@@ -1,6 +1,6 @@
 import type { Tool, MegaMenuCategory, PricingPlan } from "@/types";
 
-export const APP_NAME = "PDF Doctor";
+export const APP_NAME = "Only4PDF";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 export const APP_DESCRIPTION =
   "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs. No signup required for basic tools.";
@@ -448,4 +448,4 @@ export function getToolsByCategory(category: string): Tool[] {
 export const PROTECTED_ROUTES = ["/dashboard", "/admin"];
 export const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@pdfdoctor.com";
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@only4pdf.com";

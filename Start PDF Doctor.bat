@@ -28,6 +28,12 @@ if not exist "node_modules\" (
 
 echo  [Step 2/2] Starting server...
 echo.
+
+REM Stop stale Next.js dev servers on 3000/3001 (prevents "already running" lock)
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":3000 .*LISTENING" /C:":3001 .*LISTENING"') do (
+    taskkill /PID %%a /F >nul 2>&1
+)
+
 echo    URL:  http://localhost:3000
 echo    Stop: Press Ctrl+C in this window
 echo.

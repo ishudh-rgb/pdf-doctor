@@ -80,8 +80,6 @@ export default function EditPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
-            onCloudFiles={handleFiles}
-            onCloudError={setUploadError}
           />
           <input
             ref={fileInputRef}

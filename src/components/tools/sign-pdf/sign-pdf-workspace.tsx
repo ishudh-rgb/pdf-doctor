@@ -623,7 +623,29 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
 
   const handleExport = async () => {
     if (annotations.length === 0) {
-      setError("Add at least one signature or annotation before exporting.");
+      setProcessing(true);
+      setError(null);
+      try {
+        let pdfToExport: File = file;
+        if (!isDefaultSlotOrder(visibleSlots, totalPages)) {
+          const composeForm = new FormData();
+          composeForm.append("file", file, file.name);
+          composeForm.append("slots", JSON.stringify(workspaceSlotsToCompose(visibleSlots)));
+          const composeRes = await fetch("/api/tools/compose-pdf", { method: "POST", body: composeForm });
+          if (!composeRes.ok) {
+            const data = await composeRes.json().catch(() => ({}));
+            throw new Error((data as { error?: string }).error || "Failed to prepare PDF pages.");
+          }
+          const composedBlob = await composeRes.blob();
+          pdfToExport = new File([composedBlob], file.name, { type: "application/pdf" });
+        }
+        const url = URL.createObjectURL(pdfToExport);
+        onComplete({ url, filename: file.name, size: pdfToExport.size });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Export failed.");
+      } finally {
+        setProcessing(false);
+      }
       return;
     }
     setProcessing(true);

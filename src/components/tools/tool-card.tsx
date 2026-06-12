@@ -1,13 +1,15 @@
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "@/components/ui/badge";
+import { ToolIconTile } from "@/components/tools/tool-icon-tile";
+import { slugFromToolHref } from "@/components/tools/tool-helpers";
 
 export interface ToolConfig {
   name: string;
   description: string;
   href: string;
-  icon: React.ReactNode;
-  iconColor: string;
+  icon: LucideIcon;
   isPro?: boolean;
 }
 
@@ -31,13 +33,8 @@ export function ToolCard({ tool, className }: ToolCardProps) {
         </Badge>
       )}
 
-      <div
-        className={cn(
-          "mb-4 flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110",
-          tool.iconColor
-        )}
-      >
-        {tool.icon}
+      <div className="mb-4">
+        <ToolIconTile slug={slugFromToolHref(tool.href)} icon={tool.icon} size="lg" />
       </div>
 
       <h3 className="text-sm font-semibold text-pd-foreground">{tool.name}</h3>

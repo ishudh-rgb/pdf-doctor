@@ -7,6 +7,7 @@ import { formatFileSize } from '@/lib/utils/file';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
 import { CompressionLevelPreview } from '@/components/tools/previews/compression-preview';
+import { PdfPasswordModal } from '@/components/tools/pdf-password-modal';
 import {
   ToolDropzone,
   ToolErrorBanner,
@@ -41,6 +42,12 @@ export default function CompressPdfPage() {
   const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>('basic');
   const [originalSize, setOriginalSize] = useState<number>(0);
   const [compressedSize, setCompressedSize] = useState<number>(0);
+  const [pdfPassword, setPdfPassword] = useState<string | null>(null);
+  const [passwordPrompt, setPasswordPrompt] = useState<{
+    fileName: string;
+    errorMsg?: string;
+    loading?: boolean;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = useCallback((newFiles: FileList | File[]) => {
@@ -51,6 +58,8 @@ export default function CompressPdfPage() {
       setError(null);
       setCompleted(false);
       setResultUrl(null);
+      setPdfPassword(null);
+      setPasswordPrompt(null);
     }
   }, []);
 
@@ -60,7 +69,7 @@ export default function CompressPdfPage() {
     handleFiles(e.dataTransfer.files);
   }, [handleFiles]);
 
-  const handleProcess = async () => {
+  const runCompress = useCallback(async (password?: string | null) => {
     if (files.length === 0) return;
     setProcessing(true);
     setError(null);
@@ -69,25 +78,42 @@ export default function CompressPdfPage() {
       const formData = new FormData();
       formData.append('file', files[0]);
       formData.append('level', compressionLevel);
+      const pw = password ?? pdfPassword;
+      if (pw) formData.append('password', pw);
 
       const res = await fetch('/api/tools/compress-pdf', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Failed to compress PDF. Please try again.');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        const msg = data.error ?? 'Failed to compress PDF. Please try again.';
+        if (msg.toLowerCase().includes('password')) {
+          setPasswordPrompt({
+            fileName: files[0].name,
+            errorMsg: msg.toLowerCase().includes('incorrect') ? msg : undefined,
+            loading: false,
+          });
+          return;
+        }
+        throw new Error(msg);
+      }
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setResultUrl(url);
+      setResultUrl(URL.createObjectURL(blob));
       setResultFilename('compressed.pdf');
       const headerOriginal = res.headers.get('X-Original-Size');
       const headerCompressed = res.headers.get('X-Compressed-Size');
       setCompressedSize(headerCompressed ? parseInt(headerCompressed, 10) : blob.size);
       if (headerOriginal) setOriginalSize(parseInt(headerOriginal, 10));
+      if (pw) setPdfPassword(pw);
+      setPasswordPrompt(null);
       setCompleted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
       setProcessing(false);
     }
-  };
+  }, [files, compressionLevel, pdfPassword]);
+
+  const handleProcess = () => runCompress();
 
   const compressionPercentage = originalSize > 0 ? Math.round((1 - compressedSize / originalSize) * 100) : 0;
 
@@ -111,6 +137,7 @@ export default function CompressPdfPage() {
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || 'compressed.pdf'}
           downloadLabel="Download Compressed PDF"
+          resultSizeBytes={compressedSize}
           resetLabel="Compress another file"
           onReset={() => {
             setCompleted(false);
@@ -144,6 +171,23 @@ export default function CompressPdfPage() {
         </ToolSuccessPanel>
       ) : (
         <>
+          {passwordPrompt && (
+            <PdfPasswordModal
+              fileName={passwordPrompt.fileName}
+              errorMessage={passwordPrompt.errorMsg}
+              loading={passwordPrompt.loading}
+              onSubmit={(pw) => {
+                setPasswordPrompt((prev) => prev ? { ...prev, loading: true, errorMsg: undefined } : prev);
+                void runCompress(pw);
+              }}
+              onCancel={() => {
+                setPasswordPrompt(null);
+                setFiles([]);
+                setPdfPassword(null);
+              }}
+            />
+          )}
+
           <input
             ref={fileInputRef}
             type="file"
@@ -162,8 +206,6 @@ export default function CompressPdfPage() {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onChooseFiles={() => fileInputRef.current?.click()}
-              onCloudFiles={(incoming) => handleFiles(incoming)}
-              onCloudError={setError}
             />
           ) : (
             <>

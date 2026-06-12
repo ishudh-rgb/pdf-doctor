@@ -220,6 +220,7 @@ export default function AddWatermarkPage() {
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || "watermarked.pdf"}
           downloadLabel="Download PDF"
+          resultSizeBytes={resultSize}
           resetLabel="Watermark another file"
           onReset={() => {
             setCompleted(false);

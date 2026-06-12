@@ -71,7 +71,7 @@ export async function openRazorpayCheckout(params: {
     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
     amount: params.amount,
     currency: params.currency || "INR",
-    name: "PDF Doctor",
+    name: "Only4PDF",
     description: "Pro Plan Subscription",
     order_id: params.orderId,
     prefill: {

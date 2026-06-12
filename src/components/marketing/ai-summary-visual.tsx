@@ -13,7 +13,7 @@ export function AiSummaryVisual() {
       <div className="relative overflow-hidden rounded-[1.5rem] border border-violet-200/60 bg-white shadow-2xl shadow-violet-500/10">
         <Image
           src="/images/hero-product-ai.webp"
-          alt="PDF Doctor AI PDF Summarizer report interface screenshot"
+          alt="Only4PDF AI PDF Summarizer report interface screenshot"
           width={900}
           height={1100}
           loading="lazy"

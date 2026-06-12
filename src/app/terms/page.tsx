@@ -3,9 +3,9 @@ import Link from "next/link";
 import { LegalPageContent } from "@/components/marketing/legal-page-content";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | PDF Doctor",
+  title: "Terms of Service | Only4PDF",
   description:
-    "Read the Terms of Service for PDF Doctor. Understand your rights and responsibilities when using our PDF tools.",
+    "Read the Terms of Service for Only4PDF. Understand your rights and responsibilities when using our PDF tools.",
 };
 
 export default function TermsPage() {
@@ -18,7 +18,7 @@ export default function TermsPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  By accessing or using PDF Doctor (&ldquo;the Service&rdquo;),
+                  By accessing or using Only4PDF (&ldquo;the Service&rdquo;),
                   you agree to be bound by these Terms of Service. If you do not
                   agree to these terms, please do not use the Service.
                 </p>
@@ -36,7 +36,7 @@ export default function TermsPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  PDF Doctor provides online PDF tools including but not limited
+                  Only4PDF provides online PDF tools including but not limited
                   to: merging, splitting, compressing, converting, editing,
                   signing, protecting, unlocking, scanning, and AI-powered
                   summarization of PDF documents.
@@ -96,7 +96,7 @@ export default function TermsPage() {
                   intended only for removing passwords from PDFs you own or have
                   authorization to access. Using this tool to bypass security on
                   PDFs you do not own is prohibited and may violate applicable
-                  laws. PDF Doctor is not responsible for misuse of this tool.
+                  laws. Only4PDF is not responsible for misuse of this tool.
                 </p>
               </div>
             </section>
@@ -192,7 +192,7 @@ export default function TermsPage() {
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
                   The Service, including its design, code, features, and
-                  branding, is owned by PDF Doctor. You retain full ownership of
+                  branding, is owned by Only4PDF. You retain full ownership of
                   any files you upload — we claim no rights over your content.
                 </p>
                 <p>
@@ -208,7 +208,7 @@ export default function TermsPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  To the maximum extent permitted by law, PDF Doctor shall not be
+                  To the maximum extent permitted by law, Only4PDF shall not be
                   liable for:
                 </p>
                 <ul className="list-disc space-y-2 pl-5">
@@ -313,16 +313,16 @@ export default function TermsPage() {
                   <li>
                     Email:{" "}
                     <a
-                      href="mailto:support@pdfdoctor.com"
+                      href="mailto:support@only4pdf.com"
                       className="text-blue-600 hover:underline"
                     >
-                      support@pdfdoctor.com
+                      support@only4pdf.com
                     </a>
                   </li>
                   <li>
                     Contact Page:{" "}
                     <Link href="/contact" className="text-blue-600 hover:underline">
-                      pdfdoctor.com/contact
+                      only4pdf.com/contact
                     </Link>
                   </li>
                 </ul>

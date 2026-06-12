@@ -1,6 +1,7 @@
 "use client";
 
-import { Star, Quote } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { cn } from "@/lib/utils/cn";
 
@@ -16,42 +17,46 @@ interface Testimonial {
 }
 
 const TESTIMONIALS: Testimonial[] = [
-  { name: "Priya Sharma", role: "Freelance Designer", country: "India", flag: "🇮🇳", rating: 5, text: "PDF Doctor saved me hours of work. The merge and compress tools are blazing fast, and the quality is perfect every time.", avatar: "PS", accent: "from-pink-500 to-rose-600" },
-  { name: "James Wilson", role: "Marketing Manager", country: "USA", flag: "🇺🇸", rating: 5, text: "Switched from Adobe Acrobat. PDF Doctor does everything I need for free — convert, edit, sign. The UI is clean and intuitive.", avatar: "JW", accent: "from-blue-500 to-indigo-600" },
-  { name: "Aisha Mohammed", role: "University Student", country: "UAE", flag: "🇦🇪", rating: 5, text: "I use PDF Doctor daily for my assignments. Converting Word to PDF and merging files is so easy. Best free PDF tool online!", avatar: "AM", accent: "from-emerald-500 to-teal-600" },
+  { name: "Priya Sharma", role: "Freelance Designer", country: "India", flag: "🇮🇳", rating: 5, text: "Only4PDF saved me hours of work. The merge and compress tools are blazing fast, and the quality is perfect every time.", avatar: "PS", accent: "from-pink-500 to-rose-600" },
+  { name: "James Wilson", role: "Marketing Manager", country: "USA", flag: "🇺🇸", rating: 5, text: "Switched from Adobe Acrobat. Only4PDF does everything I need for free — convert, edit, sign. The UI is clean and intuitive.", avatar: "JW", accent: "from-blue-500 to-indigo-600" },
+  { name: "Aisha Mohammed", role: "University Student", country: "UAE", flag: "🇦🇪", rating: 5, text: "I use Only4PDF daily for my assignments. Converting Word to PDF and merging files is so easy. Best free PDF tool online!", avatar: "AM", accent: "from-emerald-500 to-teal-600" },
   { name: "Carlos Mendoza", role: "Accountant", country: "Mexico", flag: "🇲🇽", rating: 5, text: "The PDF to Excel converter is incredible. It extracted all my tables perfectly — something other tools always messed up.", avatar: "CM", accent: "from-amber-500 to-orange-600" },
   { name: "Sophie Laurent", role: "Legal Assistant", country: "France", flag: "🇫🇷", rating: 5, text: "I feel safe uploading confidential documents. The 256-bit encryption and auto-delete after 2 hours give me peace of mind.", avatar: "SL", accent: "from-violet-500 to-purple-600" },
   { name: "Takeshi Yamamoto", role: "Software Engineer", country: "Japan", flag: "🇯🇵", rating: 5, text: "Clean interface, fast processing, no bloatware. The HTML to PDF converter renders my documentation perfectly.", avatar: "TY", accent: "from-cyan-500 to-sky-600" },
   { name: "Fatima Al-Hassan", role: "Teacher", country: "Saudi Arabia", flag: "🇸🇦", rating: 5, text: "My students love the simplicity. Upload, process, download — three steps and they have their converted PDF ready.", avatar: "FH", accent: "from-rose-500 to-pink-600" },
-  { name: "Liam O'Brien", role: "Startup Founder", country: "Ireland", flag: "🇮🇪", rating: 5, text: "We use PDF Doctor across our entire team. The batch processing and no file size limits are game-changers for us.", avatar: "LO", accent: "from-green-500 to-emerald-600" },
+  { name: "Liam O'Brien", role: "Startup Founder", country: "Ireland", flag: "🇮🇪", rating: 5, text: "We use Only4PDF across our entire team. The batch processing and no file size limits are game-changers for us.", avatar: "LO", accent: "from-green-500 to-emerald-600" },
   { name: "Chen Wei", role: "Finance Analyst", country: "China", flag: "🇨🇳", rating: 5, text: "The PDF to PowerPoint conversion is spot-on. Every slide, chart, and image comes through perfectly. Highly recommended!", avatar: "CW", accent: "from-red-500 to-rose-600" },
-  { name: "Maria Santos", role: "HR Manager", country: "Brazil", flag: "🇧🇷", rating: 5, text: "We process hundreds of employee documents weekly. PDF Doctor handles large files without breaking a sweat. Love the speed!", avatar: "MS", accent: "from-yellow-500 to-amber-600" },
+  { name: "Maria Santos", role: "HR Manager", country: "Brazil", flag: "🇧🇷", rating: 5, text: "We process hundreds of employee documents weekly. Only4PDF handles large files without breaking a sweat. Love the speed!", avatar: "MS", accent: "from-yellow-500 to-amber-600" },
   { name: "David Kim", role: "Graphic Designer", country: "South Korea", flag: "🇰🇷", rating: 5, text: "JPG to PDF and the compress tool keep my design portfolio looking sharp while keeping file sizes manageable.", avatar: "DK", accent: "from-indigo-500 to-blue-600" },
   { name: "Elena Popov", role: "Researcher", country: "Russia", flag: "🇷🇺", rating: 5, text: "The AI PDF Summarizer saves me so much time reviewing papers. It extracts key points accurately. A must-have for academics.", avatar: "EP", accent: "from-purple-500 to-violet-600" },
   { name: "Michael Thompson", role: "Real Estate Agent", country: "Canada", flag: "🇨🇦", rating: 5, text: "I sign and edit contracts on the go. Works great on my phone and tablet — no app download needed.", avatar: "MT", accent: "from-teal-500 to-cyan-600" },
   { name: "Anya Müller", role: "Project Manager", country: "Germany", flag: "🇩🇪", rating: 5, text: "Organized 200+ pages using the rotate, delete, and extract tools. The page preview is fantastic!", avatar: "AM", accent: "from-orange-500 to-red-600" },
-  { name: "Raj Patel", role: "CA Student", country: "India", flag: "🇮🇳", rating: 5, text: "PDF Doctor's Excel to PDF and PDF to Excel tools are accurate. No formatting issues. Perfect for financial statements.", avatar: "RP", accent: "from-blue-600 to-indigo-700" },
+  { name: "Raj Patel", role: "CA Student", country: "India", flag: "🇮🇳", rating: 5, text: "Only4PDF's Excel to PDF and PDF to Excel tools are accurate. No formatting issues. Perfect for financial statements.", avatar: "RP", accent: "from-blue-600 to-indigo-700" },
   { name: "Emma Johnson", role: "Content Writer", country: "UK", flag: "🇬🇧", rating: 5, text: "The TXT to PDF converter with font options is brilliant. I convert my manuscripts with Courier font — looks professional.", avatar: "EJ", accent: "from-fuchsia-500 to-pink-600" },
   { name: "Ahmed El-Said", role: "IT Specialist", country: "Egypt", flag: "🇪🇬", rating: 4, text: "Great tool for converting and protecting PDFs. The password protection feature is reliable. Would love dark mode next!", avatar: "AE", accent: "from-sky-500 to-blue-600" },
   { name: "Yuki Tanaka", role: "Photographer", country: "Japan", flag: "🇯🇵", rating: 5, text: "I convert my photo collections to PDF catalogs. The JPG to PDF tool preserves image quality perfectly.", avatar: "YT", accent: "from-lime-500 to-green-600" },
-  { name: "Isabella Rossi", role: "Lawyer", country: "Italy", flag: "🇮🇹", rating: 5, text: "Privacy is non-negotiable for legal work. PDF Doctor's GDPR compliance and auto-deletion policy earned my trust.", avatar: "IR", accent: "from-red-600 to-rose-700" },
+  { name: "Isabella Rossi", role: "Lawyer", country: "Italy", flag: "🇮🇹", rating: 5, text: "Privacy is non-negotiable for legal work. Only4PDF's GDPR compliance and auto-deletion policy earned my trust.", avatar: "IR", accent: "from-red-600 to-rose-700" },
   { name: "Lucas Silva", role: "Data Analyst", country: "Portugal", flag: "🇵🇹", rating: 5, text: "Extracted tables from 50+ page reports flawlessly. The converter understood my complex multi-column layouts.", avatar: "LS", accent: "from-emerald-600 to-teal-700" },
-  { name: "Zara Nkosi", role: "NGO Coordinator", country: "South Africa", flag: "🇿🇦", rating: 5, text: "We work with limited internet. PDF Doctor loads fast, processes quickly, and compressed files are easy to share.", avatar: "ZN", accent: "from-amber-600 to-yellow-700" },
+  { name: "Zara Nkosi", role: "NGO Coordinator", country: "South Africa", flag: "🇿🇦", rating: 5, text: "We work with limited internet. Only4PDF loads fast, processes quickly, and compressed files are easy to share.", avatar: "ZN", accent: "from-amber-600 to-yellow-700" },
   { name: "Oliver Brown", role: "College Professor", country: "Australia", flag: "🇦🇺", rating: 5, text: "The split PDF tool is exactly what I needed for separating exam papers. Each student gets their individual section.", avatar: "OB", accent: "from-violet-600 to-purple-700" },
   { name: "Mei Lin", role: "E-commerce Owner", country: "Singapore", flag: "🇸🇬", rating: 5, text: "I create product catalogs by merging multiple PDFs. The drag-and-drop interface makes it super easy.", avatar: "ML", accent: "from-cyan-600 to-sky-700" },
   { name: "Andrei Volkov", role: "Architect", country: "Ukraine", flag: "🇺🇦", rating: 5, text: "Large blueprint PDFs compressed to half size without losing clarity. My clients can download plans much faster.", avatar: "AV", accent: "from-blue-500 to-cyan-600" },
   { name: "Nina Johansson", role: "Journalist", country: "Sweden", flag: "🇸🇪", rating: 5, text: "Quick, reliable, and free. I convert interview transcripts and research docs to PDF daily. Never had an issue.", avatar: "NJ", accent: "from-indigo-600 to-violet-700" },
-  { name: "Kofi Asante", role: "Business Owner", country: "Ghana", flag: "🇬🇭", rating: 5, text: "PDF Doctor helps me create professional invoices. The Word to PDF conversion is flawless — clients are impressed.", avatar: "KA", accent: "from-green-600 to-emerald-700" },
+  { name: "Kofi Asante", role: "Business Owner", country: "Ghana", flag: "🇬🇭", rating: 5, text: "Only4PDF helps me create professional invoices. The Word to PDF conversion is flawless — clients are impressed.", avatar: "KA", accent: "from-green-600 to-emerald-700" },
   { name: "Hana Park", role: "UX Designer", country: "South Korea", flag: "🇰🇷", rating: 5, text: "The extract pages tool with live preview is so well designed. Finally a PDF tool that cares about UX!", avatar: "HP", accent: "from-pink-600 to-fuchsia-700" },
-  { name: "Marco Bianchi", role: "Sales Director", country: "Italy", flag: "🇮🇹", rating: 5, text: "Our sales team sends proposals daily. PDF Doctor's merge + compress workflow means we never miss a deadline.", avatar: "MB", accent: "from-orange-600 to-red-700" },
+  { name: "Marco Bianchi", role: "Sales Director", country: "Italy", flag: "🇮🇹", rating: 5, text: "Our sales team sends proposals daily. Only4PDF's merge + compress workflow means we never miss a deadline.", avatar: "MB", accent: "from-orange-600 to-red-700" },
   { name: "Deepika Reddy", role: "Medical Student", country: "India", flag: "🇮🇳", rating: 5, text: "Rotating and organizing my scanned notes is a breeze. The page zoom preview helps me check everything.", avatar: "DR", accent: "from-teal-600 to-cyan-700" },
-  { name: "Thomas Anderson", role: "Consultant", country: "USA", flag: "🇺🇸", rating: 5, text: "I've tried every PDF tool out there. PDF Doctor strikes the perfect balance between simplicity and power.", avatar: "TA", accent: "from-slate-500 to-gray-700" },
-  { name: "Sara García", role: "Translator", country: "Spain", flag: "🇪🇸", rating: 5, text: "Converting documents between formats while preserving layout is crucial. PDF Doctor handles it perfectly.", avatar: "SG", accent: "from-rose-600 to-pink-700" },
+  { name: "Thomas Anderson", role: "Consultant", country: "USA", flag: "🇺🇸", rating: 5, text: "I've tried every PDF tool out there. Only4PDF strikes the perfect balance between simplicity and power.", avatar: "TA", accent: "from-slate-500 to-gray-700" },
+  { name: "Sara García", role: "Translator", country: "Spain", flag: "🇪🇸", rating: 5, text: "Converting documents between formats while preserving layout is crucial. Only4PDF handles it perfectly.", avatar: "SG", accent: "from-rose-600 to-pink-700" },
   { name: "Daniel Okafor", role: "Civil Engineer", country: "Nigeria", flag: "🇳🇬", rating: 5, text: "The watermark feature is great for marking draft documents. Clean, professional, and flexible positioning.", avatar: "DO", accent: "from-amber-500 to-yellow-600" },
 ];
 
 const ROW1 = TESTIMONIALS.slice(0, 16);
 const ROW2 = TESTIMONIALS.slice(16);
+
+const AUTO_SCROLL_PX_PER_SEC = 28;
+const MANUAL_SCROLL_STEP = 360;
+const MANUAL_PAUSE_MS = 3000;
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -69,21 +74,26 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function MarqueeRow({ items, reverse = false }: { items: Testimonial[]; reverse?: boolean }) {
+function CarouselRow({
+  items,
+  trackRef,
+}: {
+  items: Testimonial[];
+  trackRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const doubled = [...items, ...items];
+
   return (
-    <div className="marquee-track relative overflow-hidden">
+    <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-pd-background to-transparent sm:w-24" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-pd-background to-transparent sm:w-24" />
 
       <div
-        className="flex w-max gap-4 py-2"
-        style={{
-          animation: `${reverse ? "marquee-reverse" : "marquee"} 80s linear infinite`,
-        }}
+        ref={trackRef}
+        className="flex w-max gap-4 py-2 will-change-transform"
       >
         {doubled.map((t, i) => (
-          <div key={i} className="w-[320px] shrink-0 sm:w-[340px]">
+          <div key={`${t.name}-${i}`} className="w-[320px] shrink-0 sm:w-[340px]">
             <TestimonialCard testimonial={t} />
           </div>
         ))}
@@ -92,10 +102,166 @@ function MarqueeRow({ items, reverse = false }: { items: Testimonial[]; reverse?
   );
 }
 
+function NavArrow({
+  direction,
+  onClick,
+}: {
+  direction: "left" | "right";
+  onClick: () => void;
+}) {
+  const Icon = direction === "left" ? ChevronLeft : ChevronRight;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={direction === "left" ? "Scroll reviews left" : "Scroll reviews right"}
+      className={cn(
+        "absolute top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full",
+        "border border-gray-200/80 bg-white text-gray-700 shadow-md",
+        "transition-all hover:border-pd-brand/30 hover:bg-pd-brand hover:text-white hover:shadow-lg",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pd-brand focus-visible:ring-offset-2",
+        direction === "left" ? "left-2 sm:left-6" : "right-2 sm:right-6"
+      )}
+    >
+      <Icon className="h-5 w-5" />
+    </button>
+  );
+}
+
+function TestimonialsCarousel() {
+  const row1TrackRef = useRef<HTMLDivElement>(null);
+  const row2TrackRef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+  const halfWidthRef = useRef(0);
+  const lastFrameRef = useRef<number | null>(null);
+  const manualPauseUntilRef = useRef(0);
+  const hoverPausedRef = useRef(false);
+
+  const [ready, setReady] = useState(false);
+
+  const applyTransform = useCallback(() => {
+    const x = -halfWidthRef.current + offsetRef.current;
+    const transform = `translate3d(${x}px, 0, 0)`;
+
+    if (row1TrackRef.current) row1TrackRef.current.style.transform = transform;
+    if (row2TrackRef.current) row2TrackRef.current.style.transform = transform;
+  }, []);
+
+  const measureLoopWidth = useCallback(() => {
+    const track = row1TrackRef.current;
+    if (!track) return;
+
+    const half = track.scrollWidth / 2;
+    if (half <= 0) return;
+
+    halfWidthRef.current = half;
+
+    if (offsetRef.current >= half) {
+      offsetRef.current %= half;
+    }
+
+    applyTransform();
+    setReady(true);
+  }, [applyTransform]);
+
+  const normalizeOffset = useCallback(() => {
+    const half = halfWidthRef.current;
+    if (half <= 0) return;
+
+    while (offsetRef.current >= half) offsetRef.current -= half;
+    while (offsetRef.current < 0) offsetRef.current += half;
+  }, []);
+
+  const scrollBy = useCallback(
+    (direction: "left" | "right") => {
+      const delta = direction === "right" ? MANUAL_SCROLL_STEP : -MANUAL_SCROLL_STEP;
+      offsetRef.current += delta;
+      normalizeOffset();
+      applyTransform();
+      manualPauseUntilRef.current = performance.now() + MANUAL_PAUSE_MS;
+    },
+    [applyTransform, normalizeOffset]
+  );
+
+  useLayoutEffect(() => {
+    measureLoopWidth();
+  }, [measureLoopWidth]);
+
+  useEffect(() => {
+    const track = row1TrackRef.current;
+    if (!track) return;
+
+    const observer = new ResizeObserver(() => measureLoopWidth());
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, [measureLoopWidth]);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return;
+
+    let raf = 0;
+
+    const tick = (timestamp: number) => {
+      if (lastFrameRef.current === null) {
+        lastFrameRef.current = timestamp;
+      }
+
+      const elapsed = timestamp - lastFrameRef.current;
+      lastFrameRef.current = timestamp;
+
+      const half = halfWidthRef.current;
+      const isHovered = hoverPausedRef.current;
+      const isManualPaused = performance.now() < manualPauseUntilRef.current;
+
+      if (half > 0 && !isHovered && !isManualPaused) {
+        offsetRef.current += (AUTO_SCROLL_PX_PER_SEC * elapsed) / 1000;
+        if (offsetRef.current >= half) {
+          offsetRef.current -= half;
+        }
+        applyTransform();
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [applyTransform]);
+
+  return (
+    <div
+      className="relative mt-10"
+      onMouseEnter={() => {
+        hoverPausedRef.current = true;
+      }}
+      onMouseLeave={() => {
+        hoverPausedRef.current = false;
+        lastFrameRef.current = null;
+      }}
+    >
+      <div className={cn("space-y-4 transition-opacity duration-300", ready ? "opacity-100" : "opacity-0")}>
+        <CarouselRow items={ROW1} trackRef={row1TrackRef} />
+        <CarouselRow items={ROW2} trackRef={row2TrackRef} />
+      </div>
+
+      <NavArrow direction="left" onClick={() => scrollBy("left")} />
+      <NavArrow direction="right" onClick={() => scrollBy("right")} />
+    </div>
+  );
+}
+
 export function TestimonialsSection() {
   return (
     <section className="relative overflow-hidden bg-pd-background pd-section sm:py-20">
-      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+      <div
+        className="absolute inset-0 opacity-[0.015]"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundSize: "32px 32px",
+        }}
+      />
 
       <div className="relative">
         <div className="pd-container">
@@ -111,17 +277,14 @@ export function TestimonialsSection() {
           />
         </div>
 
-        {/* Marquee rows */}
-        <div className="mt-10 space-y-4">
-          <MarqueeRow items={ROW1} />
-          <MarqueeRow items={ROW2} reverse />
-        </div>
+        <TestimonialsCarousel />
 
-        {/* Summary stats */}
         <div className="pd-container">
           <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-center">
             <div>
-              <p className="text-2xl font-extrabold text-gray-900">4.9 <span className="text-base font-normal text-gray-400">/ 5</span></p>
+              <p className="text-2xl font-extrabold text-gray-900">
+                4.9 <span className="text-base font-normal text-gray-400">/ 5</span>
+              </p>
               <p className="mt-0.5 text-xs font-medium text-gray-400">Average Rating</p>
             </div>
             <div className="h-8 w-px bg-gray-200" />
@@ -143,11 +306,13 @@ export function TestimonialsSection() {
 
 function TestimonialCard({ testimonial: t }: { testimonial: Testimonial }) {
   return (
-    <div className={cn(
-      "group relative h-full overflow-hidden rounded-xl border border-white/80 bg-white p-4",
-      "shadow-[0_1px_8px_-2px_rgba(0,0,0,0.06)]",
-      "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1)]"
-    )}>
+    <div
+      className={cn(
+        "group relative h-full overflow-hidden rounded-xl border border-white/80 bg-white p-4",
+        "shadow-[0_1px_8px_-2px_rgba(0,0,0,0.06)]",
+        "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.1)]"
+      )}
+    >
       <Quote className="absolute -right-1 -top-1 h-10 w-10 rotate-180 text-gray-50" />
 
       <div className="relative">
@@ -157,10 +322,12 @@ function TestimonialCard({ testimonial: t }: { testimonial: Testimonial }) {
         </p>
 
         <div className="mt-3 flex items-center gap-2.5 border-t border-gray-50 pt-3">
-          <div className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[10px] font-bold text-white shadow-sm",
-            t.accent
-          )}>
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[10px] font-bold text-white shadow-sm",
+              t.accent
+            )}
+          >
             {t.avatar}
           </div>
           <div className="min-w-0">

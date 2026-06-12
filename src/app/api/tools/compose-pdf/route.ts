@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { composePdfFromSlots, type ComposeSlot } from "@/lib/services/pdf-compose.service";
+import { buildPdfBuffersDownloadResponse } from "@/lib/pdf/pdf-buffers-response";
+import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { splitPDF } from "@/lib/services/pdf-split.service";
 import { buildOwnerHash } from "@/lib/pdf/pdf-session-store";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
@@ -34,7 +36,27 @@ export async function POST(request: NextRequest) {
     }
 
     const slots = JSON.parse(slotsRaw) as ComposeSlot[];
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const password = (formData.get("password") as string | null) || null;
+    let buffer: Buffer;
+
+    try {
+      buffer = await resolvePdfBuffer(Buffer.from(await file.arrayBuffer()), password);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to open PDF";
+      if (msg === "PASSWORD_REQUIRED") {
+        return NextResponse.json(
+          { error: "This PDF is password-protected. Enter the password to continue." },
+          { status: 400 }
+        );
+      }
+      if (msg === "WRONG_PASSWORD") {
+        return NextResponse.json(
+          { error: "Incorrect password. Please try again." },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
     const splitRangesRaw = formData.get("splitRanges") as string | null;
 
     if (splitRangesRaw) {
@@ -44,19 +66,12 @@ export async function POST(request: NextRequest) {
         return { start, end: end ?? start };
       });
       const results = await splitPDF(composed, parsedRanges);
-      const { buildZip } = await import("@/lib/services/zip-builder");
-      const filesMap: Record<string, Buffer> = {};
-      results.forEach((b, i) => {
-        filesMap[`part-${i + 1}.pdf`] = b;
-      });
-      const zipBuffer = await buildZip(filesMap);
-      return new NextResponse(new Uint8Array(zipBuffer), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/zip",
-          "Content-Disposition": 'attachment; filename="split-pages.zip"',
-        },
-      });
+      return buildPdfBuffersDownloadResponse(
+        results,
+        "split.pdf",
+        "split-pages.zip",
+        results.map((_, i) => `part-${i + 1}.pdf`)
+      );
     }
 
     if (separate) {
@@ -64,19 +79,12 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < slots.length; i++) {
         results.push(await composePdfFromSlots(buffer, [slots[i]], ownerHash));
       }
-      const { buildZip } = await import("@/lib/services/zip-builder");
-      const filesMap: Record<string, Buffer> = {};
-      results.forEach((b, i) => {
-        filesMap[`page-${i + 1}.pdf`] = b;
-      });
-      const zipBuffer = await buildZip(filesMap);
-      return new NextResponse(new Uint8Array(zipBuffer), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/zip",
-          "Content-Disposition": 'attachment; filename="extracted-pages.zip"',
-        },
-      });
+      return buildPdfBuffersDownloadResponse(
+        results,
+        "extracted.pdf",
+        "extracted-pages.zip",
+        results.map((_, i) => `page-${i + 1}.pdf`)
+      );
     }
 
     const result = await composePdfFromSlots(buffer, slots, ownerHash);

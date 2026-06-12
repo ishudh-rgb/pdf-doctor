@@ -12,7 +12,7 @@ import {
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { DeletePageCard } from "@/components/tools/delete-pdf/delete-page-card";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
@@ -53,6 +53,8 @@ export function DeletePdfWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
+  const [pdfPassword, setPdfPassword] = useState<string | null>(null);
   const [passwordPrompt, setPasswordPrompt] = useState<{
     file: File;
     fileName: string;
@@ -94,6 +96,7 @@ export function DeletePdfWorkspace({
     setTotalPages(0);
     setHiddenSlotIds(new Set());
     setPageSlots([]);
+    setPdfPassword(null);
 
     loadPdfThumbnailsBatched(file, (thumbs, total, trunc) => {
       if (requestId !== loadRequestRef.current) return;
@@ -162,8 +165,15 @@ export function DeletePdfWorkspace({
         setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
         return;
       }
+      setPdfPassword(pw);
       setPasswordPrompt(null);
-      if (result.error) setError(result.error);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setError((prev) =>
+          prev && /password/i.test(prev) ? null : prev
+        );
+      }
     });
   }, [passwordPrompt]);
 
@@ -312,6 +322,9 @@ export function DeletePdfWorkspace({
     try {
       const formData = new FormData();
       formData.append("file", file, file.name || "document.pdf");
+      if (pdfPassword) {
+        formData.append("password", pdfPassword);
+      }
 
       const hasExtraSlots = visibleSlots.some(
         (s) => s.kind === "blank" || s.kind === "imported" || s.kind === "duplicate"
@@ -344,6 +357,7 @@ export function DeletePdfWorkspace({
 
         const blob = await res.blob();
         setResultUrl(URL.createObjectURL(blob));
+        setResultSize(blob.size);
         setCompleted(true);
         return;
       }
@@ -367,11 +381,19 @@ export function DeletePdfWorkspace({
 
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unexpected error occurred."
-      );
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred.";
+      if (/password/i.test(message)) {
+        setPasswordPrompt({
+          file,
+          fileName: file.name,
+          errorMsg: message,
+        });
+      }
+      setError(message);
     } finally {
       setProcessing(false);
     }
@@ -381,38 +403,23 @@ export function DeletePdfWorkspace({
 
   if (completed && resultUrl) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-          <Check className="h-7 w-7 text-green-600" />
-        </div>
-        <h2 className="text-lg font-bold text-gray-900">PDF ready</h2>
-        <p className="mt-2 text-sm text-gray-500">
-          {deletedCount > 0
+      <ToolWorkspaceReadyPanel
+        description={
+          deletedCount > 0
             ? `${deletedCount} page${deletedCount > 1 ? "s" : ""} removed. Your document is ready to download.`
-            : "Your document is ready to download."}
-        </p>
-        <a
-          href={resultUrl}
-          download={file.name.replace(/\.pdf$/i, "-pages-removed.pdf")}
-          className="mt-5 inline-block"
-        >
-          <Button size="md" className="gap-2">
-            <Download className="h-4 w-4" />
-            Download
-          </Button>
-        </a>
-        <button
-          type="button"
-          onClick={() => {
-            setCompleted(false);
-            setResultUrl(null);
-            onReset();
-          }}
-          className="mx-auto mt-3 block text-sm text-gray-400 transition-colors hover:text-gray-700"
-        >
-          Delete pages from another file
-        </button>
-      </div>
+            : "Your document is ready to download."
+        }
+        downloadUrl={resultUrl}
+        downloadFilename={file.name.replace(/\.pdf$/i, "-pages-removed.pdf")}
+        resultSizeBytes={resultSize}
+        resetLabel="Delete pages from another file"
+        onReset={() => {
+          setCompleted(false);
+          setResultUrl(null);
+          setResultSize(0);
+          onReset();
+        }}
+      />
     );
   }
 
@@ -561,7 +568,7 @@ export function DeletePdfWorkspace({
             <Button
               size="sm"
               onClick={handleExport}
-              disabled={processing || loadingThumbs || visibleSlots.length === 0}
+              disabled={processing || loadingThumbs || totalPages === 0}
               className="gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold hover:bg-red-700"
             >
               {processing ? (

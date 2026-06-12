@@ -6,7 +6,6 @@ import {
   Download,
   FileText,
   Globe,
-  Loader2,
   Settings2,
   Upload,
   X,
@@ -22,6 +21,9 @@ import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { CircularProgress } from "@/components/ui/circular-progress";
+import { useConversionProgress } from "@/hooks/use-conversion-progress";
+import { PdfResultWorkspaceViewer } from "@/components/tools/pdf-result-workspace-viewer";
 
 type PageSize = "a4" | "letter" | "auto";
 type Orientation = "portrait" | "landscape";
@@ -45,15 +47,17 @@ export default function HtmlToPdfPage() {
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultSize, setResultSize] = useState(0);
+  const [previewSessionId, setPreviewSessionId] = useState<string | null>(null);
+  const [previewTotalPages, setPreviewTotalPages] = useState(0);
 
   const [pageSize, setPageSize] = useState<PageSize>("a4");
   const [orientation, setOrientation] = useState<Orientation>("portrait");
   const [margin, setMargin] = useState<Margin>("small");
 
-  const [showSettings, setShowSettings] = useState(false);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { progress, start: startProgress, complete: completeProgress, stop: stopProgress, reset: resetProgress } =
+    useConversionProgress({ cap: 96, intervalMs: 400 });
 
   const handleFile = useCallback((picked: File) => {
     const ext = picked.name.split(".").pop()?.toLowerCase() ?? "";
@@ -65,6 +69,8 @@ export default function HtmlToPdfPage() {
     setError(null);
     setCompleted(false);
     setResultUrl(null);
+    setPreviewSessionId(null);
+    setPreviewTotalPages(0);
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -87,6 +93,10 @@ export default function HtmlToPdfPage() {
     if (!file) return;
     setProcessing(true);
     setError(null);
+    startProgress();
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 320_000);
 
     try {
       const formData = new FormData();
@@ -98,6 +108,7 @@ export default function HtmlToPdfPage() {
       const res = await fetch("/api/tools/html-to-pdf", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -106,22 +117,40 @@ export default function HtmlToPdfPage() {
       }
 
       const blob = await res.blob();
+      completeProgress();
       setResultUrl(URL.createObjectURL(blob));
       setResultSize(blob.size);
+      setPreviewSessionId(res.headers.get("X-Pdf-Session-Id"));
+      setPreviewTotalPages(
+        parseInt(res.headers.get("X-Pdf-Total-Pages") ?? "0", 10) || 0
+      );
       setCompleted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      const message =
+        err instanceof DOMException && err.name === "AbortError"
+          ? "Conversion timed out. Large HTML files can take 3–5 minutes — please try again."
+          : err instanceof Error
+            ? err.message
+            : "An unexpected error occurred.";
+      setError(message);
+      stopProgress();
     } finally {
+      window.clearTimeout(timeoutId);
       setProcessing(false);
     }
   };
 
   const reset = () => {
+    resetProgress();
     setFile(null);
     setHtmlPreview(null);
     setCompleted(false);
     setResultUrl(null);
+    setPreviewSessionId(null);
+    setPreviewTotalPages(0);
     setResultSize(0);
+    setPreviewSessionId(null);
+    setPreviewTotalPages(0);
     setError(null);
   };
 
@@ -142,22 +171,20 @@ export default function HtmlToPdfPage() {
   /* ─── Result View ─── */
   if (completed && resultUrl) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-8">
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex flex-col lg:flex-row">
-            {/* Left: PDF preview */}
-            <div className="flex-1 bg-gradient-to-b from-gray-50 to-gray-100 p-6 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto">
-              <div className="mx-auto max-w-xl">
-                <iframe
-                  src={resultUrl}
-                  className="h-[70vh] w-full rounded-lg border border-gray-200 bg-white shadow-md"
-                  title="PDF Preview"
-                />
-              </div>
+      <div className="mx-auto flex h-[calc(100vh-var(--pd-header-height))] min-h-0 w-full max-w-[100rem] flex-col px-2 sm:px-3">
+        <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden">
+            <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+              <PdfResultWorkspaceViewer
+                blobUrl={resultUrl}
+                filename={resultFileName}
+                initialSessionId={previewSessionId}
+                initialTotalPages={previewTotalPages}
+                className="h-full w-full"
+              />
             </div>
 
-            {/* Right: Sidebar */}
-            <div className="w-full shrink-0 border-t border-gray-200 bg-white p-6 lg:w-80 lg:border-l lg:border-t-0 xl:w-96">
+            <div className="w-full shrink-0 overflow-y-auto border-t border-gray-200 bg-white p-5 lg:h-full lg:w-72 lg:border-l lg:border-t-0 xl:w-80">
               {/* Done header */}
               <div className="mb-5 flex items-start gap-3">
                 <CheckCircle2 className="mt-0.5 h-7 w-7 shrink-0 text-green-500" />
@@ -265,12 +292,12 @@ export default function HtmlToPdfPage() {
           </button>
         </div>
       ) : (
-        /* ─── File loaded: Preview + Settings + Convert ─── */
+        /* ─── File loaded: Preview + toolbar ─── */
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          {/* Top bar */}
-          <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 bg-white px-5 py-3">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100">
+          {/* Toolbar — file info, options, convert (same row) */}
+          <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 bg-white px-4 py-3 sm:gap-3 sm:px-5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-100">
                 <Globe className="h-4.5 w-4.5 text-orange-600" />
               </div>
               <div className="min-w-0">
@@ -279,101 +306,100 @@ export default function HtmlToPdfPage() {
               </div>
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowSettings(!showSettings)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-                  showSettings
-                    ? "border-orange-200 bg-orange-50 text-orange-700"
-                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                )}
+            <span className="hidden h-5 w-px bg-gray-200 sm:block" />
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(["a4", "letter", "auto"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  disabled={processing}
+                  onClick={() => setPageSize(v)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-all disabled:opacity-50",
+                    pageSize === v
+                      ? "bg-orange-500 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  )}
+                >
+                  {v === "a4" ? "A4" : v === "letter" ? "Letter" : "Auto"}
+                </button>
+              ))}
+            </div>
+
+            <span className="hidden h-5 w-px bg-gray-200 md:block" />
+
+            <div className="flex items-center gap-1.5">
+              {(["portrait", "landscape"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  disabled={processing}
+                  onClick={() => setOrientation(v)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-all disabled:opacity-50",
+                    orientation === v
+                      ? "bg-orange-500 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  )}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+
+            <span className="hidden h-5 w-px bg-gray-200 md:block" />
+
+            <div className="flex items-center gap-1.5">
+              {(["none", "small", "medium"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  disabled={processing}
+                  onClick={() => setMargin(v)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-all disabled:opacity-50",
+                    margin === v
+                      ? "bg-orange-500 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  )}
+                >
+                  {v === "none" ? "No margin" : v}
+                </button>
+              ))}
+            </div>
+
+            <div className="ml-auto flex shrink-0 items-center gap-2">
+              <Button
+                onClick={handleConvert}
+                disabled={processing || !file}
+                size="sm"
+                className="h-9 gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 px-4 text-sm font-semibold shadow-sm shadow-orange-200 hover:from-orange-600 hover:to-red-600"
               >
-                <Settings2 className="h-4 w-4" />
-                Settings
-              </button>
+                {processing ? (
+                  <>
+                    <CircularProgress value={progress} size={26} strokeWidth={2.5} className="text-white" />
+                    Converting…
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    Convert to PDF
+                  </>
+                )}
+              </Button>
 
               <button
                 type="button"
                 onClick={reset}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                disabled={processing}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
                 title="Remove file"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           </div>
-
-          {/* Settings panel (collapsible) */}
-          {showSettings && (
-            <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4">
-              <div className="flex flex-wrap gap-6">
-                <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Page Size</h3>
-                  <div className="flex gap-2">
-                    {(["a4", "letter", "auto"] as const).map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setPageSize(v)}
-                        className={cn(
-                          "rounded-lg border px-3.5 py-1.5 text-sm font-medium transition-all",
-                          pageSize === v
-                            ? "border-orange-300 bg-orange-50 text-orange-700 shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
-                        )}
-                      >
-                        {v === "a4" ? "A4" : v === "letter" ? "Letter" : "Auto"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Orientation</h3>
-                  <div className="flex gap-2">
-                    {(["portrait", "landscape"] as const).map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setOrientation(v)}
-                        className={cn(
-                          "rounded-lg border px-3.5 py-1.5 text-sm font-medium capitalize transition-all",
-                          orientation === v
-                            ? "border-orange-300 bg-orange-50 text-orange-700 shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
-                        )}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Margin</h3>
-                  <div className="flex gap-2">
-                    {(["none", "small", "medium"] as const).map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setMargin(v)}
-                        className={cn(
-                          "rounded-lg border px-3.5 py-1.5 text-sm font-medium capitalize transition-all",
-                          margin === v
-                            ? "border-orange-300 bg-orange-50 text-orange-700 shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
-                        )}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Live HTML preview */}
           <div className="bg-gradient-to-b from-gray-50 to-gray-100 px-5 py-5">
@@ -401,34 +427,10 @@ export default function HtmlToPdfPage() {
 
           {/* Error */}
           {error && (
-            <div className="mx-5 mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+            <div className="mx-5 mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
               <span>{error}</span>
             </div>
           )}
-
-          {/* Convert button */}
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white px-5 py-4">
-            <p className="hidden text-sm text-gray-400 sm:block">
-              Your HTML will be rendered exactly as shown above
-            </p>
-            <Button
-              onClick={handleConvert}
-              disabled={processing || !file}
-              className="gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 px-6 py-2.5 text-sm font-semibold shadow-md shadow-orange-200 transition-all hover:shadow-lg hover:shadow-orange-300"
-            >
-              {processing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Converting…
-                </>
-              ) : (
-                <>
-                  <FileText className="h-4 w-4" />
-                  Convert to PDF
-                </>
-              )}
-            </Button>
-          </div>
         </div>
       )}
 

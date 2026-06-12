@@ -53,6 +53,7 @@ export function ExtractPdfWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultSize, setResultSize] = useState(0);
   const [passwordPrompt, setPasswordPrompt] = useState<{
     file: File;
     fileName: string;
@@ -312,7 +313,9 @@ export function ExtractPdfWorkspace({
 
   const handleExport = async () => {
     if (selectedVisibleCount === 0) {
-      setError("Select at least one page to extract.");
+      setResultUrl(URL.createObjectURL(file));
+      setResultSize(file.size);
+      setCompleted(true);
       return;
     }
 
@@ -358,6 +361,7 @@ export function ExtractPdfWorkspace({
 
         const blob = await res.blob();
         setResultUrl(URL.createObjectURL(blob));
+        setResultSize(blob.size);
         setCompleted(true);
         return;
       }
@@ -381,6 +385,7 @@ export function ExtractPdfWorkspace({
 
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
+      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       setError(
@@ -402,6 +407,7 @@ export function ExtractPdfWorkspace({
         onStartOver={() => {
           setCompleted(false);
           setResultUrl(null);
+          setResultSize(0);
           onReset();
         }}
       />
@@ -544,7 +550,7 @@ export function ExtractPdfWorkspace({
             <Button
               size="sm"
               onClick={handleExport}
-              disabled={processing || loadingThumbs || selectedVisibleCount === 0}
+              disabled={processing || loadingThumbs || totalPages === 0}
               className="gap-2 rounded-lg px-5 py-2 text-sm font-semibold"
             >
               {processing ? (

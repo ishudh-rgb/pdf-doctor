@@ -16,11 +16,11 @@ export default function PptToPdfPage() {
       downloadLabel="Download PDF"
       outputExtension="pdf"
       apiPath="/api/tools/ppt-to-pdf"
-      showOutputSize
       relatedTools={[
         { name: "PDF to PowerPoint", href: "/pdf-to-ppt" },
         { name: "Word to PDF", href: "/word-to-pdf" },
         { name: "JPG to PDF", href: "/jpg-to-pdf" },
+        { name: "Compress PDF", href: "/compress-pdf" },
       ]}
     />
   );

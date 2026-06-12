@@ -73,7 +73,7 @@ const mockData: DashboardData = {
     { id: "2", user: "john@company.com", action: "Processed 5 files (Merge PDF)", time: "5 min ago" },
     { id: "3", user: "sara@startup.io", action: "Payment completed - ₹299", time: "12 min ago" },
     { id: "4", user: "dev@test.com", action: "Account created", time: "18 min ago" },
-    { id: "5", user: "admin@pdfdoctor.com", action: "Ran cleanup job", time: "1 hour ago" },
+    { id: "5", user: "admin@only4pdf.com", action: "Ran cleanup job", time: "1 hour ago" },
   ],
   systemHealth: {
     database: "healthy",

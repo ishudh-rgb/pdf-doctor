@@ -229,7 +229,7 @@ export async function pdfToExcel(fileBuffer: Buffer): Promise<Buffer> {
   try {
     const extracted = await extractTablesFromPdf(fileBuffer);
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = "PDF Doctor";
+    workbook.creator = "Only4PDF";
     workbook.created = new Date();
 
     if (extracted.mergedTables.length > 0) {

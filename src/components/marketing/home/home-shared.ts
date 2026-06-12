@@ -135,3 +135,29 @@ export const TOOL_ACCENT: Record<string, string> = {
   "unlock-pdf": "bg-[#F39C12]",
   "protect-pdf": "bg-[#E84393]",
 };
+
+/** Rich gradients for 3D tool icon tiles */
+export const TOOL_GRADIENT: Record<string, string> = {
+  "merge-pdf": "from-rose-400 via-red-500 to-red-700",
+  "split-pdf": "from-amber-400 via-orange-500 to-orange-700",
+  "rotate-pdf": "from-violet-400 via-purple-500 to-purple-800",
+  "delete-pdf": "from-rose-400 via-red-500 to-rose-800",
+  "extract-pdf": "from-sky-400 via-blue-500 to-blue-700",
+  "compress-pdf": "from-emerald-400 via-green-500 to-green-700",
+  "pdf-to-word": "from-blue-400 via-blue-600 to-indigo-700",
+  "pdf-to-excel": "from-teal-400 via-emerald-500 to-teal-700",
+  "pdf-to-ppt": "from-orange-400 via-orange-600 to-red-700",
+  "word-to-pdf": "from-sky-400 via-blue-500 to-blue-700",
+  "excel-to-pdf": "from-green-400 via-emerald-500 to-green-700",
+  "ppt-to-pdf": "from-red-400 via-red-600 to-rose-800",
+  "jpg-to-pdf": "from-fuchsia-400 via-purple-500 to-violet-700",
+  "html-to-pdf": "from-orange-400 via-amber-600 to-orange-800",
+  "txt-to-pdf": "from-indigo-400 via-indigo-500 to-indigo-700",
+  "sign-pdf": "from-slate-500 via-slate-700 to-slate-900",
+  "add-watermark": "from-gray-400 via-gray-500 to-gray-700",
+  "ai-pdf-summarizer": "from-violet-400 via-purple-500 to-indigo-700",
+  "pdf-scanner": "from-teal-400 via-emerald-500 to-cyan-700",
+  "unlock-pdf": "from-amber-400 via-yellow-500 to-orange-600",
+  "protect-pdf": "from-pink-400 via-rose-500 to-pink-700",
+  "edit-pdf": "from-cyan-400 via-blue-500 to-blue-700",
+};

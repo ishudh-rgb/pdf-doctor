@@ -9,7 +9,7 @@ export async function sendPasswordResetCode(
   code: string
 ): Promise<SendCodeResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.EMAIL_FROM || "PDF Doctor <onboarding@resend.dev>";
+  const fromEmail = process.env.EMAIL_FROM || "Only4PDF <onboarding@resend.dev>";
 
   if (apiKey) {
     const response = await fetch("https://api.resend.com/emails", {
@@ -21,7 +21,7 @@ export async function sendPasswordResetCode(
       body: JSON.stringify({
         from: fromEmail,
         to: [email],
-        subject: "Your PDF Doctor password reset code",
+        subject: "Your Only4PDF password reset code",
         html: `
           <p>Your password reset verification code is:</p>
           <p style="font-size:28px;font-weight:700;letter-spacing:4px;">${code}</p>
@@ -39,7 +39,7 @@ export async function sendPasswordResetCode(
   }
 
   if (process.env.NODE_ENV === "development") {
-    console.log(`[PDF Doctor] Password reset code for ${email}: ${code}`);
+    console.log(`[Only4PDF] Password reset code for ${email}: ${code}`);
     return { delivered: false, mode: "dev", devCode: code };
   }
 
