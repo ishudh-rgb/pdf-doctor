@@ -1,8 +1,8 @@
 import mammoth from "mammoth";
-import puppeteer from "puppeteer";
 import { logError } from "@/lib/db/queries";
 import { tryExportWithWord } from "@/lib/services/word-com-export.service";
 import { tryConvertWithLibreOffice } from "@/lib/services/libreoffice-convert.service";
+import { getPuppeteerBrowser } from "@/lib/services/puppeteer-browser.server";
 
 const STYLE_MAP = [
   "p[style-name='Title'] => h1.doc-title:fresh",
@@ -140,13 +140,10 @@ async function convertDocxToHtml(fileBuffer: Buffer): Promise<string> {
 }
 
 async function renderHtmlToPdf(html: string): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await getPuppeteerBrowser();
+  const page = await browser.newPage();
 
   try {
-    const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "load" });
     const pdfBytes = await page.pdf({
       format: "A4",
@@ -161,7 +158,7 @@ async function renderHtmlToPdf(html: string): Promise<Buffer> {
     });
     return Buffer.from(pdfBytes);
   } finally {
-    await browser.close();
+    await page.close().catch(() => {});
   }
 }
 

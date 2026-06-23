@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
+import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 
 export const maxDuration = 600;
 
@@ -79,13 +80,15 @@ async function runConversionJob(
 ) {
   try {
     const inputStat = await fs.stat(inputPath);
-    const result = await pdfToWord({
-      fileName,
-      inputPath,
-      outputPath,
-      pdfPassword: meta.pdfPassword,
-      onProgress: (percent) => updatePdfToWordJobProgress(jobId, percent),
-    });
+    const result = await withHeavyJobGuard(() =>
+      pdfToWord({
+        fileName,
+        inputPath,
+        outputPath,
+        pdfPassword: meta.pdfPassword,
+        onProgress: (percent) => updatePdfToWordJobProgress(jobId, percent),
+      })
+    );
 
     completePdfToWordJob(jobId, {
       outputPath: result.outputPath ?? outputPath,
@@ -190,11 +193,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ jobId });
     }
 
-    const { buffer: docxBuffer, engine } = await pdfToWord({
-      buffer: prepared,
-      fileName: file.name,
-      pdfPassword,
-    });
+    const { buffer: docxBuffer, engine } = await withHeavyJobGuard(() =>
+      pdfToWord({
+        buffer: prepared,
+        fileName: file.name,
+        pdfPassword,
+      })
+    );
 
     if (!docxBuffer) {
       throw new Error("Conversion failed to produce a Word file");

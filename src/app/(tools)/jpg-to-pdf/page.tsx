@@ -14,6 +14,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { useConversionProgress } from '@/hooks/use-conversion-progress';
+import { runClientOrServerPdfExport } from '@/lib/pdf/client-pdf-export';
+import { imagesToPdfInBrowser } from '@/lib/pdf/pdf-browser';
 
 const RELATED_TOOLS = [
   { name: 'PDF to Word', href: '/pdf-to-word' },
@@ -164,13 +166,24 @@ export default function JpgToPdfPage() {
       formData.append("orientation", orientation);
       formData.append("margin", margin === "medium" ? "normal" : margin);
 
-      const res = await fetch('/api/tools/jpg-to-pdf', { method: 'POST', body: formData });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to convert images to PDF.');
-      }
+      const { blob } = await runClientOrServerPdfExport({
+        tool: 'jpg-to-pdf',
+        client: async () =>
+          imagesToPdfInBrowser(files, {
+            pageSize,
+            orientation,
+            margin: margin === 'medium' ? 'medium' : margin,
+          }),
+        server: async () => {
+          const res = await fetch('/api/tools/jpg-to-pdf', { method: 'POST', body: formData });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to convert images to PDF.');
+          }
+          return res.blob();
+        },
+      });
 
-      const blob = await res.blob();
       completeProgress();
       const url = URL.createObjectURL(blob);
       setResultUrl(url);

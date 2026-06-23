@@ -4,7 +4,8 @@ import { join } from "path";
 import { randomUUID } from "crypto";
 import { pathToFileURL } from "url";
 import { PDFDocument } from "pdf-lib";
-import puppeteer, { type Page } from "puppeteer";
+import { getPuppeteerBrowser } from "@/lib/services/puppeteer-browser.server";
+import type { Page } from "puppeteer";
 import { logError } from "@/lib/db/queries";
 
 interface HtmlToPdfOptions {
@@ -28,17 +29,6 @@ const CHUNKED_THRESHOLD_BYTES = 1_000_000;
 const BODY_CHUNK_CHARS = 400_000;
 /** Prefer temp file over setContent for heavy HTML strings. */
 const TEMP_FILE_THRESHOLD_CHARS = 600_000;
-
-const BROWSER_ARGS = [
-  "--no-sandbox",
-  "--disable-setuid-sandbox",
-  "--disable-dev-shm-usage",
-  "--disable-gpu",
-  "--font-render-hinting=none",
-  "--disable-extensions",
-  "--disable-background-networking",
-  "--js-flags=--max-old-space-size=4096",
-];
 
 /** Parallel chunk renders — same output, faster on multi-core hosts. */
 const CHUNK_RENDER_CONCURRENCY = 2;
@@ -219,13 +209,6 @@ async function renderPageToPdf(
   return Buffer.from(pdfBytes);
 }
 
-async function launchBrowser() {
-  return puppeteer.launch({
-    headless: true,
-    args: BROWSER_ARGS,
-  });
-}
-
 async function mergePdfBuffers(buffers: Buffer[]): Promise<Buffer> {
   if (buffers.length === 0) {
     throw new Error("No PDF output generated.");
@@ -247,16 +230,12 @@ async function renderSinglePass(
   forceLarge = false
 ): Promise<Buffer> {
   const isLarge = forceLarge || htmlContent.length >= CHUNKED_THRESHOLD_BYTES;
-  const browser = await launchBrowser();
+  const browser = await getPuppeteerBrowser();
+  const page = await browser.newPage();
   try {
-    const page = await browser.newPage();
-    try {
-      return await renderPageToPdf(page, htmlContent, options, isLarge);
-    } finally {
-      await page.close().catch(() => {});
-    }
+    return await renderPageToPdf(page, htmlContent, options, isLarge);
   } finally {
-    await browser.close().catch(() => {});
+    await page.close().catch(() => {});
   }
 }
 
@@ -266,13 +245,11 @@ async function renderChunked(
 ): Promise<Buffer> {
   const parts = extractHtmlParts(htmlContent);
   const bodyChunks = chunkBodyContent(parts.bodyContent, BODY_CHUNK_CHARS);
-  const browser = await launchBrowser();
+  const browser = await getPuppeteerBrowser();
+  const buffers: Buffer[] = new Array(bodyChunks.length);
+  let nextIndex = 0;
 
-  try {
-    const buffers: Buffer[] = new Array(bodyChunks.length);
-    let nextIndex = 0;
-
-    async function worker() {
+  async function worker() {
       while (true) {
         const index = nextIndex++;
         if (index >= bodyChunks.length) break;
@@ -292,16 +269,13 @@ async function renderChunked(
       }
     }
 
-    await Promise.all(
-      Array.from({ length: Math.min(CHUNK_RENDER_CONCURRENCY, bodyChunks.length) }, () =>
-        worker()
-      )
-    );
+  await Promise.all(
+    Array.from({ length: Math.min(CHUNK_RENDER_CONCURRENCY, bodyChunks.length) }, () =>
+      worker()
+    )
+  );
 
-    return mergePdfBuffers(buffers);
-  } finally {
-    await browser.close().catch(() => {});
-  }
+  return mergePdfBuffers(buffers);
 }
 
 /**

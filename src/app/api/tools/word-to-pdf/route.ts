@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { wordToPdf } from "@/lib/services/word-to-pdf.service";
+import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const pdfBuffer = await wordToPdf(buffer);
+    const pdfBuffer = await withHeavyJobGuard(() => wordToPdf(buffer));
 
     const originalName = file.name.replace(/\.(doc|docx)$/i, "");
 

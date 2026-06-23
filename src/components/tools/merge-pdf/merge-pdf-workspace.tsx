@@ -35,6 +35,12 @@ import {
   type MergePageSlot,
 } from "@/components/tools/merge-pdf/merge-file-types";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
+import { runClientOrServerPdfExport } from "@/lib/pdf/client-pdf-export";
+import {
+  buildSessionBufferMap,
+  composePdfFromSlotsInBrowser,
+  mergePdfFilesInBrowser,
+} from "@/lib/pdf/pdf-browser";
 
 interface MergePdfWorkspaceProps {
   initialFiles: File[];
@@ -467,21 +473,34 @@ export function MergePdfWorkspace({
       setProcessing(true);
       setError(null);
       try {
-        const formData = new FormData();
-        formData.append("file", mainSlot.file, mainSlot.file.name);
-        formData.append("slots", JSON.stringify(pageSlotsToComposeSlots(pageSlots, mainId)));
-        if (mainItem?.password) {
-          formData.append("password", mainItem.password);
-        }
+        const composeSlots = pageSlotsToComposeSlots(pageSlots, mainId);
+        const importedEntries = pageSlots
+          .filter((s): s is MergePageSlot & { kind: "page" } => s.kind === "page")
+          .map((s) => ({ sessionId: s.sessionId, file: s.file }));
 
-        const res = await fetch("/api/tools/compose-pdf", { method: "POST", body: formData });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(
-            (data as { error?: string }).error || "Failed to merge PDFs. Please try again."
-          );
-        }
-        const blob = await res.blob();
+        const { blob } = await runClientOrServerPdfExport({
+          tool: "merge-pdf-compose",
+          client: async () =>
+            composePdfFromSlotsInBrowser(
+              mainSlot.file,
+              composeSlots,
+              await buildSessionBufferMap(importedEntries)
+            ),
+          server: async () => {
+            const formData = new FormData();
+            formData.append("file", mainSlot.file, mainSlot.file.name);
+            formData.append("slots", JSON.stringify(composeSlots));
+            if (mainItem?.password) formData.append("password", mainItem.password);
+            const res = await fetch("/api/tools/compose-pdf", { method: "POST", body: formData });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(
+                (data as { error?: string }).error || "Failed to merge PDFs. Please try again."
+              );
+            }
+            return res.blob();
+          },
+        });
         setResultUrl(URL.createObjectURL(blob));
         setResultSize(blob.size);
         setCompleted(true);
@@ -500,22 +519,27 @@ export function MergePdfWorkspace({
     setProcessing(true);
     setError(null);
     try {
-      const formData = new FormData();
-      items.forEach((item) => formData.append("files", item.file, item.file.name));
-      formData.append(
-        "passwords",
-        JSON.stringify(items.map((item) => item.password ?? null))
-      );
-      formData.append("options", JSON.stringify({}));
-
-      const res = await fetch("/api/tools/merge-pdf", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error || "Failed to merge PDFs. Please try again."
-        );
-      }
-      const blob = await res.blob();
+      const { blob } = await runClientOrServerPdfExport({
+        tool: "merge-pdf",
+        client: async () => mergePdfFilesInBrowser(items.map((item) => item.file)),
+        server: async () => {
+          const formData = new FormData();
+          items.forEach((item) => formData.append("files", item.file, item.file.name));
+          formData.append(
+            "passwords",
+            JSON.stringify(items.map((item) => item.password ?? null))
+          );
+          formData.append("options", JSON.stringify({}));
+          const res = await fetch("/api/tools/merge-pdf", { method: "POST", body: formData });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(
+              (data as { error?: string }).error || "Failed to merge PDFs. Please try again."
+            );
+          }
+          return res.blob();
+        },
+      });
       setResultUrl(URL.createObjectURL(blob));
       setResultSize(blob.size);
       setCompleted(true);

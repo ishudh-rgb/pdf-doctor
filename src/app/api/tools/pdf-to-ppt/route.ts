@@ -8,5 +8,6 @@ export const POST = createToolRoute({
   allowedTypes: ["pdf"],
   contentType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   outputExtension: "pptx",
+  heavy: true,
   convert: (buffer) => pdfToPpt(buffer),
 });

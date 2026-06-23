@@ -11,6 +11,9 @@ const LAUNCH_ARGS = [
   "--disable-gpu",
   "--no-first-run",
   "--disable-extensions",
+  "--font-render-hinting=none",
+  "--disable-background-networking",
+  "--js-flags=--max-old-space-size=2048",
 ];
 
 export async function getPuppeteerBrowser(): Promise<Browser> {

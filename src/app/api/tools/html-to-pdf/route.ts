@@ -7,6 +7,7 @@ import { validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { createPdfSession, buildOwnerHash } from "@/lib/pdf/pdf-session-store";
 import { probePdfAccess } from "@/lib/pdf/pdf-password.server";
+import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 
 export const maxDuration = 300;
 
@@ -62,11 +63,13 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const pdfBuffer = await htmlFileToPdf(buffer, file.name, {
-      pageSize: pageSize as "a4" | "letter" | "auto",
-      orientation: orientation as "portrait" | "landscape",
-      margin: margin as "none" | "small" | "medium",
-    });
+    const pdfBuffer = await withHeavyJobGuard(() =>
+      htmlFileToPdf(buffer, file.name, {
+        pageSize: pageSize as "a4" | "letter" | "auto",
+        orientation: orientation as "portrait" | "landscape",
+        margin: margin as "none" | "small" | "medium",
+      })
+    );
 
     const originalName = file.name.replace(/\.(html?|xhtml|mhtml|svg)$/i, "");
 

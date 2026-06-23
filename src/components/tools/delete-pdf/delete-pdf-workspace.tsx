@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
+import { runClientOrServerPdfExport } from "@/lib/pdf/client-pdf-export";
+import { deletePagesInBrowser } from "@/lib/pdf/pdf-browser";
 import { DeletePageCard } from "@/components/tools/delete-pdf/delete-page-card";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
 import { PageZoomModal } from "@/components/tools/split-pdf/page-zoom-modal";
@@ -368,18 +370,24 @@ export function DeletePdfWorkspace({
 
       formData.append("pagesToKeep", JSON.stringify(pagesToKeep));
 
-      const res = await fetch("/api/tools/delete-pdf", {
-        method: "POST",
-        body: formData,
+      const { blob } = await runClientOrServerPdfExport({
+        tool: "delete-pdf",
+        client: async () => deletePagesInBrowser(file, pagesToKeep),
+        server: async () => {
+          const res = await fetch("/api/tools/delete-pdf", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(
+              (data as { error?: string }).error || "Failed to delete pages."
+            );
+          }
+          return res.blob();
+        },
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error || "Failed to delete pages."
-        );
-      }
 
-      const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
       setResultSize(blob.size);
       setCompleted(true);

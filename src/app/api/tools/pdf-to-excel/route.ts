@@ -8,5 +8,6 @@ export const POST = createToolRoute({
   allowedTypes: ["pdf"],
   contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   outputExtension: "xlsx",
+  heavy: true,
   convert: (buffer) => pdfToExcel(buffer),
 });

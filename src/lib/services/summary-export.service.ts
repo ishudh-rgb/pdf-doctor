@@ -5,7 +5,7 @@ import {
   Paragraph,
   TextRun,
 } from "docx";
-import puppeteer from "puppeteer";
+import { getPuppeteerBrowser } from "@/lib/services/puppeteer-browser.server";
 import { formatSummaryParagraphs } from "@/lib/ai/sanitize-summary";
 
 export type SummaryExportFormat = "txt" | "docx" | "pdf";
@@ -295,13 +295,10 @@ function buildSummaryHtml(summary: SummaryExportInput): string {
 
 export async function exportSummaryAsPdf(summary: SummaryExportInput): Promise<Buffer> {
   const html = buildSummaryHtml(summary);
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const browser = await getPuppeteerBrowser();
+  const page = await browser.newPage();
 
   try {
-    const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "load" });
     const pdf = await page.pdf({
       format: "A4",
@@ -310,7 +307,7 @@ export async function exportSummaryAsPdf(summary: SummaryExportInput): Promise<B
     });
     return Buffer.from(pdf);
   } finally {
-    await browser.close();
+    await page.close().catch(() => {});
   }
 }
 

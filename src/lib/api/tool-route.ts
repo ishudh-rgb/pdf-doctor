@@ -5,12 +5,16 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 
+import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
+
 interface ToolRouteOptions {
   toolSlug: string;
   allowedTypes: string[];
   contentType: string;
   outputExtension: string;
   maxDuration?: number;
+  /** Queue heavy conversions (Puppeteer/Python/Office) — does not change convert logic. */
+  heavy?: boolean;
   convert: (buffer: Buffer, file: File, formData: FormData) => Promise<Buffer>;
   outputName?: (originalName: string) => string;
 }
@@ -61,7 +65,10 @@ export function createToolRoute(options: ToolRouteOptions) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      const outputBuffer = await options.convert(buffer, file, formData);
+      const runConvert = () => options.convert(buffer, file, formData);
+      const outputBuffer = options.heavy
+        ? await withHeavyJobGuard(runConvert)
+        : await runConvert();
 
       const baseName = options.outputName
         ? options.outputName(file.name)

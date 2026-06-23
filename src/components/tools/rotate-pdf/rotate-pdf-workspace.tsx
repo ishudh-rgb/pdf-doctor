@@ -18,6 +18,8 @@ import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/too
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
 import { SplitPageCard } from "@/components/tools/split-pdf/split-page-card";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
+import { runClientOrServerPdfExport } from "@/lib/pdf/client-pdf-export";
+import { rotatePdfInBrowser } from "@/lib/pdf/pdf-browser";
 import { PageZoomModal } from "@/components/tools/split-pdf/page-zoom-modal";
 import {
   createOriginalSlots,
@@ -319,13 +321,19 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
       formData.append("file", file, file.name || "document.pdf");
       formData.append("rotations", JSON.stringify(rotationsMap));
 
-      const res = await fetch("/api/tools/rotate-pdf", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to rotate PDF. Please try again.");
-      }
+      const { blob } = await runClientOrServerPdfExport({
+        tool: "rotate-pdf",
+        client: async () => rotatePdfInBrowser(file, rotationsMap),
+        server: async () => {
+          const res = await fetch("/api/tools/rotate-pdf", { method: "POST", body: formData });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Failed to rotate PDF. Please try again.");
+          }
+          return res.blob();
+        },
+      });
 
-      const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
       setResultSize(blob.size);
       setCompleted(true);

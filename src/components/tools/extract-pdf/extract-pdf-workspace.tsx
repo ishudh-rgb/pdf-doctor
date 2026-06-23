@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner } from "@/components/tools/tool-ui";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
+import { runClientOrServerPdfExport } from "@/lib/pdf/client-pdf-export";
+import { extractPagesInBrowser } from "@/lib/pdf/pdf-browser";
 import { ExtractResultView } from "@/components/tools/extract-pdf/extract-result-view";
 import { ExtractPageCard } from "@/components/tools/extract-pdf/extract-page-card";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
@@ -367,23 +369,32 @@ export function ExtractPdfWorkspace({
       }
 
       const pagesToExtract = visibleSlots
-        .filter((s) => selectedSlotIds.has(s.id) && s.kind === "original")
+        .filter(
+          (s): s is WorkspacePageSlot & { kind: "original" } =>
+            selectedSlotIds.has(s.id) && s.kind === "original"
+        )
         .map((s) => s.page);
 
       formData.append("pagesToExtract", JSON.stringify(pagesToExtract));
 
-      const res = await fetch("/api/tools/extract-pdf", {
-        method: "POST",
-        body: formData,
+      const { blob } = await runClientOrServerPdfExport({
+        tool: "extract-pdf",
+        client: async () => extractPagesInBrowser(file, pagesToExtract),
+        server: async () => {
+          const res = await fetch("/api/tools/extract-pdf", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(
+              (data as { error?: string }).error || "Failed to extract pages."
+            );
+          }
+          return res.blob();
+        },
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error || "Failed to extract pages."
-        );
-      }
 
-      const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
       setResultSize(blob.size);
       setCompleted(true);
