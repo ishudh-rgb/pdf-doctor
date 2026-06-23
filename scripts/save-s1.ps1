@@ -89,6 +89,82 @@ foreach ($rel in $ptwFiles) {
 }
 Write-Host "  PDF-to-Word TS/API files copied to .snapshots/s1/pdf-to-word-src/" -ForegroundColor Gray
 
+# --- Excel-to-PDF mirror (offline restore) ---
+$etpFiles = @(
+  "src\lib\services\excel-to-pdf.service.ts",
+  "src\lib\services\excel-com-export.service.ts",
+  "src\lib\services\html-to-pdf.service.ts",
+  "scripts\excel-export-pdf.vbs",
+  "src\app\api\tools\excel-to-pdf\route.ts",
+  "src\app\(tools)\excel-to-pdf\page.tsx"
+)
+$etpDst = Join-Path $snapDir "excel-to-pdf-src"
+if (Test-Path $etpDst) { Remove-Item $etpDst -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $etpDst | Out-Null
+foreach ($rel in $etpFiles) {
+  $src = Join-Path $Root $rel
+  if (Test-Path $src) {
+    $dest = Join-Path $etpDst ($rel -replace '\\', '-')
+    Copy-Item $src $dest -Force
+  }
+}
+Write-Host "  Excel-to-PDF files copied to .snapshots/s1/excel-to-pdf-src/" -ForegroundColor Gray
+
+# --- PDF-to-Excel mirror (offline restore) ---
+$pteFiles = @(
+  "src\lib\services\pdf-to-excel.service.ts",
+  "src\lib\services\pdf-document-excel.service.ts",
+  "scripts\pdf-extract-tables.py",
+  "scripts\compare-smallpdf-excel.py",
+  "scripts\templates\cannabis-thailand-smallpdf-ref.json",
+  "src\app\api\tools\pdf-to-excel\route.ts",
+  "src\app\(tools)\pdf-to-excel\page.tsx",
+  "src\components\tools\convert-tool-page.tsx"
+)
+$pteDst = Join-Path $snapDir "pdf-to-excel-src"
+if (Test-Path $pteDst) { Remove-Item $pteDst -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $pteDst | Out-Null
+foreach ($rel in $pteFiles) {
+  $src = Join-Path $Root $rel
+  if (Test-Path $src) {
+    $dest = Join-Path $pteDst ($rel -replace '\\', '-')
+    Copy-Item $src $dest -Force
+  }
+}
+Write-Host "  PDF-to-Excel files copied to .snapshots/s1/pdf-to-excel-src/" -ForegroundColor Gray
+
+# --- Sign PDF mirror ---
+$signFiles = @(
+  "src\components\tools\sign-pdf\sign-pdf-workspace.tsx",
+  "src\components\tools\sign-pdf\signature-create-modal.tsx",
+  "src\lib\services\pdf-sign.service.ts",
+  "src\app\api\tools\sign-pdf\route.ts",
+  "src\app\(tools)\sign-pdf\page.tsx"
+)
+$signDst = Join-Path $snapDir "sign-pdf-src"
+if (Test-Path $signDst) { Remove-Item $signDst -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $signDst | Out-Null
+foreach ($rel in $signFiles) {
+  $src = Join-Path $Root $rel
+  if (Test-Path $src) {
+    $dest = Join-Path $signDst ($rel -replace '\\', '-')
+    Copy-Item $src $dest -Force
+  }
+}
+Write-Host "  Sign PDF files copied to .snapshots/s1/sign-pdf-src/" -ForegroundColor Gray
+
+# --- Extra Python for PDF pipelines ---
+$pyExtra = @(
+  "scripts\pdf-extract-tables.py",
+  "scripts\compare-smallpdf-excel.py"
+)
+foreach ($rel in $pyExtra) {
+  $src = Join-Path $Root $rel
+  if (Test-Path $src) {
+    Copy-Item $src (Join-Path $pyDstDir (Split-Path $rel -Leaf)) -Force
+  }
+}
+
 # --- S1 manifest doc into snapshot folder ---
 $snapDoc = Join-Path $Root "S1-SNAPSHOT.md"
 if (Test-Path $snapDoc) {
@@ -98,12 +174,12 @@ if (Test-Path $snapDoc) {
 git add -A
 $status = git status --porcelain
 if ($status) {
-  $msg = "S1: Only4PDF snapshot - PDF-to-Word v3 chunked conversion, password unlock, disk jobs, encrypted PDF repair. Revert: scripts/revert-to-s1.ps1"
+  $msg = "S1: Only4PDF full snapshot - 46 pages, 22 tools, Excel COM export, PDF-to-Excel v2, Sign PDF workspace, file-size on success. Revert: scripts/revert-to-s1.ps1"
   git commit -m $msg
 }
 
 $null = git tag -d S1 2>&1
-git tag -a S1 -m "S1 Only4PDF snapshot - PDF-to-Word v3 + all tools"
+git tag -a S1 -m "S1 Only4PDF - full website: Excel/PDF pipelines, Sign PDF, all 46 pages"
 
 $null = git branch -D s1-backup 2>&1
 git branch s1-backup
@@ -123,11 +199,17 @@ $manifestLines = @(
   "  .snapshots/s1/scripts-templates/",
   "  .snapshots/s1/scripts-core/",
   "  .snapshots/s1/pdf-to-word-src/",
+  "  .snapshots/s1/excel-to-pdf-src/",
+  "  .snapshots/s1/pdf-to-excel-src/",
+  "  .snapshots/s1/sign-pdf-src/",
   "  .snapshots/s1/public/",
   "  .snapshots/s1/S1-SNAPSHOT.md",
   "",
   "Design lock: Theme A + Layout B",
-  "PDF-to-Word v2: job polling + live progress + drawing-heavy fast path"
+  "Pages: 46 (9 marketing + 4 auth + 2 dashboard + 9 admin + 22 tools)",
+  "Excel-to-PDF: Excel COM primary, SheetJS fallback",
+  "PDF-to-Excel: financial + document layout modes",
+  "Sign PDF: multi-annotation workspace"
 )
 $manifestLines | Out-File -FilePath (Join-Path $snapDir "MANIFEST.txt") -Encoding utf8
 

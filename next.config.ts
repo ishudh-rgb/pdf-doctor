@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   experimental: {
-    // Large PDF uploads; 2gb caused dev proxy/memory pressure — 200mb is enough for pro files
-    proxyClientMaxBodySize: "200mb",
+    // Large PDF uploads — no practical cap for local/dev; increase if needed via env
+    proxyClientMaxBodySize: "1024mb",
   },
   webpack: (config, { dev }) => {
     // Avoid webpack pack-file cache OOM on Windows after heavy PDF tool builds (~2gb .next/cache)

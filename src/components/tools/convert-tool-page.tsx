@@ -34,7 +34,6 @@ interface ConvertToolPageProps {
   relatedTools?: RelatedTool[];
   extraFields?: ReactNode;
   buildFormData?: (file: File, formData: FormData) => FormData;
-  showOutputSize?: boolean;
   /** Client fetch timeout in ms (default 120s). */
   fetchTimeoutMs?: number;
   /** Cap for fake progress bar while waiting on server (default 92). */
@@ -56,7 +55,6 @@ export function ConvertToolPage({
   relatedTools = [],
   extraFields,
   buildFormData,
-  showOutputSize = false,
   fetchTimeoutMs = 120_000,
   progressCap = 92,
 }: ConvertToolPageProps) {
@@ -172,17 +170,12 @@ export function ConvertToolPage({
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || `converted.${outputExtension}`}
           downloadLabel={downloadLabel}
+          resultSizeBytes={resultSize ?? undefined}
           onReset={() => {
             resetResult();
             setFile(null);
           }}
-        >
-          {showOutputSize && resultSize !== null ? (
-            <p className="mt-2 text-xs text-pd-muted">
-              File size: <span className="font-semibold text-pd-foreground">{formatFileSize(resultSize)}</span>
-            </p>
-          ) : null}
-        </ToolSuccessPanel>
+        />
       ) : (
         <>
           <ToolDropzone

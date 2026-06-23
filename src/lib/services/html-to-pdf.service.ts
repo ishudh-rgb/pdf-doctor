@@ -7,6 +7,8 @@ export interface HtmlPdfOptions {
   bodyClass?: string;
   /** Puppeteer PDF scale (0.1–2). Used to fit very wide tables on one page width. */
   scale?: number;
+  /** Puppeteer print timeout in ms (large spreadsheets). */
+  printTimeoutMs?: number;
 }
 
 export function buildHtmlDocument(
@@ -54,36 +56,53 @@ export function buildHtmlDocument(
     }
     body.excel-export section.excel-sheet {
       page-break-after: always;
-      page-break-inside: avoid;
     }
     body.excel-export section.excel-sheet:last-child {
       page-break-after: auto;
     }
+    body.excel-export .excel-sheet-title {
+      font-size: 12pt;
+      font-weight: 700;
+      margin: 0 0 0.35em;
+      page-break-after: avoid;
+    }
+    body.excel-export section.excel-sheet-chunk {
+      page-break-inside: auto;
+    }
+    body.excel-export section.excel-sheet-chunk table {
+      page-break-inside: auto;
+    }
+    body.excel-export thead {
+      display: table-header-group;
+    }
     body.excel-landscape-fit {
-      overflow: hidden;
+      overflow: visible;
     }
     body.excel-landscape-fit section.excel-sheet {
       width: 100%;
-      overflow: hidden;
+      overflow: visible;
     }
     body.excel-landscape-fit table {
       width: max-content;
       min-width: 100%;
-      table-layout: fixed;
+      table-layout: auto;
       border-collapse: collapse;
     }
     body.excel-landscape-fit td,
     body.excel-landscape-fit th {
-      font-size: 5.5pt;
-      padding: 0 1px;
-      line-height: 1.05;
+      font-size: 8pt;
+      padding: 2px 4px;
+      line-height: 1.2;
       white-space: nowrap;
       vertical-align: middle;
     }
     body.excel-landscape-fit th {
       background: #f3f4f6;
       font-weight: 600;
-      text-align: center;
+      text-align: left;
+    }
+    body.excel-landscape-fit tr:nth-child(even) td {
+      background: #fafafa;
     }
     h1, h2, h3 { margin: 0.8em 0 0.4em; page-break-after: avoid; }
     h1 { font-size: 18pt; }
@@ -117,9 +136,10 @@ export async function renderHtmlToPdf(
     : { top: "16mm", right: "14mm", bottom: "16mm", left: "14mm" };
 
   const page = await browser.newPage();
+  const printTimeout = options.printTimeoutMs ?? 90_000;
   try {
     await page.emulateMediaType("print");
-    await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.setContent(html, { waitUntil: "domcontentloaded", timeout: printTimeout });
     const pdfBytes = await page.pdf({
       format: "A4",
       landscape: Boolean(options.landscape),
@@ -127,7 +147,7 @@ export async function renderHtmlToPdf(
       preferCSSPageSize: true,
       margin,
       scale: options.scale ?? (options.compact ? 0.92 : 1),
-      timeout: 90_000,
+      timeout: printTimeout,
     });
     return Buffer.from(pdfBytes);
   } finally {

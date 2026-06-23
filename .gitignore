@@ -56,6 +56,7 @@ next-env.d.ts
 /test-pdf-to-word-output.zip
 /test-docx-unpack/
 /test-output/
+/scripts/output/
 /test-*.docx
 /test-*.pdf
 /test-founder-summary.pdf
