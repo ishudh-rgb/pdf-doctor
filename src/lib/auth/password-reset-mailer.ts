@@ -39,7 +39,7 @@ export async function sendPasswordResetCode(
   }
 
   if (process.env.NODE_ENV === "development") {
-    console.log(`[Only4PDF] Password reset code for ${email}: ${code}`);
+    console.log("[OnlyMyPDF] Password reset code issued (dev mode only)");
     return { delivered: false, mode: "dev", devCode: code };
   }
 

@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
 import { RotatePdfWorkspace } from '@/components/tools/lazy-workspaces';
-import { ToolDropzone, ToolErrorBanner } from '@/components/tools/tool-ui';
+import { ToolDropzone, ToolErrorBanner, ToolHiddenFileInput } from '@/components/tools/tool-ui';
 
 const RELATED_TOOLS = [
   { name: 'Merge PDF', href: '/merge-pdf' },
@@ -64,14 +64,11 @@ export default function RotatePdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
           {uploadError && <ToolErrorBanner message={uploadError} />}
           <p className="mt-4 text-center text-xs text-pd-muted">
             After upload you&apos;ll see all pages in a visual grid — rotate, add, and reorder.
@@ -84,11 +81,10 @@ export default function RotatePdfPage() {
             onChangeFile={() => fileInputRef.current?.click()}
             onReset={() => setFile(null)}
           />
-          <input
+          <ToolHiddenFileInput
             ref={fileInputRef}
-            type="file"
             accept=".pdf"
-            className="hidden"
+            ariaLabel="Change PDF file"
             onChange={(e) => {
               if (e.target.files?.[0]) handleFiles(e.target.files);
             }}

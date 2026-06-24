@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ToolHiddenFileInput } from "@/components/tools/tool-ui";
 
 type PageSize = "a4" | "letter";
 type Orientation = "portrait" | "landscape";
@@ -478,11 +479,10 @@ export default function TxtToPdfPage() {
         </div>
       )}
 
-      <input
+      <ToolHiddenFileInput
         ref={fileInputRef}
-        type="file"
         accept={ACCEPTED_EXTENSIONS}
-        className="hidden"
+        ariaLabel="Choose text file to convert"
         onChange={(e) => {
           const picked = e.target.files?.[0];
           e.target.value = "";

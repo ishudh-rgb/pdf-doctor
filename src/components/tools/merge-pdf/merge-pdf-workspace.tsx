@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { loadPdfDocumentPreview } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PageZoomModal } from "@/components/tools/split-pdf/page-zoom-modal";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
 import { SplitPageCard } from "@/components/tools/split-pdf/split-page-card";
@@ -574,12 +574,11 @@ export function MergePdfWorkspace({
 
   return (
     <>
-      <input
+      <ToolHiddenFileInput
         ref={insertFileRef}
-        type="file"
         accept=".pdf,application/pdf"
         multiple
-        className="hidden"
+        ariaLabel="Add PDF files"
         onChange={handleInsertFiles}
       />
 

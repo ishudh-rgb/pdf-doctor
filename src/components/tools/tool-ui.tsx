@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { forwardRef, useId, type ChangeEvent, type InputHTMLAttributes, type RefObject } from "react";
 import { Loader2, Download, AlertCircle, Upload, FileUp, Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
@@ -46,6 +47,10 @@ interface ToolDropzoneProps {
   cloudAcceptExtensions?: string[];
   cloudMimeTypes?: string;
   cloudMultiple?: boolean;
+  fileInputRef?: RefObject<HTMLInputElement | null>;
+  fileInputAccept?: string;
+  fileInputMultiple?: boolean;
+  onFileInputChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function ToolDropzone({
@@ -63,10 +68,18 @@ export function ToolDropzone({
   cloudAcceptExtensions,
   cloudMimeTypes,
   cloudMultiple,
+  fileInputRef,
+  fileInputAccept,
+  fileInputMultiple,
+  onFileInputChange,
 }: ToolDropzoneProps) {
+  const zoneId = useId();
+
   return (
     <div className={cn("w-full", className)}>
       <div
+        role="region"
+        aria-labelledby={zoneId}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -91,9 +104,21 @@ export function ToolDropzone({
           {chooseLabel}
         </Button>
 
-        <p className="mt-2 text-sm text-pd-muted">{hint}</p>
+        <p id={zoneId} className="mt-2 text-sm text-pd-muted">
+          {hint}
+        </p>
         {subHint && <p className="mt-1 text-xs text-pd-muted/90">{subHint}</p>}
       </div>
+      {fileInputRef ? (
+        <ToolHiddenFileInput
+          ref={fileInputRef}
+          accept={fileInputAccept}
+          multiple={fileInputMultiple}
+          onChange={onFileInputChange}
+          labelledBy={zoneId}
+          ariaLabel="Choose file to upload"
+        />
+      ) : null}
       {onCloudFiles && (
         <CloudSourceButtons
           className="mt-3"
@@ -108,10 +133,36 @@ export function ToolDropzone({
   );
 }
 
+type ToolHiddenFileInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "className"> & {
+  ariaLabel: string;
+  labelledBy?: string;
+};
+
+/** Screen-reader accessible off-screen file input for tool pages and workspaces. */
+export const ToolHiddenFileInput = forwardRef<HTMLInputElement, ToolHiddenFileInputProps>(
+  function ToolHiddenFileInput({ ariaLabel, labelledBy, type = "file", ...props }, ref) {
+    return (
+      <input
+        ref={ref}
+        type={type}
+        {...props}
+        aria-label={labelledBy ? undefined : ariaLabel}
+        aria-labelledby={labelledBy}
+        className="sr-only"
+        tabIndex={-1}
+      />
+    );
+  }
+);
+
 export function ToolErrorBanner({ message }: { message: string }) {
   return (
-    <div className="mt-3 flex w-full items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="mt-3 flex w-full items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+    >
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <span>{message}</span>
     </div>
   );

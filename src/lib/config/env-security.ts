@@ -26,8 +26,18 @@ export function assertProductionSecrets(): void {
     isMissingOrPlaceholder(process.env[key])
   );
 
+  const upstashMissing =
+    isMissingOrPlaceholder(process.env.UPSTASH_REDIS_REST_URL) ||
+    isMissingOrPlaceholder(process.env.UPSTASH_REDIS_REST_TOKEN);
+
   if (missing.length > 0) {
     throw new Error(`Missing production secrets: ${missing.join(", ")}`);
+  }
+
+  if (upstashMissing) {
+    console.warn(
+      "[pdf-doctor] UPSTASH_REDIS_* not set — rate limits use per-instance memory (not recommended for production scale)."
+    );
   }
 }
 

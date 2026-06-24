@@ -27,6 +27,7 @@ import {
   Trash2,
   Code2,
 } from "lucide-react";
+import { useFocusTrap } from "@/lib/a11y/use-focus-trap";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitch } from "@/components/common/language-switch";
@@ -246,12 +247,23 @@ export function Header() {
     };
   }, [mobileOpen]);
 
+  React.useEffect(() => {
+    if (!mobileOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen]);
+
+  const mobileMenuRef = useFocusTrap(mobileOpen);
+
   return (
     <header className="pd-site-header sticky top-0 z-40 w-full bg-pd-surface">
       <div className="pd-header-row pd-container">
         <Logo link href="/" variant="wordmark" />
 
-        <nav className="pd-nav-links hidden items-center lg:flex">
+        <nav className="pd-nav-links hidden items-center lg:flex" aria-label="Main navigation">
           {navLinks.map((link) => (
             <Link
               key={link.name}
@@ -264,7 +276,11 @@ export function Header() {
 
           <div ref={megaMenuRef} className="relative">
             <button
+              type="button"
               onClick={() => setMegaMenuOpen((prev) => !prev)}
+              aria-expanded={megaMenuOpen}
+              aria-haspopup="true"
+              aria-controls="mega-menu-panel"
               className={cn(
                 "flex cursor-pointer items-center gap-1",
                 navItemClass,
@@ -283,7 +299,12 @@ export function Header() {
             </button>
 
             {megaMenuOpen && (
-              <div className="absolute left-1/2 top-full z-50 mt-2 w-[820px] max-w-[calc(100vw-2rem)] -translate-x-1/2 animate-fade-in rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.03)] backdrop-blur-xl">
+              <div
+                id="mega-menu-panel"
+                role="region"
+                aria-label="All PDF tools"
+                className="absolute left-1/2 top-full z-50 mt-2 w-[820px] max-w-[calc(100vw-2rem)] -translate-x-1/2 animate-fade-in rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.03)] backdrop-blur-xl"
+              >
                 <div className="grid grid-cols-4 gap-6">
                   <div>
                     <MegaCol categories={[megaMenuCategories[0]]} onClose={() => setMegaMenuOpen(false)} />
@@ -366,11 +387,17 @@ export function Header() {
 
       {/* Mobile Full-screen Overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 bg-pd-surface lg:hidden">
+        <div
+          ref={mobileMenuRef}
+          className="fixed inset-0 z-50 bg-pd-surface lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation menu"
+        >
           <div className="pd-header-row flex items-center justify-between px-4">
             <Link
               href="/"
-              className="inline-flex shrink-0 items-center"
+              className="pd-site-logo-link inline-flex shrink-0 items-center justify-center"
               onClick={() => setMobileOpen(false)}
             >
               <Logo variant="wordmark" />

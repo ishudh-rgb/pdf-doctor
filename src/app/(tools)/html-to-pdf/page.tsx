@@ -24,6 +24,7 @@ import Link from "next/link";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { useConversionProgress } from "@/hooks/use-conversion-progress";
 import { PdfResultWorkspaceViewer } from "@/components/tools/pdf-result-workspace-viewer";
+import { ToolHiddenFileInput } from "@/components/tools/tool-ui";
 
 type PageSize = "a4" | "letter" | "auto";
 type Orientation = "portrait" | "landscape";
@@ -434,11 +435,10 @@ export default function HtmlToPdfPage() {
         </div>
       )}
 
-      <input
+      <ToolHiddenFileInput
         ref={fileInputRef}
-        type="file"
         accept={ACCEPTED_EXTENSIONS}
-        className="hidden"
+        ariaLabel="Choose HTML or MHTML file to convert"
         onChange={(e) => {
           const picked = e.target.files?.[0];
           e.target.value = "";

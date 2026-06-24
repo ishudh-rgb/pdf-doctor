@@ -31,8 +31,6 @@ export function LogoIconBox({
         {
           "--pd-header-logo-max-h": `${slot.maxHeight}px`,
           "--pd-header-logo-max-w": `${slot.maxWidth}px`,
-          maxHeight: slot.maxHeight,
-          maxWidth: slot.maxWidth,
         } as CSSProperties
       }
     >
@@ -43,8 +41,6 @@ export function LogoIconBox({
         alt={alt}
         className="block object-contain object-center"
         style={{
-          maxHeight: slot.maxHeight,
-          maxWidth: slot.maxWidth,
           width: "auto",
           height: "auto",
         }}

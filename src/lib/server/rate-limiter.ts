@@ -186,3 +186,18 @@ export async function guardAdminRateLimit(request: NextRequest): Promise<Respons
   if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
   return null;
 }
+
+/** General API routes (files, user, privacy): 120 requests per 15 minutes per IP */
+export async function checkGeneralApiRateLimit(request: NextRequest): Promise<RateLimitResult> {
+  return checkRateLimit(request, {
+    keyPrefix: "api",
+    maxRequests: 120,
+    windowMs: 15 * 60 * 1000,
+  });
+}
+
+export async function guardGeneralApiRateLimit(request: NextRequest): Promise<Response | null> {
+  const rate = await checkGeneralApiRateLimit(request);
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+  return null;
+}

@@ -169,14 +169,11 @@ export default function ProtectPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
 
           {files.length > 0 && (
             <>
@@ -190,9 +187,10 @@ export default function ProtectPdfPage() {
 
               <div className="mt-6 space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-pd-foreground">Password</label>
+                  <label htmlFor="protect-pdf-password" className="mb-2 block text-sm font-semibold text-pd-foreground">Password</label>
                   <div className="relative">
                     <input
+                      id="protect-pdf-password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -202,6 +200,7 @@ export default function ProtectPdfPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                       className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-pd-muted transition-colors hover:text-pd-foreground"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -222,9 +221,10 @@ export default function ProtectPdfPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-pd-foreground">Confirm Password</label>
+                  <label htmlFor="protect-pdf-confirm-password" className="mb-2 block text-sm font-semibold text-pd-foreground">Confirm Password</label>
                   <div className="relative">
                     <input
+                      id="protect-pdf-confirm-password"
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -239,13 +239,14 @@ export default function ProtectPdfPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                       className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-pd-muted transition-colors hover:text-pd-foreground"
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {confirmPassword && !passwordsMatch && (
-                    <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+                    <p className="mt-1 text-xs text-red-600" role="alert">Passwords do not match</p>
                   )}
                 </div>
               </div>

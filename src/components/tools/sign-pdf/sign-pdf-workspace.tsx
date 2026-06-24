@@ -35,7 +35,7 @@ import {
 } from "@/lib/pdf/pdf-thumbnails.client";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { clickToNorm } from "@/lib/pdf/pdf-coordinates";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolHiddenFileInput } from "@/components/tools/tool-ui";
 import { SignatureCreateModal } from "@/components/tools/sign-pdf/signature-create-modal";
 import { SignPageInsertDivider } from "@/components/tools/sign-pdf/sign-page-insert-divider";
 import { SignPageThumb } from "@/components/tools/sign-pdf/sign-page-thumb";
@@ -781,11 +781,10 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
 
   return (
     <>
-      <input
+      <ToolHiddenFileInput
         ref={insertFileRef}
-        type="file"
         accept=".pdf,application/pdf"
-        className="hidden"
+        ariaLabel="Insert PDF documents"
         onChange={handleInsertDocuments}
       />
 
@@ -990,7 +989,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
             )}
           </aside>
 
-          <main className={cn("relative flex min-h-0 flex-1 flex-col overflow-auto", cursorClass)}>
+          <section aria-label="PDF signing workspace" className={cn("relative flex min-h-0 flex-1 flex-col overflow-auto", cursorClass)}>
             {error && (
               <div className="p-3">
                 <ToolErrorBanner message={error} />
@@ -1146,7 +1145,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                 </div>
               </div>
             )}
-          </main>
+          </section>
         </div>
       </div>
 

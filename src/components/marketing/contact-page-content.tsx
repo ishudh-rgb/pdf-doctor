@@ -19,6 +19,8 @@ export function ContactPageContent() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   function validate() {
     const newErrors: Record<string, string> = {};
@@ -36,7 +38,7 @@ export function ContactPageContent() {
     return newErrors;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -44,7 +46,27 @@ export function ContactPageContent() {
       return;
     }
     setErrors({});
-    setSubmitted(true);
+    setSubmitError("");
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Could not send your message. Please try again.");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Could not send your message. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -93,7 +115,11 @@ export function ContactPageContent() {
                     className={inputClass}
                     placeholder="Your name"
                   />
-                  {errors.name && <p className="mt-1 text-xs text-pd-danger">{errors.name}</p>}
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-pd-danger" role="alert">
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-pd-foreground">
@@ -107,7 +133,11 @@ export function ContactPageContent() {
                     className={inputClass}
                     placeholder="your@email.com"
                   />
-                  {errors.email && <p className="mt-1 text-xs text-pd-danger">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-pd-danger" role="alert">
+                      {errors.email}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="subject" className="block text-sm font-medium text-pd-foreground">
@@ -138,11 +168,20 @@ export function ContactPageContent() {
                     className={cn(inputClass, "resize-none")}
                     placeholder="Tell us how we can help..."
                   />
-                  {errors.message && <p className="mt-1 text-xs text-pd-danger">{errors.message}</p>}
+                  {errors.message && (
+                    <p className="mt-1 text-xs text-pd-danger" role="alert">
+                      {errors.message}
+                    </p>
+                  )}
                 </div>
-                <Button type="submit">
+                {submitError ? (
+                  <p className="text-sm text-pd-danger" role="alert">
+                    {submitError}
+                  </p>
+                ) : null}
+                <Button type="submit" disabled={submitting}>
                   <Send className="h-4 w-4" />
-                  Send Message
+                  {submitting ? "Sending…" : "Send Message"}
                 </Button>
               </div>
             </form>

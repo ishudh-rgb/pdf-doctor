@@ -47,7 +47,7 @@ import {
   type ExportStrokeOp,
   type TextStyle,
 } from "@/components/tools/edit-pdf/edit-pdf-types";
-import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 
 const CANVAS_RENDER_WIDTH = 880;
 const DEFAULT_IMAGE_WIDTH_NORM = 0.22;
@@ -759,12 +759,19 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
 
   return (
     <>
-      <input ref={imageInputRef} type="file" accept="image/*" className="hidden"
+      <ToolHiddenFileInput
+        ref={imageInputRef}
+        accept="image/*"
+        ariaLabel="Choose image to add to PDF"
         onChange={(e) => {
           const picked = e.target.files?.[0];
           e.target.value = "";
-          if (picked?.type.startsWith("image/")) { setPendingImage(picked); setTool("image"); }
-        }} />
+          if (picked?.type.startsWith("image/")) {
+            setPendingImage(picked);
+            setTool("image");
+          }
+        }}
+      />
 
       {showSignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -835,7 +842,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
             )}
           </aside>
 
-          <main className={cn("relative flex flex-1 flex-col overflow-auto", cursorClass)}>
+          <section aria-label="PDF editor workspace" className={cn("relative flex flex-1 flex-col overflow-auto", cursorClass)}>
             {error && <div className="p-3"><ToolErrorBanner message={error} /></div>}
             {(loading || loadingText) && (
               <p className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs text-white">
@@ -1121,7 +1128,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
                 </div>
               </div>
             )}
-          </main>
+          </section>
         </div>
       </div>
 

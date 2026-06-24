@@ -126,14 +126,11 @@ export default function WordToPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
 
           {files.length > 0 && (
             <div className="mt-4 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">

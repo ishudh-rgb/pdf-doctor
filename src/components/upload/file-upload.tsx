@@ -129,7 +129,8 @@ export function FileUpload({
             accept={accept}
             multiple={multiple}
             onChange={handleInputChange}
-            className="hidden"
+            className="sr-only"
+            tabIndex={-1}
             aria-label="File upload input"
           />
           <div
@@ -191,7 +192,8 @@ export function FileUpload({
             accept={accept}
             multiple={multiple}
             onChange={handleInputChange}
-            className="hidden"
+            className="sr-only"
+            tabIndex={-1}
             aria-label="File upload input"
           />
         </div>

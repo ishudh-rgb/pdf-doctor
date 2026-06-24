@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolHiddenFileInput } from "@/components/tools/tool-ui";
 
 type ScanFilter = "original" | "bw" | "enhanced";
 type InputMode = "camera" | "upload";
@@ -307,15 +307,14 @@ export function PdfScannerWorkspace() {
         </div>
       </div>
 
-      <input
+      <ToolHiddenFileInput
         ref={fileInputRef}
-        type="file"
         accept="image/jpeg,image/png,image/webp"
         multiple
+        ariaLabel="Choose images to scan to PDF"
         onChange={(e) => e.target.files && addImages(e.target.files)}
-        className="hidden"
       />
-      <canvas ref={canvasRef} className="hidden" />
+      <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
 
       {/* Empty state — compact intake only */}
       {!hasPages && (

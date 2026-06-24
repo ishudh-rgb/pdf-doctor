@@ -10,6 +10,7 @@ import { PdfResultPreview } from '@/components/tools/pdf-result-preview';
 import {
   ToolDropzone,
   ToolErrorBanner,
+  ToolHiddenFileInput,
 } from '@/components/tools/tool-ui';
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
@@ -239,19 +240,16 @@ export default function JpgToPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
-          />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            className="hidden"
-            onChange={(e) => {
+            fileInputRef={fileInputRef}
+            fileInputAccept="image/jpeg,image/png,image/webp"
+            fileInputMultiple
+            onFileInputChange={(e) => {
               const picked = Array.from(e.target.files ?? []);
               e.target.value = '';
               if (picked.length > 0) handleFiles(picked);
             }}
           />
+          
         </>
       ) : (
         <div>
@@ -264,12 +262,11 @@ export default function JpgToPdfPage() {
             >
               <Plus className="h-3.5 w-3.5" /> Add more
             </button>
-            <input
+            <ToolHiddenFileInput
               ref={addMoreRef}
-              type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
-              className="hidden"
+              ariaLabel="Add more images"
               onChange={(e) => {
                 const picked = Array.from(e.target.files ?? []);
                 e.target.value = '';

@@ -114,14 +114,11 @@ export default function SignPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf,application/pdf"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
           {uploadError && (
             <div className="mt-4">
               <ToolErrorBanner message={uploadError} />

@@ -4,6 +4,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useFocusTrap } from "@/lib/a11y/use-focus-trap";
 
 interface ModalProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function Modal({
   size = "md",
 }: ModalProps) {
   const [mounted, setMounted] = React.useState(false);
+  const trapRef = useFocusTrap(open);
 
   React.useEffect(() => {
     setMounted(true);
@@ -58,6 +60,8 @@ export function Modal({
 
   if (!mounted || !open) return null;
 
+  const titleId = title ? "modal-title" : undefined;
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -66,6 +70,7 @@ export function Modal({
         aria-hidden="true"
       />
       <div
+        ref={trapRef}
         className={cn(
           "relative z-10 w-full rounded-2xl bg-white p-6 shadow-2xl animate-modal-enter",
           sizeMap[size],
@@ -73,18 +78,22 @@ export function Modal({
         )}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={titleId}
+        aria-label={title ? undefined : "Dialog"}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           {title && (
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            <h2 id={titleId} className="text-lg font-semibold text-gray-900">
+              {title}
+            </h2>
           )}
           <button
+            type="button"
             onClick={onClose}
-            className="ml-auto rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+            className="ml-auto rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pd-brand"
             aria-label="Close dialog"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
         {children}

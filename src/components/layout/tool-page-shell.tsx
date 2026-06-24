@@ -6,6 +6,7 @@ import { useDesignPreview } from "@/components/design/design-preview-provider";
 import type { LayoutStyleId } from "@/config/design-system";
 import { RelatedToolCard } from "@/components/tools/related-tool-card";
 import type { MappedRelatedTool } from "@/components/tools/tool-helpers";
+import { useToolSeo } from "@/lib/seo/tool-seo-context";
 
 interface FAQ {
   question: string;
@@ -234,14 +235,24 @@ export function ToolPageShell({
   compactWorkspace,
 }: ToolPageShellProps) {
   const { layoutStyle } = useDesignPreview();
+  const toolSeo = useToolSeo();
+
+  const resolvedTitle = toolSeo?.h1 ?? title;
+  const resolvedDescription = toolSeo?.metaDescription ?? description;
+  const resolvedFaqs = faqs ?? toolSeo?.faqs;
+  const resolvedSeoContent =
+    seoContent ??
+    (toolSeo?.seoContent ? (
+      <p className="leading-relaxed">{toolSeo.seoContent}</p>
+    ) : undefined);
 
   return (
     <div className={cn("flex flex-col", className)}>
-      <ToolHero layout={layoutStyle} title={title} description={description} />
+      <ToolHero layout={layoutStyle} title={resolvedTitle} description={resolvedDescription} />
       <Workspace
         layout={layoutStyle}
-        title={title}
-        description={description}
+        title={resolvedTitle}
+        description={resolvedDescription}
         preview={preview}
         splitWorkspace={splitWorkspace}
         previewPlaceholder={previewPlaceholder}
@@ -272,14 +283,14 @@ export function ToolPageShell({
         </section>
       )}
 
-      {faqs && faqs.length > 0 && (
+      {resolvedFaqs && resolvedFaqs.length > 0 && (
         <section className="bg-pd-surface py-8 sm:py-10">
           <div className="pd-container max-w-3xl">
             <h2 className="mb-4 text-center text-lg font-semibold text-pd-foreground">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
-              {faqs.map((faq, idx) => (
+              {resolvedFaqs.map((faq, idx) => (
                 <div
                   key={idx}
                   className="rounded-2xl border border-pd-border bg-pd-background p-5"
@@ -293,9 +304,9 @@ export function ToolPageShell({
         </section>
       )}
 
-      {seoContent && (
+      {resolvedSeoContent && (
         <section className="bg-pd-background py-8 sm:py-10">
-          <div className="prose prose-sm mx-auto max-w-3xl px-4 text-pd-muted">{seoContent}</div>
+          <div className="prose prose-sm mx-auto max-w-3xl px-4 text-pd-muted">{resolvedSeoContent}</div>
         </section>
       )}
     </div>

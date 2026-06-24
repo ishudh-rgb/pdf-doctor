@@ -79,6 +79,7 @@ export const DeletePageCard = memo(function DeletePageCard({
             onClick={(e) => { e.stopPropagation(); onZoom(); }}
             className="rounded-md bg-gray-900/75 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-gray-900/90"
             title="Zoom"
+            aria-label="Zoom"
           >
             <ZoomIn className="h-3.5 w-3.5" />
           </button>
@@ -87,6 +88,7 @@ export const DeletePageCard = memo(function DeletePageCard({
             onClick={(e) => { e.stopPropagation(); onRotateRight(); }}
             className="rounded-md bg-gray-900/75 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-gray-900/90"
             title="Rotate right"
+            aria-label="Rotate right"
           >
             <RotateCw className="h-3.5 w-3.5" />
           </button>
@@ -95,6 +97,7 @@ export const DeletePageCard = memo(function DeletePageCard({
             onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
             className="rounded-md bg-gray-900/75 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-gray-900/90"
             title="Duplicate"
+            aria-label="Duplicate page"
           >
             <Copy className="h-3.5 w-3.5" />
           </button>
@@ -103,6 +106,7 @@ export const DeletePageCard = memo(function DeletePageCard({
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="rounded-md bg-gray-900/75 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-red-600/90"
             title="Delete this page"
+            aria-label="Delete this page"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -160,6 +164,7 @@ export const DeletePageCard = memo(function DeletePageCard({
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-all hover:scale-110 hover:bg-red-600"
             title="Delete this page"
+            aria-label="Delete this page"
           >
             <Trash2 className="h-5 w-5" />
           </button>

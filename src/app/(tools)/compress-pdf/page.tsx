@@ -188,13 +188,7 @@ export default function CompressPdfPage() {
             />
           )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
 
           {files.length === 0 ? (
             <ToolDropzone
@@ -206,6 +200,9 @@ export default function CompressPdfPage() {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
             />
           ) : (
             <>
@@ -225,11 +222,12 @@ export default function CompressPdfPage() {
               </div>
 
               <div className="mt-3">
-                <p className="mb-1.5 text-xs font-semibold text-pd-foreground">Compression level</p>
-                <div className="grid grid-cols-2 gap-2">
+                <p id="compression-level-label" className="mb-1.5 text-xs font-semibold text-pd-foreground">Compression level</p>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="compression-level-label">
                   <button
                     type="button"
                     onClick={() => setCompressionLevel('basic')}
+                    aria-pressed={compressionLevel === 'basic'}
                     className={cn(
                       'flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition-colors',
                       compressionLevel === 'basic'
@@ -243,6 +241,7 @@ export default function CompressPdfPage() {
                   <button
                     type="button"
                     onClick={() => setCompressionLevel('strong')}
+                    aria-pressed={compressionLevel === 'strong'}
                     className={cn(
                       'flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition-colors',
                       compressionLevel === 'strong'

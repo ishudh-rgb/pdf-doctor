@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
 import { SplitPageCard } from "@/components/tools/split-pdf/split-page-card";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
@@ -377,11 +377,10 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
         />
       )}
 
-      <input
+      <ToolHiddenFileInput
         ref={insertFileRef}
-        type="file"
         accept=".pdf,application/pdf"
-        className="hidden"
+        ariaLabel="Insert PDF documents"
         onChange={handleInsertDocuments}
       />
 

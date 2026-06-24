@@ -95,6 +95,7 @@ export const SplitPageCard = memo(function SplitPageCard({
             }}
             className="rounded p-1 text-white hover:bg-white/20"
             title="Zoom"
+            aria-label="Zoom"
           >
             <ZoomIn className="h-3.5 w-3.5" />
           </button>
@@ -106,6 +107,7 @@ export const SplitPageCard = memo(function SplitPageCard({
             }}
             className="rounded p-1 text-white hover:bg-white/20"
             title="Rotate left"
+            aria-label="Rotate left"
           >
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
@@ -117,6 +119,7 @@ export const SplitPageCard = memo(function SplitPageCard({
             }}
             className="rounded p-1 text-white hover:bg-white/20"
             title="Duplicate"
+            aria-label="Duplicate page"
           >
             <Copy className="h-3.5 w-3.5" />
           </button>
@@ -128,6 +131,7 @@ export const SplitPageCard = memo(function SplitPageCard({
             }}
             className="rounded p-1 text-white hover:bg-red-400/80"
             title="Remove page"
+            aria-label="Remove page"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>

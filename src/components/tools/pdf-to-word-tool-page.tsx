@@ -273,14 +273,11 @@ export function PdfToWordToolPage({
               handleFiles(e.dataTransfer.files);
             }}
             onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf,application/pdf"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
 
           {file && (
             <div className="mt-4 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">

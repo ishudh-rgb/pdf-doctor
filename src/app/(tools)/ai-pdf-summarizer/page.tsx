@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ToolPageShell } from "@/components/layout/tool-page-shell";
+import { ToolHiddenFileInput } from "@/components/tools/tool-ui";
 import { mapRelatedTools } from "@/components/tools/tool-helpers";
 import {
   cleanSummaryText,
@@ -241,6 +242,8 @@ export default function AIPDFSummarizerPage() {
           <div>
             {!file ? (
               <div
+                role="region"
+                aria-label="Upload PDF for AI summarization"
                 className={`rounded-xl border-2 border-dashed p-9 text-center transition-colors ${
                   isDragging ? "border-purple-400 bg-purple-50" : "border-gray-300 hover:border-purple-400"
                 }`}
@@ -257,7 +260,12 @@ export default function AIPDFSummarizerPage() {
                 >
                   Select PDF File
                 </button>
-                <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
+                <ToolHiddenFileInput
+                  ref={fileInputRef}
+                  accept="application/pdf"
+                  ariaLabel="Choose PDF file to summarize"
+                  onChange={handleFileChange}
+                />
                 <p className="mt-3 text-xs text-gray-400">Any file size accepted</p>
               </div>
             ) : (
@@ -272,17 +280,24 @@ export default function AIPDFSummarizerPage() {
                 </div>
 
                 {error && (
-                  <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700">
-                    <AlertCircle className="h-4 w-4" /> {error}
+                  <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+                    <AlertCircle className="h-4 w-4" aria-hidden="true" /> {error}
                   </div>
                 )}
 
                 {processing ? (
-                  <div className="py-6 text-center">
+                  <div className="py-6 text-center" aria-live="polite" aria-busy="true">
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-purple-600" />
                     <p className="mt-3 font-medium text-gray-700">AI is analyzing your document...</p>
                     <div className="mx-auto mt-3 max-w-xs">
-                      <div className="h-2 rounded-full bg-gray-200">
+                      <div
+                        className="h-2 rounded-full bg-gray-200"
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={progress}
+                        aria-label="Summarization progress"
+                      >
                         <div className="h-2 rounded-full bg-purple-600 transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
                       <p className="mt-1 text-xs text-gray-500">{progress}%</p>
@@ -755,6 +770,9 @@ function DownloadFormatMenu({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Download summary"
         className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-50"
       >
         {downloadingFormat ? (
@@ -767,7 +785,10 @@ function DownloadFormatMenu({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+        <div
+          role="menu"
+          className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
+        >
           {options.map((option) => (
             <button
               key={option.id}
@@ -839,6 +860,8 @@ function ListenButton({
           : "text-gray-500 hover:bg-gray-100"
       )}
       title={isListening ? "Stop listening" : "Listen to this section"}
+      aria-label={isListening ? "Stop listening" : "Listen to this section"}
+      aria-pressed={isListening}
     >
       {isListening ? (
         <Square className="h-3 w-3 fill-current" />
@@ -863,7 +886,9 @@ function CopyButton({
 }) {
   return (
     <button
+      type="button"
       onClick={() => onCopy(text, section)}
+      aria-label={copied === section ? "Copied to clipboard" : "Copy section to clipboard"}
       className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 cursor-pointer"
     >
       {copied === section ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}

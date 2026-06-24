@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Download, Clock, FileText, AlertCircle, Search, ArrowLeft } from "lucide-react";
+import { Download, Clock, FileText, AlertCircle, Search, ArrowLeft, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTranslation } from "@/i18n";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-layout";
@@ -16,6 +16,7 @@ interface FileJob {
   status: "completed" | "failed" | "processing";
   file_size: number;
   download_url: string | null;
+  file_id: string | null;
   expired: boolean;
 }
 
@@ -47,6 +48,22 @@ export default function MyFilesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDeleteFile(fileId: string) {
+    if (!window.confirm("Delete this file from our servers now?")) return;
+    setDeletingId(fileId);
+    try {
+      const res = await fetch(`/api/files/${fileId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      setFiles((prev) => prev.filter((f) => f.file_id !== fileId));
+    } catch {
+      setError("Could not delete file. Try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const statusConfig = {
     completed: { label: t("dashboard.completed"), className: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/60" },
@@ -167,20 +184,33 @@ export default function MyFilesPage() {
                         {formatFileSize(file.file_size)}
                       </td>
                       <td className="px-5 py-4">
-                        {file.status === "completed" && !file.expired && file.download_url ? (
-                          <a
-                            href={file.download_url}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-pd-brand-muted px-3 py-1.5 text-xs font-bold text-pd-brand transition hover:bg-pd-brand hover:text-white"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            {t("dashboard.download")}
-                          </a>
-                        ) : file.status === "completed" && file.expired ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-pd-muted">
-                            <Clock className="h-3.5 w-3.5" />
-                            {t("dashboard.expired")}
-                          </span>
-                        ) : null}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {file.status === "completed" && !file.expired && file.download_url ? (
+                            <a
+                              href={file.download_url}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-pd-brand-muted px-3 py-1.5 text-xs font-bold text-pd-brand transition hover:bg-pd-brand hover:text-white"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              {t("dashboard.download")}
+                            </a>
+                          ) : file.status === "completed" && file.expired ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-pd-muted">
+                              <Clock className="h-3.5 w-3.5" />
+                              {t("dashboard.expired")}
+                            </span>
+                          ) : null}
+                          {file.file_id && !file.expired ? (
+                            <button
+                              type="button"
+                              onClick={() => void handleDeleteFile(file.file_id!)}
+                              disabled={deletingId === file.file_id}
+                              className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Delete
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   );

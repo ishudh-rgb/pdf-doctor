@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Lock, Eye, EyeOff, X } from "lucide-react";
+import { useFocusTrap } from "@/lib/a11y/use-focus-trap";
 
 interface PdfPasswordModalProps {
   fileName: string;
@@ -21,6 +22,8 @@ export function PdfPasswordModal({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useFocusTrap(true);
+  const titleId = "pdf-password-modal-title";
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -39,14 +42,16 @@ export function PdfPasswordModal({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div
+        ref={dialogRef}
         className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
         role="dialog"
         aria-modal="true"
-        aria-label="Enter password"
+        aria-labelledby={titleId}
       >
         <button
           type="button"
           onClick={onCancel}
+          aria-label="Close password dialog"
           className="absolute right-3 top-3 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
         >
           <X className="h-4 w-4" />
@@ -54,10 +59,12 @@ export function PdfPasswordModal({
 
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pd-brand-muted">
-            <Lock className="h-5 w-5 text-pd-brand" />
+            <Lock className="h-5 w-5 text-pd-brand" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-pd-foreground">Enter password</h3>
+            <h3 id={titleId} className="text-lg font-bold text-pd-foreground">
+              Enter password
+            </h3>
             <p className="text-sm text-pd-muted">
               Type password to open <strong>{shortName}</strong>
             </p>
@@ -65,9 +72,13 @@ export function PdfPasswordModal({
         </div>
 
         <form onSubmit={handleSubmit}>
+          <label htmlFor="pdf-password-input" className="sr-only">
+            PDF password
+          </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input
+              id="pdf-password-input"
               ref={inputRef}
               type={showPassword ? "text" : "password"}
               value={password}
@@ -80,15 +91,17 @@ export function PdfPasswordModal({
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              tabIndex={-1}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
           {errorMessage && (
-            <p className="mt-2 text-sm font-medium text-red-600">{errorMessage}</p>
+            <p className="mt-2 text-sm font-medium text-red-600" role="alert">
+              {errorMessage}
+            </p>
           )}
 
           <div className="mt-5 flex items-center justify-end gap-3">

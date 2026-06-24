@@ -1,14 +1,19 @@
+import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { deleteFile, getFileUrl } from "@/lib/services/upload.service";
 import { getUploadedFileById, deleteUploadedFileRecord, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeFilename } from "@/lib/utils/file";
 import { toSafeApiError } from "@/lib/server/safe-error";
+import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rateLimited = await guardGeneralApiRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   try {
     const { id } = await params;
 
@@ -36,7 +41,7 @@ export async function GET(
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     } else {
-      const sessionId = request.headers.get("x-session-id")?.trim();
+      const sessionId = getGuestSessionIdFromRequest(request);
       if (!sessionId || !file.guest_session_id || file.guest_session_id !== sessionId) {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
@@ -78,6 +83,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const rateLimited = await guardGeneralApiRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   try {
     const { id } = await params;
 
@@ -86,18 +94,21 @@ export async function DELETE(
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-    }
-
     const file = await getUploadedFileById(id);
 
     if (!file) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    if (file.user_id !== user.id) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (file.user_id) {
+      if (!user || file.user_id !== user.id) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
+    } else {
+      const sessionId = getGuestSessionIdFromRequest(request);
+      if (!sessionId || !file.guest_session_id || file.guest_session_id !== sessionId) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
     }
 
     await deleteFile(file.storage_path);

@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getUserJobs } from "@/lib/db/queries";
 import { getApiUser } from "@/lib/auth/get-api-user";
+import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 
 type ToolJobRow = {
   id: string;
@@ -50,7 +51,10 @@ function mapJobStatus(status: string): "completed" | "processing" | "failed" {
   return "processing";
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rateLimited = await guardGeneralApiRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   try {
     const user = await getApiUser();
     if (!user) {
@@ -106,6 +110,7 @@ export async function GET() {
           output && !expired && job.status === "completed"
             ? `/api/files/${output.id}`
             : null,
+        file_id: output?.id ?? null,
         expired,
       };
     });

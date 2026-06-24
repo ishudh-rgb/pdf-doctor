@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageContent } from "@/components/marketing/legal-page-content";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Terms of Service | Only4PDF",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Terms of Service",
   description:
-    "Read the Terms of Service for Only4PDF. Understand your rights and responsibilities when using our PDF tools.",
-};
+    "Read the Terms of Service for OnlyMyPDF. Understand your rights and responsibilities when using our PDF tools.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

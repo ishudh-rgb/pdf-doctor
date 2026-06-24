@@ -155,13 +155,11 @@ export async function extractDocumentTablesForExcel(
   const allRows = blocksToSpreadsheetRows(blocks);
   const split = splitDocumentExportTables(allRows);
 
-  return split
-    .map((rows, index) => {
-      const table = tableFromRows(rows);
-      if (!table) return null;
-      return { ...table, page: index + 1 };
-    })
-    .filter((table): table is DocumentExportTable => table !== null);
+  return split.flatMap((rows, index) => {
+    const table = tableFromRows(rows);
+    if (!table) return [];
+    return [{ ...table, page: index + 1 }];
+  });
 }
 
 export function isWeakDocumentExtraction(tables: DocumentExportTable[]): boolean {

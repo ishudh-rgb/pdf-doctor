@@ -9,6 +9,7 @@ import { WatermarkPreview } from "@/components/tools/previews/watermark-preview"
 import {
   ToolDropzone,
   ToolErrorBanner,
+  ToolHiddenFileInput,
   ToolPrimaryButton,
   ToolSuccessPanel,
 } from "@/components/tools/tool-ui";
@@ -265,17 +266,14 @@ export default function AddWatermarkPage() {
               }
             }}
             onChooseFiles={() => fileInputRef.current?.click()}
-          />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={(e) => {
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf,application/pdf"
+            onFileInputChange={(e) => {
               setFile(e.target.files?.[0] ?? null);
               setCompleted(false);
             }}
           />
+          
 
           <div className="mt-3 grid grid-cols-2 gap-3">
             {(["text", "image"] as const).map((type) => (
@@ -338,11 +336,10 @@ export default function AddWatermarkPage() {
                   Choose image
                 </button>
               )}
-              <input
+              <ToolHiddenFileInput
                 ref={imageInputRef}
-                type="file"
                 accept="image/png,image/jpeg,image/webp"
-                className="hidden"
+                ariaLabel="Choose watermark image"
                 onChange={(e) => setWatermarkImage(e.target.files?.[0] ?? null)}
               />
             </div>

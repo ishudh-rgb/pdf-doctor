@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrivacyGdprSections } from "@/components/marketing/privacy-gdpr-sections";
 import { LegalPageContent } from "@/components/marketing/legal-page-content";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy | Only4PDF",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Privacy Policy",
   description:
-    "Learn how Only4PDF handles your data, files, and personal information. Your privacy is our priority.",
-};
+    "Learn how OnlyMyPDF handles your data, files, and personal information. Your privacy is our priority.",
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (
-    <LegalPageContent title="Privacy Policy" lastUpdated="May 22, 2026">
+    <LegalPageContent title="Privacy Policy" lastUpdated="June 5, 2026">
+          <PrivacyGdprSections />
           <div className="space-y-10">
             <section>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -36,9 +40,9 @@ export default function PrivacyPage() {
                     full card details on our servers.
                   </li>
                   <li>
-                    <strong>Device Information:</strong> Browser type, operating
-                    system, IP address, and device identifiers for security and
-                    analytics purposes.
+                    <strong>Device identifiers:</strong> Browser type, operating
+                    system, and a <strong>hashed</strong> IP address (we do not store raw IP
+                    addresses in usage logs) for security and rate limiting.
                   </li>
                 </ul>
               </div>

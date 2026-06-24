@@ -5,6 +5,7 @@ import { Eraser, ImageIcon, PenTool, Redo2, Type, Undo2, Upload, X } from "lucid
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { canvasToPngDataUrl, trimCanvasToContent } from "@/lib/utils/canvas-trim";
+import { useFocusTrap } from "@/lib/a11y/use-focus-trap";
 
 type Tab = "draw" | "type" | "upload";
 type InkColor = "#000000" | "#2563eb" | "#dc2626";
@@ -40,8 +41,18 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const uploadRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useFocusTrap(true);
+  const titleId = "signature-create-modal-title";
 
   const title = kind === "signature" ? "Create signature" : "Create initials";
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   const pushHistory = useCallback(() => {
     const canvas = canvasRef.current;
@@ -196,14 +207,29 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+      role="presentation"
+    >
       <div
+        ref={dialogRef}
         className="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-pd-border px-5 py-4">
-          <h3 className="text-lg font-semibold text-pd-foreground">{title}</h3>
-          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-pd-muted hover:bg-pd-background">
+          <h3 id={titleId} className="text-lg font-semibold text-pd-foreground">
+            {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close signature dialog"
+            className="rounded-lg p-1.5 text-pd-muted hover:bg-pd-background"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -240,6 +266,7 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
                     key={c.value}
                     type="button"
                     title={c.label}
+                    aria-label={`Ink color ${c.label}`}
                     onClick={() => setInkColor(c.value)}
                     className={cn(
                       "h-7 w-7 rounded-full border-2 transition-transform",
@@ -274,6 +301,7 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
                     type="button"
                     disabled={historyIndex <= 0}
                     onClick={() => restoreHistory(historyIndex - 1)}
+                    aria-label="Undo"
                     className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
                   >
                     <Undo2 className="h-4 w-4" />
@@ -282,6 +310,7 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
                     type="button"
                     disabled={historyIndex >= drawHistory.length - 1}
                     onClick={() => restoreHistory(historyIndex + 1)}
+                    aria-label="Redo"
                     className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
                   >
                     <Redo2 className="h-4 w-4" />
@@ -360,7 +389,7 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
                   <p className="text-sm text-pd-muted">Click to upload an image</p>
                 </>
               )}
-              <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+              <input ref={uploadRef} type="file" accept="image/*" className="sr-only" onChange={handleUpload} aria-label="Upload signature image" />
             </div>
           )}
         </div>

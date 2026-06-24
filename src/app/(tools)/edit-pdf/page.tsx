@@ -80,14 +80,11 @@ export default function EditPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf,application/pdf"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
           {uploadError && <ToolErrorBanner message={uploadError} />}
           <p className="mt-4 text-center text-xs text-pd-muted">
             After upload you&apos;ll enter a full-screen editor with page thumbnails, toolbar, and

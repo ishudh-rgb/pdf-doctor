@@ -1,50 +1,53 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { getExpiredFiles, markFileDeleted, logError } from "@/lib/db/queries";
+import { getExpiredFiles, markFileDeleted, logError, purgeOldConsentRecords } from "@/lib/db/queries";
 
 const STORAGE_BUCKET = "pdf-files";
+const BATCH_SIZE = 200;
+const STORAGE_DELETE_CHUNK = 20;
 
 export async function cleanupExpiredFiles(): Promise<{
   deleted: number;
   failed: number;
+  batches: number;
 }> {
   let deleted = 0;
   let failed = 0;
+  let batches = 0;
 
   try {
-    const expiredFiles = await getExpiredFiles();
-
-    if (expiredFiles.length === 0) {
-      return { deleted: 0, failed: 0 };
-    }
-
     const supabase = await createServiceClient();
 
-    for (const file of expiredFiles) {
-      try {
-        const { error } = await supabase.storage
-          .from(STORAGE_BUCKET)
-          .remove([file.storage_path]);
+    while (true) {
+      const expiredFiles = await getExpiredFiles(BATCH_SIZE);
+      if (expiredFiles.length === 0) break;
 
-        if (error) {
-          console.error(
-            `Failed to delete file from storage: ${file.storage_path}`,
-            error.message
-          );
-          failed++;
-          continue;
+      batches += 1;
+
+      for (let i = 0; i < expiredFiles.length; i += STORAGE_DELETE_CHUNK) {
+        const chunk = expiredFiles.slice(i, i + STORAGE_DELETE_CHUNK);
+        const paths = chunk.map((f) => f.storage_path);
+
+        try {
+          const { error } = await supabase.storage.from(STORAGE_BUCKET).remove(paths);
+          if (error) {
+            failed += chunk.length;
+            continue;
+          }
+
+          await Promise.all(chunk.map((file) => markFileDeleted(file.id)));
+          deleted += chunk.length;
+        } catch (err) {
+          failed += chunk.length;
+          await logError({
+            tool_name: "cleanup",
+            error_type: "FILE_CLEANUP_CHUNK_FAILED",
+            error_message: err instanceof Error ? err.message : String(err),
+            metadata: { paths },
+          });
         }
-
-        await markFileDeleted(file.id);
-        deleted++;
-      } catch (err) {
-        failed++;
-        await logError({
-          tool_name: "cleanup",
-          error_type: "FILE_CLEANUP_FAILED",
-          error_message: err instanceof Error ? err.message : String(err),
-          metadata: { file_id: file.id, storage_path: file.storage_path },
-        });
       }
+
+      if (expiredFiles.length < BATCH_SIZE) break;
     }
   } catch (err) {
     await logError({
@@ -55,7 +58,20 @@ export async function cleanupExpiredFiles(): Promise<{
     });
   }
 
-  return { deleted, failed };
+  return { deleted, failed, batches };
+}
+
+export async function purgeExpiredConsentRecords(): Promise<number> {
+  try {
+    return await purgeOldConsentRecords(3);
+  } catch (err) {
+    await logError({
+      tool_name: "cleanup",
+      error_type: "CONSENT_PURGE_FAILED",
+      error_message: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
 }
 
 export async function getCleanupStats(): Promise<{

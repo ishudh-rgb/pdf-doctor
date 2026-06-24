@@ -2,12 +2,12 @@ import type { ToolSEO } from "@/types";
 
 export const TOOL_SEO: Record<string, ToolSEO> = {
   "merge-pdf": {
-    title: "Merge PDF — Combine Multiple PDFs into One | Only4PDF",
+    title: "Merge PDF — Combine Multiple PDFs into One | OnlyMyPDF",
     metaDescription:
       "Merge multiple PDF files into a single document online for free. Drag and drop to reorder pages. No signup required. Fast, secure, and easy to use.",
     h1: "Merge PDF Files Online — Free & Fast",
     seoContent:
-      "Combine two or more PDF files into a single document in seconds. Only4PDF's Merge PDF tool lets you drag and drop multiple files, reorder pages as needed, and download a perfectly combined PDF — all from your browser. No software to install, no registration required. Whether you're merging reports, contracts, or study notes, our tool accepts files of any size with zero quality loss.",
+      "Combine two or more PDF files into a single document in seconds. OnlyMyPDF's Merge PDF tool lets you drag and drop multiple files, reorder pages as needed, and download a perfectly combined PDF — all from your browser. No software to install, no registration required. Whether you're merging reports, contracts, or study notes, our tool accepts files of any size with zero quality loss.",
     faqs: [
       {
         question: "How do I merge PDF files?",
@@ -33,12 +33,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "split-pdf": {
-    title: "Split PDF — Extract Pages from PDF Online | Only4PDF",
+    title: "Split PDF — Extract Pages from PDF Online | OnlyMyPDF",
     metaDescription:
       "Split PDF files into individual pages or extract specific page ranges online for free. Fast, secure, and no signup required.",
     h1: "Split PDF — Extract Pages Instantly",
     seoContent:
-      "Need to extract specific pages from a large PDF? Only4PDF's Split PDF tool makes it easy. Upload your PDF, select the pages or page ranges you want, and download them as separate files. Perfect for extracting chapters from an e-book, pulling specific pages from a report, or breaking down large documents into manageable sections. Works entirely in your browser with no software needed.",
+      "Need to extract specific pages from a large PDF? OnlyMyPDF's Split PDF tool makes it easy. Upload your PDF, select the pages or page ranges you want, and download them as separate files. Perfect for extracting chapters from an e-book, pulling specific pages from a report, or breaking down large documents into manageable sections. Works entirely in your browser with no software needed.",
     faqs: [
       {
         question: "How do I split a PDF into separate pages?",
@@ -59,12 +59,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "compress-pdf": {
-    title: "Compress PDF — Reduce PDF File Size Online | Only4PDF",
+    title: "Compress PDF — Reduce PDF File Size Online | OnlyMyPDF",
     metaDescription:
       "Compress PDF files to reduce size without losing quality. Choose from multiple compression levels. Free, fast, and secure.",
     h1: "Compress PDF — Reduce File Size Instantly",
     seoContent:
-      "Reduce the size of your PDF files without sacrificing quality. Only4PDF's Compress PDF tool offers three compression levels — low, medium, and high — so you can find the perfect balance between file size and quality. Ideal for emailing large documents, uploading to portals with size limits, or saving storage space. Our intelligent compression algorithm preserves text clarity and image quality while significantly reducing file size.",
+      "Reduce the size of your PDF files without sacrificing quality. OnlyMyPDF's Compress PDF tool offers three compression levels — low, medium, and high — so you can find the perfect balance between file size and quality. Ideal for emailing large documents, uploading to portals with size limits, or saving storage space. Our intelligent compression algorithm preserves text clarity and image quality while significantly reducing file size.",
     faqs: [
       {
         question: "How much can I reduce my PDF file size?",
@@ -85,12 +85,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "pdf-to-word": {
-    title: "PDF to Word — Convert PDF to Editable DOCX Online | Only4PDF",
+    title: "PDF to Word — Convert PDF to Editable DOCX Online | OnlyMyPDF",
     metaDescription:
       "Convert PDF files to editable Word documents (.docx) online for free. Real text, tables, headings, and bullet lists you can edit.",
     h1: "Convert PDF to Word — Free Online Converter",
     seoContent:
-      "Transform your PDF documents into fully editable Word files (.docx). Only4PDF extracts real text, headings, bullet lists, and tables — so you can edit content in Microsoft Word, Google Docs, or LibreOffice. Layout and formatting are preserved as closely as possible.",
+      "Transform your PDF documents into fully editable Word files (.docx). OnlyMyPDF extracts real text, headings, bullet lists, and tables — so you can edit content in Microsoft Word, Google Docs, or LibreOffice. Layout and formatting are preserved as closely as possible.",
     faqs: [
       {
         question: "How accurate is the PDF to Word conversion?",
@@ -116,12 +116,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "word-to-pdf": {
-    title: "Word to PDF — Convert DOCX to PDF Online | Only4PDF",
+    title: "Word to PDF — Convert DOCX to PDF Online | OnlyMyPDF",
     metaDescription:
       "Convert Word documents (.doc, .docx) to PDF format online for free. Perfect formatting preservation. Fast and secure.",
     h1: "Convert Word to PDF — Free Online Tool",
     seoContent:
-      "Convert your Word documents to PDF format with perfect formatting preservation. Only4PDF's Word to PDF converter handles .doc and .docx files, maintaining all your fonts, images, tables, headers, and footers exactly as they appear in the original document. Ideal for sharing professional documents, submitting assignments, or creating print-ready files. The resulting PDF looks identical on every device and platform.",
+      "Convert your Word documents to PDF format with perfect formatting preservation. OnlyMyPDF's Word to PDF converter handles .doc and .docx files, maintaining all your fonts, images, tables, headers, and footers exactly as they appear in the original document. Ideal for sharing professional documents, submitting assignments, or creating print-ready files. The resulting PDF looks identical on every device and platform.",
     faqs: [
       {
         question: "Will the formatting be preserved in the PDF?",
@@ -142,12 +142,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "jpg-to-pdf": {
-    title: "JPG to PDF — Convert Images to PDF Online | Only4PDF",
+    title: "JPG to PDF — Convert Images to PDF Online | OnlyMyPDF",
     metaDescription:
       "Convert JPG, PNG, and other images to PDF format online for free. Combine multiple images into one PDF. Fast and easy.",
     h1: "Convert Images to PDF — JPG, PNG & More",
     seoContent:
-      "Convert your images to PDF format quickly and easily. Only4PDF's Image to PDF converter supports JPG, JPEG, PNG, WebP, and GIF formats. Upload multiple images and combine them into a single PDF document — perfect for creating photo albums, digitizing documents, or preparing image portfolios. Drag and drop to reorder images before conversion. Each image is placed on its own page with optimal sizing.",
+      "Convert your images to PDF format quickly and easily. OnlyMyPDF's Image to PDF converter supports JPG, JPEG, PNG, WebP, and GIF formats. Upload multiple images and combine them into a single PDF document — perfect for creating photo albums, digitizing documents, or preparing image portfolios. Drag and drop to reorder images before conversion. Each image is placed on its own page with optimal sizing.",
     faqs: [
       {
         question: "What image formats can I convert to PDF?",
@@ -173,12 +173,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "html-to-pdf": {
-    title: "HTML to PDF — Convert HTML Pages to PDF Online | Only4PDF",
+    title: "HTML to PDF — Convert HTML Pages to PDF Online | OnlyMyPDF",
     metaDescription:
       "Convert HTML files to pixel-perfect PDF documents online for free. Supports CSS, images, SVG, and complex layouts. Fast and accurate.",
     h1: "Convert HTML to PDF — Pixel Perfect Results",
     seoContent:
-      "Convert any HTML page to a professional PDF document with Only4PDF's HTML to PDF converter. Our tool renders your HTML exactly as a browser would — supporting full CSS (Flexbox, Grid, animations), embedded images, SVG graphics, web fonts, and complex layouts. Upload your .html, .htm, .xhtml, or .svg file and get a pixel-perfect PDF. Customize page size (A4, Letter, Auto), orientation (Portrait, Landscape), and margins. Perfect for converting web reports, dashboards, invoices, resumes, and documentation to PDF format.",
+      "Convert any HTML page to a professional PDF document with OnlyMyPDF's HTML to PDF converter. Our tool renders your HTML exactly as a browser would — supporting full CSS (Flexbox, Grid, animations), embedded images, SVG graphics, web fonts, and complex layouts. Upload your .html, .htm, .xhtml, or .svg file and get a pixel-perfect PDF. Customize page size (A4, Letter, Auto), orientation (Portrait, Landscape), and margins. Perfect for converting web reports, dashboards, invoices, resumes, and documentation to PDF format.",
     faqs: [
       {
         question: "What file types can I convert?",
@@ -204,12 +204,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "txt-to-pdf": {
-    title: "TXT to PDF — Convert Text Files to PDF Online | Only4PDF",
+    title: "TXT to PDF — Convert Text Files to PDF Online | OnlyMyPDF",
     metaDescription:
       "Convert TXT and other text files to professionally formatted PDF documents online for free. Choose fonts, sizes, and page layout. Fast and accurate.",
     h1: "Convert TXT to PDF — Professional Formatting",
     seoContent:
-      "Convert any text file to a cleanly formatted PDF document with Only4PDF's TXT to PDF converter. Supports TXT, LOG, CSV, MD, JSON, XML, YAML, INI, and other plain-text formats. Choose your preferred font (Helvetica, Courier, or Times), font size (9pt–16pt), page size (A4 or Letter), orientation, and margins. The converter intelligently wraps long lines, preserves blank lines and paragraph breaks, and produces a professional PDF that matches the original text structure. Perfect for converting code files, log files, configuration files, and plain text documents to shareable PDF format.",
+      "Convert any text file to a cleanly formatted PDF document with OnlyMyPDF's TXT to PDF converter. Supports TXT, LOG, CSV, MD, JSON, XML, YAML, INI, and other plain-text formats. Choose your preferred font (Helvetica, Courier, or Times), font size (9pt–16pt), page size (A4 or Letter), orientation, and margins. The converter intelligently wraps long lines, preserves blank lines and paragraph breaks, and produces a professional PDF that matches the original text structure. Perfect for converting code files, log files, configuration files, and plain text documents to shareable PDF format.",
     faqs: [
       {
         question: "What file types can I convert?",
@@ -236,12 +236,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
 
 
   "sign-pdf": {
-    title: "Sign PDF — Add Digital Signature to PDF Online | Only4PDF",
+    title: "Sign PDF — Add Digital Signature to PDF Online | OnlyMyPDF",
     metaDescription:
       "Add your signature to PDF documents online. Draw, type, or upload your signature. Secure and legally acceptable digital signatures.",
     h1: "Sign PDF Documents Online — Quick & Secure",
     seoContent:
-      "Sign your PDF documents digitally with Only4PDF. Create your signature by drawing with your mouse or touchscreen, typing your name in a signature font, or uploading an image of your handwritten signature. Place your signature anywhere on the document, resize it as needed, and download the signed PDF. Perfect for contracts, agreements, forms, and official documents. Our digital signatures are secure and widely accepted.",
+      "Sign your PDF documents digitally with OnlyMyPDF. Create your signature by drawing with your mouse or touchscreen, typing your name in a signature font, or uploading an image of your handwritten signature. Place your signature anywhere on the document, resize it as needed, and download the signed PDF. Perfect for contracts, agreements, forms, and official documents. Our digital signatures are secure and widely accepted.",
     faqs: [
       {
         question: "How can I create my signature?",
@@ -251,7 +251,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "Are digital signatures legally valid?",
         answer:
-          "Digital signatures created with Only4PDF are widely accepted for most business documents. For legally binding documents requiring certified digital signatures, you may need a certificate-based signature solution.",
+          "Digital signatures created with OnlyMyPDF are widely accepted for most business documents. For legally binding documents requiring certified digital signatures, you may need a certificate-based signature solution.",
       },
       {
         question: "Is the Sign PDF tool free?",
@@ -267,12 +267,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "ai-pdf-summarizer": {
-    title: "AI PDF Summarizer — Get Instant PDF Summary | Only4PDF",
+    title: "AI PDF Summarizer — Get Instant PDF Summary | OnlyMyPDF",
     metaDescription:
       "Use AI to summarize your PDF documents instantly. Get key points, summaries, and insights powered by advanced AI. Pro feature.",
     h1: "AI PDF Summarizer — Instant Summaries & Insights",
     seoContent:
-      "Let AI read your PDF and provide a concise summary in seconds. Only4PDF's AI PDF Summarizer uses advanced language models to extract key points, main ideas, and important details from your documents. Perfect for research papers, reports, legal documents, and lengthy articles. Get a structured summary with bullet points, main themes, and actionable insights. Available exclusively for Pro users with a login account.",
+      "Let AI read your PDF and provide a concise summary in seconds. OnlyMyPDF's AI PDF Summarizer uses advanced language models to extract key points, main ideas, and important details from your documents. Perfect for research papers, reports, legal documents, and lengthy articles. Get a structured summary with bullet points, main themes, and actionable insights. Available exclusively for Pro users with a login account.",
     faqs: [
       {
         question: "How does the AI PDF Summarizer work?",
@@ -303,12 +303,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "pdf-scanner": {
-    title: "PDF Scanner — Scan Documents to PDF Online | Only4PDF",
+    title: "PDF Scanner — Scan Documents to PDF Online | OnlyMyPDF",
     metaDescription:
       "Convert scanned images and photos of documents into clean, professional PDFs. Enhance contrast and readability automatically.",
     h1: "PDF Scanner — Turn Photos into Clean PDFs",
     seoContent:
-      "Transform photos of documents, receipts, whiteboards, and notes into clean, professional-looking PDFs. Only4PDF's PDF Scanner applies automatic image enhancement including contrast adjustment, perspective correction, and background cleanup to make your scanned documents look crisp and readable. Upload photos from your phone or computer and get a clean PDF in seconds. Perfect for digitizing paper documents on the go.",
+      "Transform photos of documents, receipts, whiteboards, and notes into clean, professional-looking PDFs. OnlyMyPDF's PDF Scanner applies automatic image enhancement including contrast adjustment, perspective correction, and background cleanup to make your scanned documents look crisp and readable. Upload photos from your phone or computer and get a clean PDF in seconds. Perfect for digitizing paper documents on the go.",
     faqs: [
       {
         question: "What types of images can I scan to PDF?",
@@ -329,12 +329,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "unlock-pdf": {
-    title: "Unlock PDF — Remove Password from PDF Online | Only4PDF",
+    title: "Unlock PDF — Remove Password from PDF Online | OnlyMyPDF",
     metaDescription:
       "Remove password protection from your PDF files online. You must know the password. Free, fast, and secure.",
     h1: "Unlock PDF — Remove Password Protection",
     seoContent:
-      "Remove password protection from your PDF files easily with Only4PDF. If you know the password to your protected PDF, our tool can remove the restriction so you can freely open, print, and edit the document without entering a password each time. This tool is designed for legitimate use — you must provide the correct password to unlock the document. Your files are processed securely and deleted automatically after processing.",
+      "Remove password protection from your PDF files easily with OnlyMyPDF. If you know the password to your protected PDF, our tool can remove the restriction so you can freely open, print, and edit the document without entering a password each time. This tool is designed for legitimate use — you must provide the correct password to unlock the document. Your files are processed securely and deleted automatically after processing.",
     faqs: [
       {
         question: "Can I unlock a PDF without the password?",
@@ -355,12 +355,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "protect-pdf": {
-    title: "Protect PDF — Add Password to PDF Online | Only4PDF",
+    title: "Protect PDF — Add Password to PDF Online | OnlyMyPDF",
     metaDescription:
       "Add password protection to your PDF files online. Set open and permission passwords. Secure your sensitive documents for free.",
     h1: "Protect PDF — Add Password & Encrypt",
     seoContent:
-      "Secure your sensitive PDF documents with password protection using Only4PDF. Set a password that recipients must enter to open the document, and optionally set permissions to control whether the document can be printed, edited, or copied. Our tool uses strong AES-256 encryption to ensure your documents are genuinely secure. Perfect for confidential reports, financial documents, legal files, and any sensitive information you need to share safely.",
+      "Secure your sensitive PDF documents with password protection using OnlyMyPDF. Set a password that recipients must enter to open the document, and optionally set permissions to control whether the document can be printed, edited, or copied. Our tool uses strong AES-256 encryption to ensure your documents are genuinely secure. Perfect for confidential reports, financial documents, legal files, and any sensitive information you need to share safely.",
     faqs: [
       {
         question: "What type of encryption is used?",
@@ -386,12 +386,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "pdf-to-excel": {
-    title: "PDF to Excel — Convert PDF to XLSX Spreadsheet Online | Only4PDF",
+    title: "PDF to Excel — Convert PDF to XLSX Spreadsheet Online | OnlyMyPDF",
     metaDescription:
       "Convert PDF files to Excel spreadsheets (.xlsx) online for free. Extract text and tables from PDF into editable Excel format.",
     h1: "Convert PDF to Excel — Free Online Tool",
     seoContent:
-      "Extract text and tabular data from your PDF documents into editable Excel spreadsheets (.xlsx). Only4PDF's PDF to Excel converter parses text-based PDFs and organizes content into rows and columns. Best for reports, invoices, and data tables. Scanned PDFs without selectable text may need OCR first.",
+      "Extract text and tabular data from your PDF documents into editable Excel spreadsheets (.xlsx). OnlyMyPDF's PDF to Excel converter parses text-based PDFs and organizes content into rows and columns. Best for reports, invoices, and data tables. Scanned PDFs without selectable text may need OCR first.",
     faqs: [
       {
         question: "Will tables be preserved in Excel?",
@@ -407,12 +407,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "excel-to-pdf": {
-    title: "Excel to PDF — Convert XLSX to PDF Online | Only4PDF",
+    title: "Excel to PDF — Convert XLSX to PDF Online | OnlyMyPDF",
     metaDescription:
       "Convert Excel spreadsheets (.xls, .xlsx) to PDF format online for free. Preserves worksheet data in a printable PDF.",
     h1: "Convert Excel to PDF — Free Online Converter",
     seoContent:
-      "Convert your Excel spreadsheets to PDF documents ready for sharing and printing. Only4PDF renders each worksheet as a formatted table in the PDF. Supports .xls and .xlsx files with multiple sheets.",
+      "Convert your Excel spreadsheets to PDF documents ready for sharing and printing. OnlyMyPDF renders each worksheet as a formatted table in the PDF. Supports .xls and .xlsx files with multiple sheets.",
     faqs: [
       {
         question: "Are all worksheets included?",
@@ -426,7 +426,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "pdf-to-ppt": {
-    title: "PDF to PowerPoint — Convert PDF to PPTX Online | Only4PDF",
+    title: "PDF to PowerPoint — Convert PDF to PPTX Online | OnlyMyPDF",
     metaDescription:
       "Convert PDF files to PowerPoint presentations (.pptx) online for free. Turn PDF pages into editable slides.",
     h1: "Convert PDF to PowerPoint — Free Online Tool",
@@ -446,12 +446,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "ppt-to-pdf": {
-    title: "PowerPoint to PDF — Convert PPTX to PDF Online | Only4PDF",
+    title: "PowerPoint to PDF — Convert PPTX to PDF Online | OnlyMyPDF",
     metaDescription:
       "Convert PowerPoint presentations (.ppt, .pptx) to PDF format online for free. Share slides as a single PDF document.",
     h1: "Convert PowerPoint to PDF — Free Online Converter",
     seoContent:
-      "Convert PowerPoint presentations to PDF for easy sharing and printing. Only4PDF extracts slide content and renders it as a clean PDF document. Supports .ppt and .pptx formats.",
+      "Convert PowerPoint presentations to PDF for easy sharing and printing. OnlyMyPDF extracts slide content and renders it as a clean PDF document. Supports .ppt and .pptx formats.",
     faqs: [
       {
         question: "Will slide designs be preserved exactly?",
@@ -466,7 +466,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
   },
 
   "add-watermark": {
-    title: "Add Watermark to PDF — Text & Image Watermarks Online | Only4PDF",
+    title: "Add Watermark to PDF — Text & Image Watermarks Online | OnlyMyPDF",
     metaDescription:
       "Add text or image watermarks to PDF files online for free. Customize opacity, rotation, and font size.",
     h1: "Add Watermark to PDF — Free Online Tool",
@@ -484,12 +484,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
     ],
   },
   "rotate-pdf": {
-    title: "Rotate PDF — Rotate Pages Online Free | Only4PDF",
+    title: "Rotate PDF — Rotate Pages Online Free | OnlyMyPDF",
     metaDescription:
       "Rotate PDF pages online for free. Rotate individual pages or all pages at once — 90°, 180°, or 270°. Add pages from other PDFs. No signup required.",
     h1: "Rotate PDF Pages Online — Free & Visual",
     seoContent:
-      "Rotate PDF pages with a visual drag-and-drop workspace. Only4PDF's Rotate PDF tool lets you preview every page, rotate individual pages or select multiple pages to rotate at once. Add blank pages or insert pages from other PDFs between existing pages. Download the result instantly — no signup, no watermarks, no quality loss.",
+      "Rotate PDF pages with a visual drag-and-drop workspace. OnlyMyPDF's Rotate PDF tool lets you preview every page, rotate individual pages or select multiple pages to rotate at once. Add blank pages or insert pages from other PDFs between existing pages. Download the result instantly — no signup, no watermarks, no quality loss.",
     faqs: [
       {
         question: "How do I rotate a single page in a PDF?",
@@ -514,12 +514,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
     ],
   },
   "delete-pdf": {
-    title: "Delete PDF Pages — Remove Pages Online Free | Only4PDF",
+    title: "Delete PDF Pages — Remove Pages Online Free | OnlyMyPDF",
     metaDescription:
       "Delete pages from your PDF online for free. Remove individual pages or multiple pages at once. Add pages from other PDFs. No signup required.",
     h1: "Delete PDF Pages Online — Free & Visual",
     seoContent:
-      "Remove unwanted pages from your PDF with a visual workspace. Only4PDF's Delete PDF Pages tool lets you preview every page, delete individual pages with one click, or select multiple pages to remove at once. You can also add blank pages or insert pages from other PDFs. Download the result instantly — no signup, no watermarks, no quality loss.",
+      "Remove unwanted pages from your PDF with a visual workspace. OnlyMyPDF's Delete PDF Pages tool lets you preview every page, delete individual pages with one click, or select multiple pages to remove at once. You can also add blank pages or insert pages from other PDFs. Download the result instantly — no signup, no watermarks, no quality loss.",
     faqs: [
       {
         question: "How do I delete a single page from a PDF?",
@@ -544,12 +544,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
     ],
   },
   "extract-pdf": {
-    title: "Extract PDF Pages — Extract Pages Online Free | Only4PDF",
+    title: "Extract PDF Pages — Extract Pages Online Free | OnlyMyPDF",
     metaDescription:
       "Extract specific pages from your PDF online for free. Select the pages you need, click Finish, and download a new PDF with only those pages. No signup required.",
     h1: "Extract PDF Pages Online — Free & Visual",
     seoContent:
-      "Extract pages from any PDF with a visual workspace. Only4PDF's Extract Pages tool lets you preview every page, select the ones you need, and create a new PDF with just those pages. You can also add pages from other PDFs or insert blank pages. Download instantly — no signup, no watermarks, no quality loss.",
+      "Extract pages from any PDF with a visual workspace. OnlyMyPDF's Extract Pages tool lets you preview every page, select the ones you need, and create a new PDF with just those pages. You can also add pages from other PDFs or insert blank pages. Download instantly — no signup, no watermarks, no quality loss.",
     faqs: [
       {
         question: "How do I extract specific pages from a PDF?",
@@ -570,6 +570,31 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
         question: "Can I add pages from another PDF before extracting?",
         answer:
           "Yes! Click the + button between any two pages to add documents from another PDF or insert a blank page, then select from all available pages.",
+      },
+    ],
+  },
+  "edit-pdf": {
+    title: "Edit PDF — Add Text & Images Online Free | OnlyMyPDF",
+    metaDescription:
+      "Edit PDF files online for free. Add text, insert images, and reposition elements in a visual editor. No signup required for basic edits.",
+    h1: "Edit PDF Online — Add Text & Images Free",
+    seoContent:
+      "Edit your PDF documents directly in the browser with OnlyMyPDF's visual editor. Add text anywhere on any page, insert images, drag to reposition elements, and download the updated PDF — no desktop software required. Perfect for filling forms, annotating documents, or making quick corrections.",
+    faqs: [
+      {
+        question: "What types of edits can I make to a PDF?",
+        answer:
+          "Add text anywhere on any page, insert images, drag to reposition, and export — all in a visual editor like professional PDF tools.",
+      },
+      {
+        question: "Will editing affect the original PDF quality?",
+        answer:
+          "No. Additions are layered on top of your existing content without re-compressing the underlying document.",
+      },
+      {
+        question: "Is there a page or file size limit?",
+        answer:
+          "There is no file size limit. Edit PDFs of any size with no page restrictions.",
       },
     ],
   },

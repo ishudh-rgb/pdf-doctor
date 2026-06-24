@@ -46,7 +46,11 @@ async function renderPageWithPdfJs(doc: PdfDoc, pageNum: number): Promise<string
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas 2D context unavailable");
 
-    await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+    await page.render({
+      canvasContext: ctx as unknown as CanvasRenderingContext2D,
+      viewport,
+      canvas: canvas as unknown as HTMLCanvasElement,
+    }).promise;
     const jpeg = await canvas.encode("jpeg", JPEG_QUALITY);
     return `data:image/jpeg;base64,${jpeg.toString("base64")}`;
   } finally {

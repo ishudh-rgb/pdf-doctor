@@ -27,6 +27,7 @@ const TOOL_SLUG_LABELS: Record<string, string> = {
   "txt-to-pdf": "TXT to PDF",
   "add-watermark": "Add Watermark",
   "pdf-scanner": "PDF Scanner",
+  "edit-pdf": "Edit PDF",
   "ai-pdf-summarizer": "AI PDF Summarizer",
 };
 

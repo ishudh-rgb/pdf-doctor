@@ -73,13 +73,22 @@ This downloads all required packages. Wait until it finishes (may take 2-5 minut
    - **anon public key** → This is your `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - **service_role secret key** → This is your `SUPABASE_SERVICE_ROLE_KEY`
 
-### 4.4 Run Database Migration
+### 4.4 Run Database Migrations
+
+Run **all** SQL migrations in order (new projects and upgrades):
+
 1. Go to SQL Editor in your Supabase dashboard
 2. Click "New query"
-3. Copy the ENTIRE content of `supabase/migrations/001_initial_schema.sql`
-4. Paste it in the SQL editor
-5. Click "Run"
-6. You should see "Success" message
+3. Run each file in `supabase/migrations/` **in numeric order**:
+   - `001_initial_schema.sql`
+   - `002_security_hardening.sql`
+   - `003_security_rls_payments.sql`
+   - `004_security_rls_admin_tables.sql`
+   - `005_scalability_privacy.sql`
+4. Paste the full file contents, click **Run**, confirm **Success** before the next file
+
+For day-to-day operations (health checks, cron, CI, backups), see `docs/OPERATIONS.md`.  
+For production env vars, see `docs/PRODUCTION_CHECKLIST.md`.
 
 ### 4.5 Set Up Storage Bucket
 1. Go to Storage in Supabase dashboard

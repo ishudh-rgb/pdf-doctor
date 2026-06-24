@@ -43,9 +43,10 @@ function ToolBtn({
     <button
       type="button"
       title={title}
+      aria-label={title}
       onClick={onClick}
       className={cn(
-        "relative flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm transition-colors",
+        "relative flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pd-brand",
         active
           ? "bg-pd-brand text-white shadow-sm"
           : "text-pd-muted hover:bg-pd-background hover:text-pd-foreground"

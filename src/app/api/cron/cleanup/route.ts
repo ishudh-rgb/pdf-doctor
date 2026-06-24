@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cleanupExpiredFiles } from "@/lib/services/cleanup.service";
+import { cleanupExpiredFiles, purgeExpiredConsentRecords } from "@/lib/services/cleanup.service";
+import { isCronAuthorized } from "@/lib/ops/cron-auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    const isAuthorized = authHeader === `Bearer ${cronSecret}`;
-
-    if (!cronSecret || !isAuthorized) {
+    if (
+      !isCronAuthorized(
+        request.headers.get("authorization"),
+        request.nextUrl.searchParams.get("secret"),
+        request.headers.get("x-vercel-cron"),
+        process.env.CRON_SECRET
+      )
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const result = await cleanupExpiredFiles();
+    const consentPurged = await purgeExpiredConsentRecords();
 
     return NextResponse.json({
       deleted: result.deleted,
       failed: result.failed,
+      batches: result.batches,
+      consent_records_purged: consentPurged,
       cleaned_at: new Date().toISOString(),
     });
   } catch (err) {

@@ -31,6 +31,7 @@ const companyLinks = [
   { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
   { name: "Privacy Policy", href: "/privacy" },
+  { name: "Cookie Policy", href: "/cookies" },
   { name: "Terms of Service", href: "/terms" },
   { name: "FAQ", href: "/faq" },
   { name: "Pricing", href: "/pricing" },
@@ -77,7 +78,7 @@ export function Footer() {
           </div>
 
           {/* Tools column */}
-          <div className="lg:col-span-3">
+          <nav className="lg:col-span-3" aria-label="PDF tools">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
               PDF Tools
@@ -96,10 +97,10 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Company column */}
-          <div className="lg:col-span-2">
+          <nav className="lg:col-span-2" aria-label="Company">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-violet-500 to-purple-500" />
               Company
@@ -117,7 +118,7 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Language + Newsletter column */}
           <div className="lg:col-span-3">
@@ -144,7 +145,7 @@ export function Footer() {
 
             {/* Quick stats */}
             <div className="mt-6 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Why Only4PDF?</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Why OnlyMyPDF?</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-lg font-extrabold text-blue-600">12+</p>

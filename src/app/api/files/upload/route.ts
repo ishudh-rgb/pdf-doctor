@@ -4,6 +4,7 @@ import { uploadFile, validateFile } from "@/lib/services/upload.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { createUploadedFileRecord, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
+import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { generateSecureFilename } from "@/lib/utils/file";
 import { validateBufferMagic } from "@/lib/utils/file-magic";
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
       : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
     const maxSizeMB = sizeResult.maxSizeMB;
 
-    const sessionId = request.headers.get("x-session-id")?.trim() || null;
+    const sessionId = userId ? null : getGuestSessionIdFromRequest(request);
 
     const usageResult = await checkUsageLimit(userId, getGuestUsageKey(request), "file-upload");
     if (!usageResult.allowed) {

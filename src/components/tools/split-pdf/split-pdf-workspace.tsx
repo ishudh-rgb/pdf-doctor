@@ -19,7 +19,7 @@ import {
   splitAfterFromEachPage,
   splitAfterFromEveryN,
 } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { ExtractToolbar } from "@/components/tools/split-pdf/extract-toolbar";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
@@ -578,11 +578,10 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         />
       )}
 
-      <input
+      <ToolHiddenFileInput
         ref={insertFileRef}
-        type="file"
         accept=".pdf,application/pdf"
-        className="hidden"
+        ariaLabel="Insert PDF documents"
         onChange={handleInsertDocuments}
       />
 

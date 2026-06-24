@@ -11,6 +11,7 @@ import {
   Shield,
   LogOut,
   Crown,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuthContext } from "@/components/providers/auth-provider";
@@ -19,6 +20,7 @@ import { useTranslation } from "@/i18n";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard.overview" },
   { href: "/dashboard/files", icon: FolderOpen, labelKey: "dashboard.myFiles" },
+  { href: "/dashboard/settings", icon: Settings, labelKey: "dashboard.privacySettings" },
   { href: "/#tools", icon: Wrench, labelKey: "dashboard.browseTools" },
   { href: "/dashboard/pricing", icon: CreditCard, labelKey: "nav.pricing" },
   { href: "/contact", icon: HelpCircle, labelKey: "dashboard.helpSupport" },
@@ -55,7 +57,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {/* Sidebar — desktop */}
         <aside className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-[calc(var(--pd-header-height)+1.5rem)] space-y-4">
-            <nav className="rounded-2xl border border-pd-border/80 bg-pd-surface/90 p-2 shadow-sm backdrop-blur-sm">
+            <nav className="rounded-2xl border border-pd-border/80 bg-pd-surface/90 p-2 shadow-sm backdrop-blur-sm" aria-label="Dashboard navigation">
               <ul className="space-y-0.5">
                 {navItems.map(({ href, icon: Icon, labelKey }) => {
                   const active =
@@ -136,7 +138,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Main */}
-        <main className="min-w-0 flex-1">{children}</main>
+        <div className="min-w-0 flex-1" role="region" aria-label="Dashboard content">
+          {children}
+        </div>
       </div>
     </div>
   );

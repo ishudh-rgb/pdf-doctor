@@ -133,14 +133,11 @@ export default function UnlockPdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
+            fileInputRef={fileInputRef}
+            fileInputAccept=".pdf"
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
+          
 
           {files.length > 0 && (
             <>
@@ -153,9 +150,10 @@ export default function UnlockPdfPage() {
               </div>
 
               <div className="mt-3">
-                <label className="mb-2 block text-sm font-semibold text-pd-foreground">PDF Password</label>
+                <label htmlFor="unlock-pdf-password" className="mb-2 block text-sm font-semibold text-pd-foreground">PDF Password</label>
                 <div className="relative">
                   <input
+                    id="unlock-pdf-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -165,6 +163,7 @@ export default function UnlockPdfPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-pd-muted transition-colors hover:text-pd-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

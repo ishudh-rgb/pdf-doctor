@@ -128,21 +128,45 @@ export async function createUploadedFile(data: {
   mime_type: string;
   file_size_bytes: number;
   file_type?: "input" | "output";
+  expires_at?: string;
 }) {
   const supabase = await createServiceClient();
+
+  let expiresAt = data.expires_at;
+  if (!expiresAt && data.user_id) {
+    const { computeFileExpiresAt, fileRetentionHoursForPlan } = await import(
+      "@/lib/privacy/retention"
+    );
+    try {
+      const profile = await getUserProfile(data.user_id);
+      const hours = fileRetentionHoursForPlan(
+        (profile as { plan?: string }).plan ?? "free"
+      );
+      expiresAt = computeFileExpiresAt(hours);
+    } catch {
+      const { computeFileExpiresAt, fileRetentionHoursForPlan } = await import(
+        "@/lib/privacy/retention"
+      );
+      expiresAt = computeFileExpiresAt(fileRetentionHoursForPlan("free"));
+    }
+  }
+
+  const row: Record<string, unknown> = {
+    user_id: data.user_id ?? null,
+    guest_session_id: data.guest_session_id ?? null,
+    job_id: data.job_id ?? null,
+    original_name: data.original_name,
+    stored_name: data.stored_name,
+    storage_path: data.storage_path,
+    mime_type: data.mime_type,
+    file_size_bytes: data.file_size_bytes,
+    file_type: data.file_type ?? "input",
+  };
+  if (expiresAt) row.expires_at = expiresAt;
+
   const { data: file, error } = await supabase
     .from("uploaded_files")
-    .insert({
-      user_id: data.user_id ?? null,
-      guest_session_id: data.guest_session_id ?? null,
-      job_id: data.job_id ?? null,
-      original_name: data.original_name,
-      stored_name: data.stored_name,
-      storage_path: data.storage_path,
-      mime_type: data.mime_type,
-      file_size_bytes: data.file_size_bytes,
-      file_type: data.file_type ?? "input",
-    })
+    .insert(row)
     .select()
     .single();
 
@@ -172,13 +196,15 @@ export async function markFileDeleted(fileId: string) {
   if (error) throw error;
 }
 
-export async function getExpiredFiles() {
+export async function getExpiredFiles(limit = 200) {
   const supabase = await createServiceClient();
   const { data, error } = await supabase
     .from("uploaded_files")
     .select("*")
     .eq("is_deleted", false)
-    .lt("expires_at", new Date().toISOString());
+    .lt("expires_at", new Date().toISOString())
+    .order("expires_at", { ascending: true })
+    .limit(limit);
 
   if (error) throw error;
   return data ?? [];
@@ -574,6 +600,68 @@ export const logToolUsage = async (data: {
 export const createUploadedFileRecord = createUploadedFile;
 export const getUploadedFileById = getUploadedFile;
 export const deleteUploadedFileRecord = markFileDeleted;
+
+export async function logConsentRecord(data: {
+  user_id?: string | null;
+  guest_session_id?: string | null;
+  consent_version: string;
+  essential: boolean;
+  analytics: boolean;
+  marketing: boolean;
+  ip_hash?: string | null;
+  user_agent?: string | null;
+}) {
+  if (!isSupabaseConfigured()) return;
+
+  const supabase = await createServiceClient();
+  const { error } = await supabase.from("consent_records").insert({
+    user_id: data.user_id ?? null,
+    guest_session_id: data.guest_session_id ?? null,
+    consent_version: data.consent_version,
+    essential: data.essential,
+    analytics: data.analytics,
+    marketing: data.marketing,
+    ip_hash: data.ip_hash ?? null,
+    user_agent: data.user_agent ?? null,
+  });
+
+  if (error) console.error("consent_records insert failed:", error.message);
+}
+
+export async function purgeOldConsentRecords(retentionYears = 3): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+
+  const supabase = await createServiceClient();
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - retentionYears);
+
+  const { data, error } = await supabase
+    .from("consent_records")
+    .delete()
+    .lt("created_at", cutoff.toISOString())
+    .select("id");
+
+  if (error) {
+    console.error("consent_records purge failed:", error.message);
+    return 0;
+  }
+
+  return data?.length ?? 0;
+}
+
+export async function getUserUploadedFilePaths(userId: string): Promise<
+  { id: string; storage_path: string }[]
+> {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("uploaded_files")
+    .select("id, storage_path")
+    .eq("user_id", userId)
+    .eq("is_deleted", false);
+
+  if (error) throw error;
+  return data ?? [];
+}
 
 export async function logError(data: {
   user_id?: string | null;

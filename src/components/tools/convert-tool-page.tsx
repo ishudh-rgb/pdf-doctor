@@ -195,13 +195,9 @@ export function ConvertToolPage({
             onChooseFiles={() => fileInputRef.current?.click()}
             onCloudFiles={(incoming) => handleFiles(incoming)}
             onCloudError={setError}
-          />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={accept}
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
+            fileInputRef={fileInputRef}
+            fileInputAccept={accept}
+            onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
 
           {file && (

@@ -208,6 +208,18 @@ export interface FAQ {
   answer: string;
 }
 
+export interface HowToStep {
+  name: string;
+  text: string;
+}
+
+export interface ToolAeo {
+  shortAnswer: string;
+  definition: string;
+  howToSteps: HowToStep[];
+  keyFacts: string[];
+}
+
 export interface ToolSEO {
   title: string;
   metaDescription: string;

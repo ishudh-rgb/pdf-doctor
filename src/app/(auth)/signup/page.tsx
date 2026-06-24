@@ -90,7 +90,7 @@ export default function SignupPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
           {error}
         </div>
       )}
@@ -212,19 +212,6 @@ export default function SignupPage() {
           {t("auth.signupButton")}
         </Button>
       </form>
-
-      <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-pd-border" />
-        <span className="text-xs text-pd-muted">{t("auth.orContinueWith")}</span>
-        <div className="h-px flex-1 bg-pd-border" />
-      </div>
-
-      <button
-        type="button"
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-pd-border bg-pd-surface px-4 py-2.5 text-sm font-medium text-pd-foreground transition hover:bg-pd-background"
-      >
-        {t("auth.google")}
-      </button>
 
       <p className="mt-6 text-center text-sm text-pd-muted">
         {t("auth.hasAccount")}{" "}

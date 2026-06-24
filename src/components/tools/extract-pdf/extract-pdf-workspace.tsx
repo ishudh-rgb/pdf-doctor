@@ -11,7 +11,7 @@ import {
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
-import { ToolErrorBanner } from "@/components/tools/tool-ui";
+import { ToolErrorBanner, ToolHiddenFileInput } from "@/components/tools/tool-ui";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { runClientOrServerPdfExport } from "@/lib/pdf/client-pdf-export";
 import { extractPagesInBrowser } from "@/lib/pdf/pdf-browser";
@@ -442,11 +442,10 @@ export function ExtractPdfWorkspace({
         />
       )}
 
-      <input
+      <ToolHiddenFileInput
         ref={insertFileRef}
-        type="file"
         accept=".pdf,application/pdf"
-        className="hidden"
+        ariaLabel="Insert PDF documents"
         onChange={handleInsertDocuments}
       />
 
