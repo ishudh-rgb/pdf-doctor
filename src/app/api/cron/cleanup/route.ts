@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cleanupExpiredFiles, purgeExpiredConsentRecords } from "@/lib/services/cleanup.service";
+import {
+  cleanupExpiredFiles,
+  purgeExpiredConsentRecords,
+  purgeOldUsageLogs,
+} from "@/lib/services/cleanup.service";
 import { isCronAuthorized } from "@/lib/ops/cron-auth";
 
 export async function GET(request: NextRequest) {
@@ -7,7 +11,6 @@ export async function GET(request: NextRequest) {
     if (
       !isCronAuthorized(
         request.headers.get("authorization"),
-        request.nextUrl.searchParams.get("secret"),
         request.headers.get("x-vercel-cron"),
         process.env.CRON_SECRET
       )
@@ -17,12 +20,14 @@ export async function GET(request: NextRequest) {
 
     const result = await cleanupExpiredFiles();
     const consentPurged = await purgeExpiredConsentRecords();
+    const usageLogsPurged = await purgeOldUsageLogs();
 
     return NextResponse.json({
       deleted: result.deleted,
       failed: result.failed,
       batches: result.batches,
       consent_records_purged: consentPurged,
+      usage_logs_purged: usageLogsPurged,
       cleaned_at: new Date().toISOString(),
     });
   } catch (err) {

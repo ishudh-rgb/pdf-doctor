@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from "@/config/constants";
+
 interface ContactEmailPayload {
   name: string;
   email: string;
@@ -16,7 +18,7 @@ export async function sendContactEmail(
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.EMAIL_FROM || "OnlyMyPDF <onboarding@resend.dev>";
   const toEmail =
-    process.env.CONTACT_INBOX_EMAIL || process.env.ADMIN_EMAIL || "support@onlymypdf.in";
+    process.env.CONTACT_INBOX_EMAIL || process.env.ADMIN_EMAIL || SUPPORT_EMAIL;
 
   const safeName = payload.name.trim().slice(0, 120);
   const safeSubject = payload.subject.trim().slice(0, 200);

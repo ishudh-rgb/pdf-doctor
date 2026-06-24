@@ -1,19 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { isProductionReady } from "@/lib/config/env-security";
 import { getCleanupStats } from "@/lib/services/cleanup.service";
+import { isHealthDetailAuthorized } from "@/lib/ops/health-auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+function isUpstashConfigured(): boolean {
+  return Boolean(
+    process.env.UPSTASH_REDIS_REST_URL?.trim() &&
+      process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+  );
+}
+
+export async function GET(request: NextRequest) {
+  const detailed = isHealthDetailAuthorized(request);
+
+  if (!detailed) {
+    return NextResponse.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   const checks: Record<string, { ok: boolean; detail?: string }> = {
     app: { ok: true },
     secrets: { ok: isProductionReady() },
     upstash: {
-      ok: Boolean(
-        process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-      ),
-      detail: "Recommended for distributed rate limits in production",
+      ok: isUpstashConfigured(),
+      detail: "Required for distributed rate limits in production",
     },
   };
 
@@ -45,10 +60,12 @@ export async function GET() {
     checks.database = { ok: false, detail: "Supabase not configured" };
   }
 
+  const isProd = process.env.NODE_ENV === "production";
   const allCriticalOk =
     checks.app.ok &&
     checks.secrets.ok &&
-    (checks.database?.ok ?? false);
+    (checks.database?.ok ?? false) &&
+    (!isProd || checks.upstash.ok);
 
   const status = allCriticalOk ? 200 : 503;
 

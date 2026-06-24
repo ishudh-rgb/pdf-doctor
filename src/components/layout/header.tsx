@@ -256,7 +256,17 @@ export function Header() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [mobileOpen]);
 
+  React.useEffect(() => {
+    if (!megaMenuOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMegaMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [megaMenuOpen]);
+
   const mobileMenuRef = useFocusTrap(mobileOpen);
+  const megaMenuTrapRef = useFocusTrap(megaMenuOpen);
 
   return (
     <header className="pd-site-header sticky top-0 z-40 w-full bg-pd-surface">
@@ -300,6 +310,7 @@ export function Header() {
 
             {megaMenuOpen && (
               <div
+                ref={megaMenuTrapRef}
                 id="mega-menu-panel"
                 role="region"
                 aria-label="All PDF tools"

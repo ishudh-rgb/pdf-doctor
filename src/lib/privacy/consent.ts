@@ -1,4 +1,5 @@
 export const CONSENT_VERSION = "1.0";
+export const TERMS_CONSENT_VERSION = "tos-1.0";
 export const CONSENT_STORAGE_KEY = "onlymypdf_cookie_consent";
 
 export type CookieConsentState = {

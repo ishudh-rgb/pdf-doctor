@@ -9,7 +9,7 @@ import {
 } from "@/lib/db/queries";
 import { deleteFile } from "@/lib/services/upload.service";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
-import { toSafeApiError } from "@/lib/server/safe-error";
+import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
 
 export async function DELETE(request: NextRequest) {
   const rateLimited = await guardGeneralApiRateLimit(request);
@@ -48,9 +48,11 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Your account and associated data have been deleted.",
+      message:
+        "Your account and personal data have been deleted. Anonymized billing records may be retained as required by law.",
     });
   } catch (error) {
+    captureApiError(error, { route: "user/account", method: "DELETE" });
     const message = toSafeApiError(error, "Failed to delete account");
     return NextResponse.json({ error: message }, { status: 500 });
   }
@@ -121,6 +123,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    captureApiError(error, { route: "user/account", method: "GET" });
     const message = toSafeApiError(error, "Failed to export data");
     return NextResponse.json({ error: message }, { status: 500 });
   }

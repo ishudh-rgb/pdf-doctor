@@ -15,7 +15,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { FooterLogo } from "@/components/common/logo";
-import { APP_NAME } from "@/config/constants";
+import { APP_NAME, SUPPORT_EMAIL } from "@/config/constants";
 
 const toolLinks = [
   { name: "Compress PDF", href: "/compress-pdf", icon: Minimize2, color: "text-orange-500" },
@@ -68,7 +68,7 @@ export function Footer() {
             <div className="mt-4 flex flex-col gap-2">
               <div className="flex items-center gap-2 text-[12px] text-gray-400">
                 <Mail className="h-3.5 w-3.5" />
-                <span>support@only4pdf.in</span>
+                <span>{SUPPORT_EMAIL}</span>
               </div>
               <div className="flex items-center gap-2 text-[12px] text-gray-400">
                 <MapPin className="h-3.5 w-3.5" />

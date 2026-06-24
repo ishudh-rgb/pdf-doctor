@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PrivacyGdprSections } from "@/components/marketing/privacy-gdpr-sections";
 import { LegalPageContent } from "@/components/marketing/legal-page-content";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { SUPPORT_EMAIL } from "@/config/constants";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Privacy Policy",
@@ -199,10 +200,10 @@ export default function PrivacyPage() {
                 <p>
                   To exercise any of these rights, please contact us at{" "}
                   <a
-                    href="mailto:support@only4pdf.com"
+                    href={`mailto:${SUPPORT_EMAIL}`}
                     className="text-blue-600 hover:underline"
                   >
-                    support@only4pdf.com
+                    {SUPPORT_EMAIL}
                   </a>
                   .
                 </p>
@@ -255,16 +256,16 @@ export default function PrivacyPage() {
                   <li>
                     Email:{" "}
                     <a
-                      href="mailto:support@only4pdf.com"
+                      href={`mailto:${SUPPORT_EMAIL}`}
                       className="text-blue-600 hover:underline"
                     >
-                      support@only4pdf.com
+                      {SUPPORT_EMAIL}
                     </a>
                   </li>
                   <li>
                     Contact Page:{" "}
                     <Link href="/contact" className="text-blue-600 hover:underline">
-                      only4pdf.com/contact
+                      Contact us
                     </Link>
                   </li>
                 </ul>

@@ -649,6 +649,27 @@ export async function purgeOldConsentRecords(retentionYears = 3): Promise<number
   return data?.length ?? 0;
 }
 
+export async function purgeOldUsageLogs(retentionDays = 90): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+
+  const supabase = await createServiceClient();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - retentionDays);
+
+  const { data, error } = await supabase
+    .from("usage_logs")
+    .delete()
+    .lt("created_at", cutoff.toISOString())
+    .select("id");
+
+  if (error) {
+    console.error("usage_logs purge failed:", error.message);
+    return 0;
+  }
+
+  return data?.length ?? 0;
+}
+
 export async function getUserUploadedFilePaths(userId: string): Promise<
   { id: string; storage_path: string }[]
 > {

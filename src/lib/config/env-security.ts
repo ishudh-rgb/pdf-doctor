@@ -9,6 +9,8 @@ const REQUIRED_IN_PRODUCTION = [
   "RAZORPAY_KEY_ID",
   "RAZORPAY_KEY_SECRET",
   "RAZORPAY_WEBHOOK_SECRET",
+  "UPSTASH_REDIS_REST_URL",
+  "UPSTASH_REDIS_REST_TOKEN",
 ] as const;
 
 const PLACEHOLDER_MARKERS = ["your_", "placeholder", "change_me", "change_this"];
@@ -26,18 +28,8 @@ export function assertProductionSecrets(): void {
     isMissingOrPlaceholder(process.env[key])
   );
 
-  const upstashMissing =
-    isMissingOrPlaceholder(process.env.UPSTASH_REDIS_REST_URL) ||
-    isMissingOrPlaceholder(process.env.UPSTASH_REDIS_REST_TOKEN);
-
   if (missing.length > 0) {
     throw new Error(`Missing production secrets: ${missing.join(", ")}`);
-  }
-
-  if (upstashMissing) {
-    console.warn(
-      "[pdf-doctor] UPSTASH_REDIS_* not set — rate limits use per-instance memory (not recommended for production scale)."
-    );
   }
 }
 

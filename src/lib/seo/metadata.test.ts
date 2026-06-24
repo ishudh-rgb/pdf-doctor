@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildPageMetadata, buildToolMetadata } from "@/lib/seo/metadata";
 
 describe("buildPageMetadata", () => {
-  it("includes hreflang alternates for English and Hindi", () => {
+  it("includes hreflang alternates for English", () => {
     const meta = buildPageMetadata({
       title: "About",
       path: "/about",
@@ -11,8 +11,8 @@ describe("buildPageMetadata", () => {
     const languages = meta.alternates?.languages;
     expect(languages).toBeDefined();
     expect(languages?.en).toContain("/about");
-    expect(languages?.hi).toContain("lang=hi");
     expect(languages?.["x-default"]).toContain("/about");
+    expect(languages).not.toHaveProperty("hi");
   });
 
   it("sets canonical via alternates", () => {
@@ -28,6 +28,6 @@ describe("buildToolMetadata", () => {
   it("generates metadata for merge-pdf slug", () => {
     const meta = buildToolMetadata("merge-pdf");
     expect(meta.title).toBeTruthy();
-    expect(meta.alternates?.languages?.hi).toContain("merge-pdf");
+    expect(meta.alternates?.languages?.en).toContain("merge-pdf");
   });
 });

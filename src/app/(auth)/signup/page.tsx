@@ -59,7 +59,7 @@ export default function SignupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ fullName, email, password }),
+        body: JSON.stringify({ fullName, email, password, termsAccepted: true }),
       });
 
       const data = await res.json().catch(() => ({}));

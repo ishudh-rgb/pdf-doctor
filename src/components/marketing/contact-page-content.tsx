@@ -6,6 +6,7 @@ import { Send, Mail, Clock, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
+import { SUPPORT_EMAIL } from "@/config/constants";
 
 const inputClass =
   "mt-1.5 w-full rounded-xl border border-pd-border bg-pd-surface px-4 py-2.5 text-sm text-pd-foreground placeholder:text-pd-muted focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20";
@@ -194,8 +195,8 @@ export function ContactPageContent() {
               icon: Mail,
               title: "Email Us",
               body: (
-                <a href="mailto:support@only4pdf.com" className="text-sm text-pd-brand hover:underline">
-                  support@only4pdf.com
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-sm text-pd-brand hover:underline">
+                  {SUPPORT_EMAIL}
                 </a>
               ),
             },

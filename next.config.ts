@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import path from "path";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const maxBodyMb = Number(process.env.MAX_UPLOAD_BODY_MB) || 110;
 
@@ -102,4 +103,15 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+const sentryEnabled = Boolean(process.env.SENTRY_DSN);
+
+export default sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      silent: !process.env.CI,
+      widenClientFileUpload: true,
+      disableLogger: true,
+      automaticVercelMonitors: true,
+    })
+  : nextConfig;

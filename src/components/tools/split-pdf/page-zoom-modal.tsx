@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/lib/a11y/use-focus-trap";
 import {
   ChevronLeft,
   ChevronRight,
@@ -52,6 +53,7 @@ export function PageZoomModal({
   onDelete,
 }: PageZoomModalProps) {
   const thumbStripRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useFocusTrap(true);
   const [hiResLoaded, setHiResLoaded] = useState(false);
   const hiResUrl = toHiRes(imageUrl);
 
@@ -96,6 +98,7 @@ export function PageZoomModal({
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[100] flex flex-col bg-black/95"
       role="dialog"
       aria-modal
@@ -184,6 +187,7 @@ export function PageZoomModal({
             type="button"
             onClick={goPrev}
             disabled={pageNum <= 1}
+            aria-label="Previous page"
             className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-30"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -202,6 +206,7 @@ export function PageZoomModal({
             type="button"
             onClick={goNext}
             disabled={pageNum >= totalPages}
+            aria-label="Next page"
             className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-30"
           >
             <ChevronRight className="h-5 w-5" />
@@ -215,8 +220,8 @@ export function PageZoomModal({
             <button
               type="button"
               onClick={onRotateLeft}
+              aria-label="Rotate left"
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20"
-              title="Rotate left"
             >
               <RotateCcw className="h-4.5 w-4.5" />
             </button>
@@ -226,8 +231,8 @@ export function PageZoomModal({
             <button
               type="button"
               onClick={onRotateRight}
+              aria-label="Rotate right"
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20"
-              title="Rotate right"
             >
               <RotateCw className="h-4.5 w-4.5" />
             </button>
@@ -237,8 +242,8 @@ export function PageZoomModal({
             <button
               type="button"
               onClick={onDelete}
+              aria-label="Delete page"
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-red-600/80"
-              title="Delete page"
             >
               <Trash2 className="h-4.5 w-4.5" />
             </button>

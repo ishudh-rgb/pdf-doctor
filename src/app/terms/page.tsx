@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageContent } from "@/components/marketing/legal-page-content";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { SUPPORT_EMAIL } from "@/config/constants";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Terms of Service",
@@ -315,16 +316,16 @@ export default function TermsPage() {
                   <li>
                     Email:{" "}
                     <a
-                      href="mailto:support@only4pdf.com"
+                      href={`mailto:${SUPPORT_EMAIL}`}
                       className="text-blue-600 hover:underline"
                     >
-                      support@only4pdf.com
+                      {SUPPORT_EMAIL}
                     </a>
                   </li>
                   <li>
                     Contact Page:{" "}
                     <Link href="/contact" className="text-blue-600 hover:underline">
-                      only4pdf.com/contact
+                      Contact us
                     </Link>
                   </li>
                 </ul>

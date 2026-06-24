@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
       originalName: file.name,
       size: file.size,
       mimeType: file.type,
-      storagePath: uploadResult.storagePath,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to upload file";

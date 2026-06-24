@@ -28,3 +28,11 @@ export function toSafeApiError(
   }
   return fallback;
 }
+
+/** Log unexpected API errors to Sentry in production. */
+export function captureApiError(error: unknown, context?: Record<string, unknown>): void {
+  if (process.env.NODE_ENV !== "production" || !process.env.SENTRY_DSN) return;
+  void import("@/lib/ops/sentry").then(({ captureException }) =>
+    captureException(error, context)
+  );
+}

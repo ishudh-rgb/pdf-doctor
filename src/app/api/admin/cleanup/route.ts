@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyAdmin } from "@/lib/auth/verify-admin";
+import { cleanupExpiredFiles } from "@/lib/services/cleanup.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,32 +38,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const serviceClient = await createServiceClient();
-    const now = new Date().toISOString();
-
-    const { data: expiredFiles, error: fetchError } = await serviceClient
-      .from("uploaded_files")
-      .select("id")
-      .eq("is_deleted", false)
-      .lt("expires_at", now);
-
-    if (fetchError) throw fetchError;
-
-    if (!expiredFiles || expiredFiles.length === 0) {
-      return NextResponse.json({ cleaned: 0, message: "No expired files to clean up" });
-    }
-
-    const fileIds = expiredFiles.map((f) => f.id);
-    const { error: updateError } = await serviceClient
-      .from("uploaded_files")
-      .update({ is_deleted: true })
-      .in("id", fileIds);
-
-    if (updateError) throw updateError;
+    const result = await cleanupExpiredFiles();
 
     return NextResponse.json({
-      cleaned: fileIds.length,
-      cleaned_at: now,
+      cleaned: result.deleted,
+      failed: result.failed,
+      batches: result.batches,
+      cleaned_at: new Date().toISOString(),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Cleanup failed";
