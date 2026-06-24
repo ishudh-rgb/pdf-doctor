@@ -1,6 +1,6 @@
 import type { Tool, MegaMenuCategory, PricingPlan } from "@/types";
 
-export const APP_NAME = "Only4PDF";
+export const APP_NAME = "OnlyMyPDF";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 export const APP_DESCRIPTION =
   "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs. No signup required for basic tools.";

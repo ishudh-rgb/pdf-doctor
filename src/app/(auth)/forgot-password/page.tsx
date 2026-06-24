@@ -3,10 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, ShieldCheck, FileText, Loader2, ArrowRight } from "lucide-react";
+import { Mail, ShieldCheck, Loader2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Logo } from "@/components/common/logo";
 
 type Step = "email" | "verify" | "done";
 
@@ -97,9 +98,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell title="Reset password" subtitle={stepSubtitles[step]}>
       <div className="mb-6 hidden flex-col items-center gap-2 lg:flex">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pd-brand">
-          <FileText className="h-5 w-5 text-white" />
-        </div>
+        <Logo variant="icon" />
         <h1 className="text-xl font-bold text-pd-foreground">Reset password</h1>
         <p className="text-sm text-pd-muted">{stepSubtitles[step]}</p>
       </div>

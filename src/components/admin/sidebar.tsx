@@ -15,8 +15,8 @@ import {
   Trash2,
   ArrowLeft,
   X,
-  FileText,
 } from "lucide-react";
+import { Logo } from "@/components/common/logo";
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -60,10 +60,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
         )}
       >
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-pd-border px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pd-brand">
-            <FileText className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold text-pd-foreground">Only4PDF</span>
+          <Logo variant="wordmark" className="min-w-0 flex-1" />
           <button
             type="button"
             onClick={onClose}

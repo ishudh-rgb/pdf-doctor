@@ -9,12 +9,12 @@ import {
   Eye,
   EyeOff,
   User,
-  FileText,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/common/logo";
 import { useTranslation } from "@/i18n";
 
 const inputClass =
@@ -84,9 +84,7 @@ export default function SignupPage() {
   return (
     <AuthShell title={t("auth.signupTitle")} subtitle={t("auth.signupSubtitle")}>
       <div className="mb-6 hidden flex-col items-center gap-2 lg:flex">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pd-brand">
-          <FileText className="h-5 w-5 text-white" />
-        </div>
+        <Logo variant="icon" />
         <h1 className="text-xl font-bold text-pd-foreground">{t("auth.signupTitle")}</h1>
         <p className="text-sm text-pd-muted">{t("auth.signupSubtitle")}</p>
       </div>

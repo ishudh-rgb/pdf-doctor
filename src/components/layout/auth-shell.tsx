@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FileText, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { Logo } from "@/components/common/logo";
 import { useDesignPreview } from "@/components/design/design-preview-provider";
 import { useTranslation } from "@/i18n";
 
@@ -31,27 +32,8 @@ export function AuthShell({ children, title, subtitle }: AuthShellProps) {
             layoutStyle === "C" && "bg-pd-brand text-white"
           )}
         >
-          <Link href="/" className="mb-8 flex items-center gap-2.5">
-            <div
-              className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-xl shadow-md",
-                layoutStyle === "C" ? "bg-white/20" : "bg-pd-brand"
-              )}
-            >
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <span
-              className={cn(
-                "text-2xl font-bold",
-                layoutStyle === "C" ? "text-white" : "text-pd-foreground"
-              )}
-            >
-              Only
-              <span className={layoutStyle === "C" ? "text-white/90" : "text-pd-brand"}>
-                4
-              </span>
-              PDF
-            </span>
+          <Link href="/" className="mb-8 inline-flex">
+            <Logo variant="wordmark" />
           </Link>
 
           <h2

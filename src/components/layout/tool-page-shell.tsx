@@ -26,6 +26,8 @@ interface ToolPageShellProps {
   previewPlaceholder?: string;
   /** Full-width tool workspace (page grid, editor-style tools) */
   fullWidthWorkspace?: boolean;
+  /** ~20% tighter card width and padding */
+  compactWorkspace?: boolean;
 }
 
 function ToolHero({
@@ -100,6 +102,7 @@ function Workspace({
   splitWorkspace,
   previewPlaceholder,
   fullWidthWorkspace,
+  compactWorkspace,
 }: {
   layout: LayoutStyleId;
   title: string;
@@ -109,6 +112,7 @@ function Workspace({
   splitWorkspace?: boolean;
   previewPlaceholder?: string;
   fullWidthWorkspace?: boolean;
+  compactWorkspace?: boolean;
 }) {
   const inlineHeader = layout === "B";
   const useSplit = splitWorkspace || Boolean(preview);
@@ -130,23 +134,66 @@ function Workspace({
   }
 
   return (
-    <section className="bg-pd-background py-3 sm:py-4">
+    <section
+      className={cn(
+        "bg-pd-background",
+        compactWorkspace ? "py-2 sm:py-3" : "py-3 sm:py-4"
+      )}
+    >
       <div className="pd-container">
-        <div className={cn("mx-auto w-full", useSplit ? "max-w-6xl" : "max-w-lg")}>
+        <div
+          className={cn(
+            "mx-auto w-full",
+            useSplit
+              ? "max-w-6xl"
+              : compactWorkspace
+                ? "max-w-[26rem]"
+                : "max-w-lg"
+          )}
+        >
           <div
             className={cn(
               useSplit && "grid gap-3 lg:grid-cols-2 lg:items-stretch lg:gap-4"
             )}
           >
-            <div className="flex min-h-0 flex-col rounded-xl border border-pd-border bg-pd-surface p-4 shadow-sm sm:p-4">
+            <div
+              className={cn(
+                "flex min-h-0 flex-col rounded-xl border border-pd-border bg-pd-surface shadow-sm",
+                compactWorkspace ? "p-3" : "p-4 sm:p-4"
+              )}
+            >
               {inlineHeader && (
-                <header className="mb-3 border-b border-pd-border pb-2.5">
-                  <h1 className="text-lg font-bold text-pd-foreground sm:text-xl">{title}</h1>
-                  <p className="mt-0.5 text-sm text-pd-muted">{description}</p>
+                <header
+                  className={cn(
+                    "border-b border-pd-border",
+                    compactWorkspace ? "mb-2 pb-2" : "mb-3 pb-2.5"
+                  )}
+                >
+                  <h1
+                    className={cn(
+                      "font-bold text-pd-foreground",
+                      compactWorkspace ? "text-base sm:text-lg" : "text-lg sm:text-xl"
+                    )}
+                  >
+                    {title}
+                  </h1>
+                  <p
+                    className={cn(
+                      "text-pd-muted",
+                      compactWorkspace ? "mt-0.5 text-xs sm:text-[13px]" : "mt-0.5 text-sm"
+                    )}
+                  >
+                    {description}
+                  </p>
                 </header>
               )}
               <div className="pd-tool-workspace w-full">{children}</div>
-              <footer className="mt-3 flex justify-center border-t border-pd-border pt-2.5">
+              <footer
+                className={cn(
+                  "flex justify-center border-t border-pd-border",
+                  compactWorkspace ? "mt-2 pt-2" : "mt-3 pt-2.5"
+                )}
+              >
                 <PrivacyBadge />
               </footer>
             </div>
@@ -184,6 +231,7 @@ export function ToolPageShell({
   splitWorkspace,
   previewPlaceholder,
   fullWidthWorkspace,
+  compactWorkspace,
 }: ToolPageShellProps) {
   const { layoutStyle } = useDesignPreview();
 
@@ -198,6 +246,7 @@ export function ToolPageShell({
         splitWorkspace={splitWorkspace}
         previewPlaceholder={previewPlaceholder}
         fullWidthWorkspace={fullWidthWorkspace}
+        compactWorkspace={compactWorkspace}
       >
         {children}
       </Workspace>

@@ -14,8 +14,14 @@ html[data-layout-style="B"] {
   --pd-section-y: 3rem;
   --pd-density: 1;
   --pd-container: 80rem;
-  --pd-header-height: 4rem;
+  --pd-header-height: 6.625rem;
   --pd-btn-radius: 0.625rem;
+}
+
+html[data-layout-style="B"] .pd-header-row {
+  height: var(--pd-header-height);
+  min-height: var(--pd-header-height);
+  padding-block: 0.25rem;
 }
 
 html[data-layout-style="C"] {
@@ -66,6 +72,99 @@ html[data-layout-style="D"] .pd-site-header .pd-trust-strip {
 
 html[data-layout-style="B"] .pd-site-header .pd-logo-text {
   letter-spacing: -0.02em;
+}
+
+html[data-layout-style="B"] .pd-nav-links {
+  gap: 0;
+}
+
+html[data-layout-style="B"] .pd-nav-links a,
+html[data-layout-style="B"] .pd-nav-links button {
+  white-space: nowrap;
+}
+
+/* ─── Site header + brand logo ─── */
+
+.pd-site-header {
+  overflow: visible;
+  background-color: var(--pd-surface);
+}
+
+.pd-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-sizing: border-box;
+  min-height: var(--pd-header-height);
+  padding-block: 0.625rem;
+  overflow: visible;
+}
+
+.pd-header-border {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: var(--pd-border);
+  pointer-events: none;
+}
+
+.pd-site-logo-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  align-self: stretch;
+  overflow: visible;
+  line-height: 0;
+}
+
+html[data-layout-style="B"] .pd-brand-logo--header.pd-logo-icon-box {
+  height: calc(var(--pd-header-height) - 0.5rem);
+  max-height: calc(var(--pd-header-height) - 0.5rem);
+}
+
+html[data-layout-style="B"] .pd-brand-logo--header.pd-logo-icon-box img {
+  height: 100%;
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+  object-position: center center;
+}
+
+.pd-split-logo {
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
+  line-height: 0;
+}
+
+.pd-logo-icon-box {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  line-height: 0;
+}
+
+.pd-logo-icon-box img {
+  display: block;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+.pd-brand-logo--header,
+.pd-split-logo .pd-logo-icon-box img {
+  max-height: var(--pd-header-logo-max-h, 40px);
+  max-width: var(--pd-header-logo-max-w, 52px);
+}
+
+.pd-logo-text {
+  line-height: 1.2;
+  overflow: visible;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* ─── Homepage layout hooks ─── */

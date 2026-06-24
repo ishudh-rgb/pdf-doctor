@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ToolPageShell } from "@/components/layout/tool-page-shell";
+import { mapRelatedTools } from "@/components/tools/tool-helpers";
 import {
   cleanSummaryText,
   getDetailedDisplayBlocks,
@@ -47,6 +48,13 @@ interface SummaryResult {
     processingTimeMs?: number;
   };
 }
+
+const RELATED_TOOLS = [
+  { name: "PDF to Word", href: "/pdf-to-word" },
+  { name: "Compress PDF", href: "/compress-pdf" },
+  { name: "Merge PDF", href: "/merge-pdf" },
+  { name: "Unlock PDF", href: "/unlock-pdf" },
+];
 
 export default function AIPDFSummarizerPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -198,6 +206,8 @@ export default function AIPDFSummarizerPage() {
       <ToolPageShell
         title="AI PDF Summarizer"
         description="Upload a PDF and get a clear summary, key points, and action items."
+        relatedTools={mapRelatedTools(RELATED_TOOLS)}
+        compactWorkspace
       >
         <div className="max-w-md mx-auto text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-pd-brand-muted">
@@ -224,34 +234,36 @@ export default function AIPDFSummarizerPage() {
     <ToolPageShell
       title="AI PDF Summarizer"
       description="Upload a PDF and get a clear summary, key points, and action items. Free users: 1 AI summary/day | Pro users: Unlimited"
+      relatedTools={mapRelatedTools(RELATED_TOOLS)}
+      compactWorkspace
     >
         {!result ? (
           <div>
             {!file ? (
               <div
-                className={`rounded-2xl border-2 border-dashed p-12 text-center transition-colors ${
+                className={`rounded-xl border-2 border-dashed p-9 text-center transition-colors ${
                   isDragging ? "border-purple-400 bg-purple-50" : "border-gray-300 hover:border-purple-400"
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-4 text-lg font-medium text-gray-700">Drag & drop your PDF here</p>
+                <Upload className="mx-auto h-10 w-10 text-gray-400" />
+                <p className="mt-3 text-base font-medium text-gray-700">Drag & drop your PDF here</p>
                 <p className="mt-1 text-sm text-gray-500">or click to select a file</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-700 cursor-pointer"
+                  className="mt-3 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 cursor-pointer"
                 >
                   Select PDF File
                 </button>
                 <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
-                <p className="mt-4 text-xs text-gray-400">Any file size accepted</p>
+                <p className="mt-3 text-xs text-gray-400">Any file size accepted</p>
               </div>
             ) : (
               <div>
-                <div className="flex items-center gap-4 rounded-xl bg-gray-50 p-4 mb-6">
-                  <FileText className="h-10 w-10 text-purple-600" />
+                <div className="mb-4 flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+                  <FileText className="h-8 w-8 shrink-0 text-purple-600" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">{file.name}</p>
                     <p className="text-sm text-gray-500">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
@@ -266,10 +278,10 @@ export default function AIPDFSummarizerPage() {
                 )}
 
                 {processing ? (
-                  <div className="text-center py-8">
-                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-purple-600" />
-                    <p className="mt-4 font-medium text-gray-700">AI is analyzing your document...</p>
-                    <div className="mt-4 mx-auto max-w-xs">
+                  <div className="py-6 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-purple-600" />
+                    <p className="mt-3 font-medium text-gray-700">AI is analyzing your document...</p>
+                    <div className="mx-auto mt-3 max-w-xs">
                       <div className="h-2 rounded-full bg-gray-200">
                         <div className="h-2 rounded-full bg-purple-600 transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
@@ -279,14 +291,13 @@ export default function AIPDFSummarizerPage() {
                 ) : (
                   <button
                     onClick={handleSummarize}
-                    className="w-full rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white hover:bg-purple-700 cursor-pointer flex items-center justify-center gap-2"
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 text-base font-semibold text-white hover:bg-purple-700"
                   >
                     <Sparkles className="h-5 w-5" /> Summarize with AI
                   </button>
                 )}
               </div>
             )}
-            <p className="mt-4 text-center text-xs text-pd-muted">Your files are automatically deleted after 2 hours.</p>
           </div>
         ) : (
           <SummaryReport

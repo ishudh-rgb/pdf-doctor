@@ -174,12 +174,12 @@ if (Test-Path $snapDoc) {
 git add -A
 $status = git status --porcelain
 if ($status) {
-  $msg = "S1: Only4PDF full snapshot - 46 pages, 22 tools, Excel COM export, PDF-to-Excel v2, Sign PDF workspace, file-size on success. Revert: scripts/revert-to-s1.ps1"
+  $msg = "S1: OnlyMyPDF snapshot - Logo D lock, dashboard/pricing redesign, PDF Scanner UI, user files API, AI Summarizer polish. Revert: scripts/revert-to-s1.ps1"
   git commit -m $msg
 }
 
 $null = git tag -d S1 2>&1
-git tag -a S1 -m "S1 Only4PDF - full website: Excel/PDF pipelines, Sign PDF, all 46 pages"
+git tag -a S1 -m "S1 OnlyMyPDF - dashboard, pricing, Logo D, PDF Scanner, user files API"
 
 $null = git branch -D s1-backup 2>&1
 git branch s1-backup
@@ -205,8 +205,8 @@ $manifestLines = @(
   "  .snapshots/s1/public/",
   "  .snapshots/s1/S1-SNAPSHOT.md",
   "",
-  "Design lock: Theme A + Layout B",
-  "Pages: 46 (9 marketing + 4 auth + 2 dashboard + 9 admin + 22 tools)",
+  "Design lock: Theme A + Layout B, OnlyMyPDF Logo D",
+  "Dashboard: overview, files, pricing + layout wrapper",
   "Excel-to-PDF: Excel COM primary, SheetJS fallback",
   "PDF-to-Excel: financial + document layout modes",
   "Sign PDF: multi-annotation workspace"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Crown,
@@ -11,31 +12,44 @@ import {
   Download,
   ArrowUpRight,
   Clock,
+  Upload,
+  TrendingUp,
+  Zap,
+  Brain,
+  ChevronRight,
+  Search,
+  PenTool,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTranslation } from "@/i18n";
-import { DashboardCard, DashboardShell } from "@/components/layout/dashboard-shell";
+import { useAuthContext } from "@/components/providers/auth-provider";
+import { DashboardMobileNav } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 
 const quickAccessTools = [
-  { slug: "merge-pdf", icon: Layers, nameKey: "tools.mergePdf.name" },
-  { slug: "split-pdf", icon: Scissors, nameKey: "tools.splitPdf.name" },
-  { slug: "compress-pdf", icon: Minimize2, nameKey: "tools.compressPdf.name" },
-  { slug: "pdf-to-word", icon: FileText, nameKey: "tools.pdfToWord.name" },
-  { slug: "word-to-pdf", icon: FileText, nameKey: "tools.wordToPdf.name" },
-  { slug: "ai-pdf-summarizer", icon: Sparkles, nameKey: "tools.aiPdfSummarizer.name" },
+  { slug: "merge-pdf", icon: Layers, nameKey: "tools.mergePdf.name", color: "from-blue-500 to-indigo-600" },
+  { slug: "split-pdf", icon: Scissors, nameKey: "tools.splitPdf.name", color: "from-sky-500 to-cyan-600" },
+  { slug: "compress-pdf", icon: Minimize2, nameKey: "tools.compressPdf.name", color: "from-emerald-500 to-teal-600" },
+  { slug: "pdf-to-word", icon: FileText, nameKey: "tools.pdfToWord.name", color: "from-violet-500 to-purple-600" },
+  { slug: "sign-pdf", icon: PenTool, nameKey: "tools.signPdf.name", color: "from-rose-500 to-pink-600" },
+  { slug: "ai-pdf-summarizer", icon: Sparkles, nameKey: "tools.aiPdfSummarizer.name", color: "from-amber-500 to-orange-600" },
+  { slug: "protect-pdf", icon: Lock, nameKey: "tools.protectPdf.name", color: "from-slate-600 to-slate-800" },
+  { slug: "word-to-pdf", icon: FileText, nameKey: "tools.wordToPdf.name", color: "from-blue-600 to-blue-800" },
 ];
 
 type JobStatus = "completed" | "processing" | "failed";
 
-const recentJobs: {
+interface JobRow {
   id: string;
   toolKey: string;
   fileName: string;
   date: string;
   status: JobStatus;
   downloadable: boolean;
-}[] = [
+}
+
+const fallbackJobs: JobRow[] = [
   { id: "1", toolKey: "tools.mergePdf.name", fileName: "merged-report.pdf", date: "Today, 2:30 PM", status: "completed", downloadable: true },
   { id: "2", toolKey: "tools.compressPdf.name", fileName: "presentation.pdf", date: "Today, 1:15 PM", status: "processing", downloadable: false },
   { id: "3", toolKey: "tools.pdfToWord.name", fileName: "contract.docx", date: "Today, 11:00 AM", status: "completed", downloadable: true },
@@ -43,125 +57,384 @@ const recentJobs: {
   { id: "5", toolKey: "tools.compressPdf.name", fileName: "photos.pdf", date: "Yesterday, 9:20 AM", status: "completed", downloadable: false },
 ];
 
+function StatCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  accent,
+  progress,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accent: string;
+  progress?: number;
+}) {
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-pd-border/70 bg-pd-surface p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className={cn("absolute -right-4 -top-4 h-24 w-24 rounded-full opacity-10 blur-2xl", accent)} />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-pd-muted">
+            {label}
+          </p>
+          <p className="mt-2 text-2xl font-bold tracking-tight text-pd-foreground">
+            {value}
+          </p>
+          {sub && <p className="mt-1 text-xs text-pd-muted">{sub}</p>}
+        </div>
+        <span
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm",
+            accent
+          )}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+      {progress !== undefined && (
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-pd-border/60">
+          <div
+            className={cn("h-full rounded-full transition-all", accent)}
+            style={{ width: `${Math.min(100, progress)}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const { user, profile, isPro } = useAuthContext();
+  const [jobs, setJobs] = useState<JobRow[]>(fallbackJobs);
+  const [search, setSearch] = useState("");
+
+  const displayName =
+    profile?.full_name?.trim() ||
+    user?.email?.split("@")[0] ||
+    "there";
+
+  useEffect(() => {
+    async function loadJobs() {
+      try {
+        const res = await fetch("/api/user/files");
+        if (!res.ok) return;
+        const json = await res.json();
+        const files = json.files as Array<{
+          id: string;
+          file_name: string;
+          tool: string;
+          created_at: string;
+          status: JobStatus;
+          expired: boolean;
+          download_url: string | null;
+        }>;
+        if (files?.length) {
+          setJobs(
+            files.slice(0, 8).map((f) => ({
+              id: f.id,
+              toolKey: f.tool,
+              fileName: f.file_name,
+              date: new Date(f.created_at).toLocaleString(),
+              status: f.status,
+              downloadable: f.status === "completed" && !f.expired && !!f.download_url,
+            }))
+          );
+        }
+      } catch {
+        /* use fallback demo data */
+      }
+    }
+    void loadJobs();
+  }, []);
 
   const statusConfig: Record<JobStatus, { label: string; className: string }> = {
-    completed: { label: t("dashboard.completed"), className: "bg-pd-brand-muted text-pd-brand" },
-    processing: { label: t("dashboard.processing"), className: "bg-amber-100 text-amber-700" },
-    failed: { label: t("dashboard.failed"), className: "bg-red-100 text-red-700" },
+    completed: { label: t("dashboard.completed"), className: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/60" },
+    processing: { label: t("dashboard.processing"), className: "bg-amber-100 text-amber-800 ring-1 ring-amber-200/60" },
+    failed: { label: t("dashboard.failed"), className: "bg-red-100 text-red-700 ring-1 ring-red-200/60" },
   };
 
+  const filesUsed = 3;
+  const filesLimit = isPro ? 999 : 5;
+  const aiUsed = profile?.ai_credits_used ?? 1;
+  const aiLimit = isPro ? 50 : 3;
+  const totalProcessed = profile?.total_files_processed ?? 12;
+
+  const filteredJobs = jobs.filter(
+    (j) =>
+      !search.trim() ||
+      j.fileName.toLowerCase().includes(search.toLowerCase()) ||
+      t(j.toolKey).toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <DashboardShell title={t("dashboard.title")} subtitle={t("dashboard.welcomeBackSimple")}>
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <DashboardCard>
-          <p className="text-sm font-medium text-pd-muted">{t("dashboard.currentPlan")}</p>
-          <div className="mt-2">
-            <span className="inline-flex rounded-full bg-pd-brand-muted px-2.5 py-0.5 text-xs font-semibold text-pd-brand">
-              {t("dashboard.freePlan")}
-            </span>
+    <div className="space-y-8">
+      <DashboardMobileNav />
+
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pd-brand via-indigo-600 to-violet-700 p-6 text-white shadow-lg shadow-indigo-500/20 sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-violet-400/20 blur-3xl" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-medium text-white/80">{t("dashboard.overview")}</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+              {t("dashboard.welcome", { name: displayName })}
+            </h1>
+            <p className="mt-2 max-w-lg text-sm text-white/85">
+              {t("dashboard.uploadHint")}
+            </p>
           </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/merge-pdf">
+              <Button
+                size="lg"
+                className="border-0 bg-white font-bold text-pd-brand shadow-md hover:bg-white/95"
+              >
+                <Upload className="h-5 w-5" />
+                {t("dashboard.uploadPdf")}
+              </Button>
+            </Link>
+            {!isPro && (
+              <Link href="/dashboard/pricing">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/40 bg-white/10 font-bold text-white hover:bg-white/20"
+                >
+                  <Crown className="h-5 w-5" />
+                  {t("dashboard.upgradeToPro")}
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label={t("dashboard.currentPlan")}
+          value={isPro ? "Pro" : t("dashboard.freePlan")}
+          sub={isPro ? t("dashboard.manageBilling") : t("dashboard.upgradeToPro")}
+          icon={Crown}
+          accent="bg-gradient-to-br from-amber-400 to-orange-500"
+        />
+        <StatCard
+          label={t("dashboard.todaysUsage")}
+          value={t("dashboard.filesProcessed", {
+            used: String(filesUsed),
+            total: String(filesLimit),
+          })}
+          icon={Zap}
+          accent="bg-gradient-to-br from-blue-500 to-indigo-600"
+          progress={(filesUsed / filesLimit) * 100}
+        />
+        <StatCard
+          label={t("dashboard.aiSummaries")}
+          value={t("dashboard.summariesUsed", {
+            used: String(aiUsed),
+            total: String(aiLimit),
+          })}
+          icon={Brain}
+          accent="bg-gradient-to-br from-violet-500 to-purple-600"
+          progress={(aiUsed / aiLimit) * 100}
+        />
+        <StatCard
+          label={t("dashboard.totalFiles")}
+          value={String(totalProcessed)}
+          sub={t("dashboard.allTime")}
+          icon={TrendingUp}
+          accent="bg-gradient-to-br from-emerald-500 to-teal-600"
+        />
+      </section>
+
+      {/* Quick access */}
+      <section>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-pd-foreground">
+            {t("dashboard.quickAccess")}
+          </h2>
           <Link
-            href="/pricing"
-            className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-pd-brand hover:text-pd-brand-hover"
+            href="/#tools"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-pd-brand hover:text-pd-brand-hover"
           >
-            <Crown className="h-3.5 w-3.5" />
-            {t("dashboard.upgradeToPro")}
-            <ArrowUpRight className="h-3.5 w-3.5" />
+            {t("dashboard.browseTools")}
+            <ChevronRight className="h-4 w-4" />
           </Link>
-        </DashboardCard>
-
-        <DashboardCard>
-          <p className="text-sm font-medium text-pd-muted">{t("dashboard.todaysUsage")}</p>
-          <p className="mt-2 text-lg font-semibold text-pd-foreground">
-            {t("dashboard.filesProcessed", { used: "3", total: "5" })}
-          </p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-pd-border">
-            <div className="h-full w-[60%] rounded-full bg-pd-brand" />
-          </div>
-        </DashboardCard>
-
-        <DashboardCard>
-          <p className="text-sm font-medium text-pd-muted">{t("dashboard.aiSummaries")}</p>
-          <p className="mt-2 text-lg font-semibold text-pd-foreground">
-            {t("dashboard.summariesUsed", { used: "1", total: "3" })}
-          </p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-pd-border">
-            <div className="h-full w-[33%] rounded-full bg-pd-brand" />
-          </div>
-        </DashboardCard>
-      </div>
-
-      <div className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold text-pd-foreground">{t("dashboard.quickAccess")}</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
           {quickAccessTools.map((tool) => {
             const Icon = tool.icon;
             return (
               <Link
                 key={tool.slug}
                 href={`/${tool.slug}`}
-                className="group flex flex-col items-center gap-2 rounded-2xl border border-pd-border bg-pd-surface p-4 text-center shadow-sm transition hover:border-pd-brand/40 hover:shadow-md"
+                className="group flex flex-col items-center gap-2.5 rounded-2xl border border-pd-border/70 bg-pd-surface p-4 text-center shadow-sm transition hover:-translate-y-1 hover:border-pd-brand/30 hover:shadow-md"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-pd-brand-muted text-pd-brand transition-transform group-hover:scale-110">
+                <span
+                  className={cn(
+                    "flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md transition group-hover:scale-105",
+                    tool.color
+                  )}
+                >
                   <Icon className="h-5 w-5" />
                 </span>
-                <span className="text-xs font-medium text-pd-foreground">{t(tool.nameKey)}</span>
+                <span className="text-xs font-semibold leading-tight text-pd-foreground">
+                  {t(tool.nameKey)}
+                </span>
               </Link>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-pd-foreground">{t("dashboard.recentJobs")}</h2>
-        <div className="overflow-hidden rounded-2xl border border-pd-border bg-pd-surface shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-pd-border bg-pd-background">
-                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.tool")}</th>
-                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.fileName")}</th>
-                  <th className="hidden px-4 py-3 font-medium text-pd-muted sm:table-cell">{t("dashboard.date")}</th>
-                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.status")}</th>
-                  <th className="px-4 py-3 font-medium text-pd-muted">{t("dashboard.action")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-pd-border">
-                {recentJobs.map((job) => {
-                  const status = statusConfig[job.status];
-                  return (
-                    <tr key={job.id} className="transition-colors hover:bg-pd-background/80">
-                      <td className="px-4 py-3 font-medium text-pd-foreground">{t(job.toolKey)}</td>
-                      <td className="max-w-[200px] truncate px-4 py-3 text-pd-muted">{job.fileName}</td>
-                      <td className="hidden px-4 py-3 text-pd-muted sm:table-cell">{job.date}</td>
-                      <td className="px-4 py-3">
-                        <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", status.className)}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {job.status === "completed" && job.downloadable ? (
-                          <Button variant="ghost" size="sm" className="h-8 px-3 text-xs">
-                            <Download className="h-3.5 w-3.5" />
-                            {t("dashboard.download")}
-                          </Button>
-                        ) : job.status === "completed" && !job.downloadable ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-pd-muted">
-                            <Clock className="h-3.5 w-3.5" />
-                            {t("dashboard.expired")}
-                          </span>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {/* Recent jobs */}
+      <section>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-pd-foreground">
+              {t("dashboard.recentJobs")}
+            </h2>
+            <p className="text-sm text-pd-muted">{t("dashboard.recentJobsHint")}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-muted" />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("dashboard.searchFiles")}
+                className="h-10 w-full rounded-xl border border-pd-border bg-pd-surface pl-9 pr-3 text-sm outline-none transition focus:border-pd-brand focus:ring-2 focus:ring-pd-brand/20 sm:w-56"
+              />
+            </div>
+            <Link href="/dashboard/files">
+              <Button variant="outline" size="sm" className="shrink-0 font-semibold">
+                {t("dashboard.viewAllFiles")}
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
-      </div>
-    </DashboardShell>
+
+        <div className="overflow-hidden rounded-2xl border border-pd-border/70 bg-pd-surface shadow-sm">
+          {filteredJobs.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <FileText className="mx-auto h-10 w-10 text-pd-muted" />
+              <p className="mt-3 font-semibold text-pd-foreground">
+                {t("dashboard.noActivity")}
+              </p>
+              <p className="mt-1 text-sm text-pd-muted">
+                {t("dashboard.noActivityDescription")}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile cards */}
+              <div className="divide-y divide-pd-border/70 md:hidden">
+                {filteredJobs.map((job) => {
+                  const status = statusConfig[job.status];
+                  return (
+                    <div key={job.id} className="flex items-center gap-3 p-4">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pd-brand-muted text-pd-brand">
+                        <FileText className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-pd-foreground">
+                          {job.fileName}
+                        </p>
+                        <p className="text-xs text-pd-muted">
+                          {typeof job.toolKey === "string" && job.toolKey.startsWith("tools.")
+                            ? t(job.toolKey)
+                            : job.toolKey}{" "}
+                          · {job.date}
+                        </p>
+                      </div>
+                      <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold", status.className)}>
+                        {status.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-pd-border bg-pd-background/80">
+                      <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wide text-pd-muted">
+                        {t("dashboard.tool")}
+                      </th>
+                      <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wide text-pd-muted">
+                        {t("dashboard.fileName")}
+                      </th>
+                      <th className="hidden px-5 py-3.5 text-xs font-bold uppercase tracking-wide text-pd-muted lg:table-cell">
+                        {t("dashboard.date")}
+                      </th>
+                      <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wide text-pd-muted">
+                        {t("dashboard.status")}
+                      </th>
+                      <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wide text-pd-muted">
+                        {t("dashboard.action")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-pd-border/60">
+                    {filteredJobs.map((job) => {
+                      const status = statusConfig[job.status];
+                      return (
+                        <tr
+                          key={job.id}
+                          className="transition-colors hover:bg-pd-background/50"
+                        >
+                          <td className="px-5 py-4 font-semibold text-pd-foreground">
+                            {typeof job.toolKey === "string" && job.toolKey.startsWith("tools.")
+                              ? t(job.toolKey)
+                              : job.toolKey}
+                          </td>
+                          <td className="max-w-[220px] truncate px-5 py-4 text-pd-muted">
+                            {job.fileName}
+                          </td>
+                          <td className="hidden px-5 py-4 text-pd-muted lg:table-cell">
+                            {job.date}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-bold", status.className)}>
+                              {status.label}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            {job.status === "completed" && job.downloadable ? (
+                              <Button variant="ghost" size="sm" className="h-8 font-semibold text-pd-brand">
+                                <Download className="h-4 w-4" />
+                                {t("dashboard.download")}
+                              </Button>
+                            ) : job.status === "completed" && !job.downloadable ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-pd-muted">
+                                <Clock className="h-4 w-4" />
+                                {t("dashboard.expired")}
+                              </span>
+                            ) : job.status === "processing" ? (
+                              <span className="text-xs font-medium text-amber-700">
+                                {t("dashboard.processing")}…
+                              </span>
+                            ) : null}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }

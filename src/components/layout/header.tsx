@@ -30,7 +30,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitch } from "@/components/common/language-switch";
-import { TrustStrip } from "@/components/marketing/trust-strip";
+import { Logo } from "@/components/common/logo";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { useTranslation } from "@/i18n";
 
@@ -207,6 +207,14 @@ function MegaCol({ categories, onClose }: { categories: ToolCategory[]; onClose:
   );
 }
 
+const headerNavTextClass =
+  "text-lg font-bold tracking-tight text-slate-800";
+
+const navItemClass = cn(
+  "rounded-lg px-3 py-2 transition-colors hover:bg-pd-brand-muted hover:text-pd-brand",
+  headerNavTextClass
+);
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = React.useState(false);
@@ -239,24 +247,16 @@ export function Header() {
   }, [mobileOpen]);
 
   return (
-    <header className="pd-site-header sticky top-0 z-40 w-full border-b border-pd-border bg-pd-surface/95 backdrop-blur-md">
-      <TrustStrip className="pd-trust-strip hidden sm:flex" />
-      <div className="pd-container flex h-[var(--pd-header-height)] items-center justify-between">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-[var(--pd-radius-lg)] bg-pd-brand shadow-sm">
-            <FileText className="h-4 w-4 text-white" />
-          </div>
-          <span className="pd-logo-text text-xl font-bold text-pd-foreground">
-            Only<span className="text-pd-brand">4</span>PDF
-          </span>
-        </Link>
+    <header className="pd-site-header sticky top-0 z-40 w-full bg-pd-surface">
+      <div className="pd-header-row pd-container">
+        <Logo link href="/" variant="wordmark" />
 
-        <nav className="pd-nav-links hidden items-center gap-1 lg:flex">
+        <nav className="pd-nav-links hidden items-center lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-pd-muted transition-colors hover:bg-pd-brand-muted hover:text-pd-brand"
+              className={navItemClass}
             >
               {link.name}
             </Link>
@@ -266,23 +266,24 @@ export function Header() {
             <button
               onClick={() => setMegaMenuOpen((prev) => !prev)}
               className={cn(
-                "flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex cursor-pointer items-center gap-1",
+                navItemClass,
                 megaMenuOpen
                   ? "bg-pd-brand-muted text-pd-brand"
-                  : "text-pd-muted hover:bg-pd-brand-muted hover:text-pd-brand"
+                  : undefined
               )}
             >
               All Tools
               <ChevronDown
                 className={cn(
-                  "h-4 w-4 transition-transform duration-200",
+                  "h-5 w-5 shrink-0 transition-transform duration-200",
                   megaMenuOpen && "rotate-180"
                 )}
               />
             </button>
 
             {megaMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-[820px] animate-fade-in rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.03)] backdrop-blur-xl">
+              <div className="absolute left-1/2 top-full z-50 mt-2 w-[820px] max-w-[calc(100vw-2rem)] -translate-x-1/2 animate-fade-in rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.03)] backdrop-blur-xl">
                 <div className="grid grid-cols-4 gap-6">
                   <div>
                     <MegaCol categories={[megaMenuCategories[0]]} onClose={() => setMegaMenuOpen(false)} />
@@ -310,30 +311,45 @@ export function Header() {
           <LanguageSwitch />
           <Link
             href="/pricing"
-            className="text-sm font-medium text-pd-muted transition-colors hover:text-pd-brand"
+            className={cn(
+              headerNavTextClass,
+              "transition-colors hover:text-pd-brand"
+            )}
           >
             {t("nav.pricing")}
           </Link>
           {!loading && user ? (
             <>
               <Link href="/dashboard">
-                <Button variant="ghost" size="sm">
+                <Button
+                  variant="ghost"
+                  className={cn(headerNavTextClass, "h-auto px-3 py-2 hover:bg-pd-brand-muted hover:text-pd-brand")}
+                >
                   {t("nav.dashboard")}
                 </Button>
               </Link>
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+              <Button
+                variant="ghost"
+                className={cn(headerNavTextClass, "h-auto px-3 py-2 hover:bg-pd-brand-muted hover:text-pd-brand")}
+                onClick={() => signOut()}
+              >
                 {t("nav.logout")}
               </Button>
             </>
           ) : (
             <Link href="/login">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                className={cn(headerNavTextClass, "h-auto px-3 py-2 hover:bg-pd-brand-muted hover:text-pd-brand")}
+              >
                 {t("nav.login")}
               </Button>
             </Link>
           )}
           <Link href="/pricing">
-            <Button size="sm">Get Pro</Button>
+            <Button size="sm" className="text-base font-bold px-4 py-2.5">
+              Get Pro
+            </Button>
           </Link>
         </div>
 
@@ -346,21 +362,18 @@ export function Header() {
         </button>
       </div>
 
+      <div className="pd-header-border" aria-hidden="true" />
+
       {/* Mobile Full-screen Overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 bg-pd-surface lg:hidden">
-          <div className="flex h-[var(--pd-header-height)] items-center justify-between border-b border-pd-border px-4">
+          <div className="pd-header-row flex items-center justify-between px-4">
             <Link
               href="/"
-              className="flex items-center gap-2.5"
+              className="inline-flex shrink-0 items-center"
               onClick={() => setMobileOpen(false)}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-[var(--pd-radius-lg)] bg-pd-brand">
-                <FileText className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-xl font-bold text-pd-foreground">
-                Only<span className="text-pd-brand">4</span>PDF
-              </span>
+              <Logo variant="wordmark" />
             </Link>
             <button
               onClick={() => setMobileOpen(false)}

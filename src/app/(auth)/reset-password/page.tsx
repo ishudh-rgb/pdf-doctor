@@ -3,10 +3,11 @@
 import { useState, type FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Lock, Eye, EyeOff, FileText, Loader2 } from "lucide-react";
+import { Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Logo } from "@/components/common/logo";
 
 const inputClass =
   "w-full rounded-xl border border-pd-border bg-pd-surface py-2.5 text-sm text-pd-foreground outline-none transition focus:border-pd-brand focus:ring-2 focus:ring-pd-brand/20";
@@ -153,9 +154,7 @@ export default function ResetPasswordPage() {
       subtitle="Enter and confirm your new password below"
     >
       <div className="mb-6 hidden flex-col items-center gap-2 lg:flex">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pd-brand">
-          <FileText className="h-5 w-5 text-white" />
-        </div>
+        <Logo variant="icon" />
         <h1 className="text-xl font-bold text-pd-foreground">Choose a new password</h1>
         <p className="text-sm text-pd-muted">Enter and confirm your new password below</p>
       </div>

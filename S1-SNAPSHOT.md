@@ -4,7 +4,7 @@
 |-------|-------|
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
-| **Saved** | 2026-06-05 — Full website: all 46 pages, 22 tools, Excel/PDF pipelines v2, Sign PDF workspace, file-size on success |
+| **Saved** | 2026-06-05 — OnlyMyPDF (Logo D lock), dashboard + pricing redesign, PDF Scanner workspace, user files API, AI Summarizer polish |
 
 ---
 
@@ -14,7 +14,9 @@
 |---------|--------|------|
 | **Brand theme** | A — Enterprise Navy | `src/config/design-system.ts` |
 | **UX layout** | B — Split panel (Stripe-style) | `src/config/design-system.ts` |
-| **Preview Lab** | Off | `DESIGN_LOCKED=true` |
+| **Brand name** | OnlyMyPDF | `src/config/constants.ts`, `src/config/brand.ts` |
+| **Logo** | D — Stacked gradient (locked) | `src/config/brand-logos.ts` |
+| **Preview Lab** | Off | `DESIGN_LOCKED=true`, logo preview disabled |
 | **Body layout class** | `layout-split-panel` | `LAYOUT_BODY_CLASS.B` |
 | **Global styles** | Theme A tokens + Layout B spacing | `src/app/globals.css`, `src/styles/layout-styles.css` |
 | **Hero variant config** | `src/config/hero-variant.ts` | v1 / v2 / v2-d1 / v2-d2 switch |
@@ -46,12 +48,14 @@
 | `/forgot-password` | `src/app/(auth)/forgot-password/page.tsx` |
 | `/reset-password` | `src/app/(auth)/reset-password/page.tsx` |
 
-### Dashboard (2)
+### Dashboard (4)
 
 | Route | File |
 |-------|------|
 | `/dashboard` | `src/app/dashboard/page.tsx` |
 | `/dashboard/files` | `src/app/dashboard/files/page.tsx` |
+| `/dashboard/pricing` | `src/app/dashboard/pricing/page.tsx` |
+| Layout wrapper | `src/app/dashboard/layout.tsx` |
 
 ### Admin (9)
 
@@ -119,6 +123,34 @@ Path pattern: `src/app/api/tools/<slug>/route.ts`
 ---
 
 ## Current stage — what changed at this S1 save
+
+### OnlyMyPDF brand & UI
+
+| Change | Path |
+|--------|------|
+| Logo D locked (stacked gradient) | `src/config/brand-logos.ts`, `src/app/icon.png` |
+| Brand constants | `src/config/constants.ts`, `src/config/brand.ts` |
+| Header nav sizing + All Tools dropdown centered | `src/components/layout/header.tsx` |
+| Dashboard sidebar layout | `src/components/dashboard/dashboard-layout.tsx` |
+| Dashboard overview redesign | `src/app/dashboard/page.tsx` |
+| Dashboard pricing (compact, space-optimized) | `src/app/dashboard/pricing/page.tsx`, `src/components/dashboard/dashboard-pricing.tsx` |
+| Marketing pricing page | `src/components/marketing/pricing-page-content.tsx`, `src/app/pricing/page.tsx` |
+| User files API | `src/app/api/user/files/route.ts` |
+
+### PDF Scanner (redesigned workspace)
+
+| Component | Path |
+|-----------|------|
+| Compact workspace UI | `src/components/tools/pdf-scanner/pdf-scanner-workspace.tsx` |
+| Tool page | `src/app/(tools)/pdf-scanner/page.tsx` |
+
+### AI PDF Summarizer polish
+
+| Change | Path |
+|--------|------|
+| Related tools section | `src/app/(tools)/ai-pdf-summarizer/page.tsx` |
+| Compact workspace (`compactWorkspace`) | `src/components/layout/tool-page-shell.tsx` |
+| Removed duplicate privacy line | same page |
 
 ### Excel → PDF (verified good on Windows)
 

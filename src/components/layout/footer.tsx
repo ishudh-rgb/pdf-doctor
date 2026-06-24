@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  FileText,
   Shield,
   Minimize2,
   Layers,
@@ -15,6 +14,8 @@ import {
   Heart,
   ArrowUpRight,
 } from "lucide-react";
+import { FooterLogo } from "@/components/common/logo";
+import { APP_NAME } from "@/config/constants";
 
 const toolLinks = [
   { name: "Compress PDF", href: "/compress-pdf", icon: Minimize2, color: "text-orange-500" },
@@ -48,12 +49,7 @@ export function Footer() {
           {/* Brand column */}
           <div className="lg:col-span-4">
             <Link href="/" className="group inline-flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-200/50 ring-1 ring-white/20 transition-transform duration-300 group-hover:scale-105">
-                <FileText className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">
-                Only<span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">4</span>PDF
-              </span>
+              <FooterLogo />
             </Link>
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-gray-500">
               Every PDF tool you need, right in your browser. Fast, free, and secure. Trusted by 10,000+ users across 50+ countries.
@@ -174,7 +170,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-200 pt-6 sm:flex-row">
           <p className="text-[13px] text-gray-400">
-            © {new Date().getFullYear()} Only4PDF. All rights reserved.
+            © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
           </p>
           <p className="flex items-center gap-1 text-[12px] text-gray-400">
             Made with <Heart className="h-3 w-3 fill-rose-500 text-rose-500" /> in India for the world

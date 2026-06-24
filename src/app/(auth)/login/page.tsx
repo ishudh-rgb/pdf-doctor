@@ -3,10 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, FileText, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/common/logo";
 import { useTranslation } from "@/i18n";
 
 const inputClass =
@@ -54,9 +55,7 @@ export default function LoginPage() {
   return (
     <AuthShell title={t("auth.loginTitle")} subtitle={t("auth.loginSubtitle")}>
       <div className="mb-6 hidden flex-col items-center gap-2 lg:flex">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pd-brand">
-          <FileText className="h-5 w-5 text-white" />
-        </div>
+        <Logo variant="icon" />
         <h1 className="text-xl font-bold text-pd-foreground">{t("auth.loginTitle")}</h1>
         <p className="text-sm text-pd-muted">{t("auth.loginSubtitle")}</p>
       </div>
