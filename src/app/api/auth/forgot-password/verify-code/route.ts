@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isLocalDevAuthEnabled, localDevVerifyResetCode } from "@/lib/auth/local-dev-auth";
+import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { toSafeApiError } from "@/lib/server/safe-error";
+import { APP_URL } from "@/config/constants";
 
 export async function POST(request: NextRequest) {
   try {
+    const rate = checkAuthRateLimit(request);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+
     const { email, code } = await request.json();
 
     if (!email || !code) {
@@ -20,17 +26,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { resetToken } = await localDevVerifyResetCode({ email, code });
-    const origin = request.headers.get("origin") || "http://localhost:3000";
-    const resetUrl = `${origin}/reset-password?token=${resetToken}`;
+    const resetUrl = `${APP_URL}/reset-password?token=${resetToken}`;
 
     return NextResponse.json({
       message: "Code verified. Use the reset link to choose a new password.",
       resetUrl,
-      resetToken,
+      ...(process.env.NODE_ENV === "development" ? { resetToken } : {}),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    console.error("Verify reset code error:", err);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: toSafeApiError(err, "Verification failed") },
+      { status: 400 }
+    );
   }
 }

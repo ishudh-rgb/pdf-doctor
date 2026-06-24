@@ -5,6 +5,7 @@ import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
+import { clientIpForLogs } from "@/lib/server/request-security";
 
 export const maxDuration = 60;
 
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
       : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
     const maxSizeMB = sizeResult.maxSizeMB;
 
-    const usageResult = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"), "unlock-pdf");
+    const usageResult = await checkUsageLimit(userId, request, "unlock-pdf");
     if (!usageResult.allowed) {
       return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
     }
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       userId,
       sessionId: request.headers.get("x-session-id") || "anonymous",
       toolSlug: "unlock-pdf",
-      ipAddress: request.headers.get("x-forwarded-for"),
+      ipAddress: clientIpForLogs(request),
       fileSize: buffer.length,
       processingTimeMs: processingTime,
       status: "completed",

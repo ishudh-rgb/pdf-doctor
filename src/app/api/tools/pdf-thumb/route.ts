@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  buildOwnerHash,
   cacheThumb,
   getCachedThumb,
   getPdfSessionBuffer,
 } from "@/lib/pdf/pdf-session-store";
 import { renderPageThumb } from "@/lib/pdf/pdf-thumbnails.server";
 import { createClient } from "@/lib/supabase/server";
+import { ownerHashFromRequest } from "@/lib/server/request-security";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const ownerHash = buildOwnerHash(user?.id ?? null, request.headers.get("x-forwarded-for"));
+    const ownerHash = ownerHashFromRequest(request, user?.id ?? null);
 
     const sessionId = request.nextUrl.searchParams.get("session");
     const page = parseInt(request.nextUrl.searchParams.get("page") ?? "0", 10);

@@ -7,6 +7,7 @@ export type PdfToWordJob = {
   progress: number;
   status: PdfToWordJobStatus;
   filename: string;
+  ownerKey: string;
   engine?: PdfToWordEngine;
   /** DOCX on disk — avoids holding large files in Node heap */
   outputPath?: string;
@@ -43,13 +44,14 @@ async function purgeExpiredJobs() {
   }
 }
 
-export function createPdfToWordJob(filename: string): string {
+export function createPdfToWordJob(filename: string, ownerKey: string): string {
   void purgeExpiredJobs();
   const id = crypto.randomUUID();
   jobStore().set(id, {
     progress: 0,
     status: "running",
     filename,
+    ownerKey,
     createdAt: Date.now(),
   });
   return id;

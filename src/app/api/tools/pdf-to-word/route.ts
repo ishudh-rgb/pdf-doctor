@@ -14,8 +14,12 @@ import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
+import { clientIpForLogs } from "@/lib/server/request-security";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
+import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
+import { resolveJobOwnerKey } from "@/lib/server/job-owner";
 
 export const maxDuration = 600;
 
@@ -124,6 +128,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
+    const toolRate = checkToolRateLimit(request, "pdf-to-word");
+    if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -133,7 +140,7 @@ export async function POST(request: NextRequest) {
     const isPro = user ? (await getUserProfile(user.id)).plan === "pro" : false;
     const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
 
-    const usage = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"));
+    const usage = await checkUsageLimit(userId, getGuestUsageKey(request));
     if (!usage.allowed) {
       return NextResponse.json(
         { error: usage.message || "Daily usage limit reached." },
@@ -176,7 +183,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (wantsJobMode(request)) {
-      const jobId = createPdfToWordJob(outputFilename);
+      const ownerKey = resolveJobOwnerKey(request, userId);
+      const jobId = createPdfToWordJob(outputFilename, ownerKey);
       const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "pdfdoctor-ptw-job-"));
       const inputPath = path.join(workDir, "input.pdf");
       const outputPath = path.join(workDir, outputFilename);
@@ -185,7 +193,7 @@ export async function POST(request: NextRequest) {
       void runConversionJob(jobId, inputPath, workDir, outputPath, file.name, {
         userId,
         sessionId: request.headers.get("x-session-id") || "anonymous",
-        ipAddress: request.headers.get("x-forwarded-for"),
+        ipAddress: getGuestUsageKey(request),
         startTime,
         fileSize: prepared.length,
         pdfPassword,
@@ -209,7 +217,7 @@ export async function POST(request: NextRequest) {
       userId,
       sessionId: request.headers.get("x-session-id") || "anonymous",
       toolSlug: "pdf-to-word",
-      ipAddress: request.headers.get("x-forwarded-for"),
+      ipAddress: clientIpForLogs(request),
       fileSize: prepared.length,
       processingTimeMs: Date.now() - startTime,
       status: "completed",

@@ -365,6 +365,9 @@ export async function createPayment(data: {
   currency?: string;
   status?: "pending" | "completed" | "failed" | "refunded";
   payment_method?: string | null;
+  plan_name?: string | null;
+  plan_duration?: string | null;
+  coupon_code?: string | null;
 }) {
   const supabase = await createServiceClient();
   const { data: payment, error } = await supabase
@@ -379,12 +382,67 @@ export async function createPayment(data: {
       currency: data.currency ?? "INR",
       status: data.status ?? "pending",
       payment_method: data.payment_method ?? null,
+      plan_name: data.plan_name ?? null,
+      plan_duration: data.plan_duration ?? null,
+      coupon_code: data.coupon_code ?? null,
     })
     .select()
     .single();
 
   if (error) throw error;
   return payment;
+}
+
+export async function getPaymentByRazorpayOrderId(orderId: string) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("razorpay_order_id", orderId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getPaymentByRazorpayPaymentId(paymentId: string) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("razorpay_payment_id", paymentId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getPlanUuidByName(planName: string) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("plans")
+    .select("id")
+    .eq("name", planName)
+    .single();
+
+  if (error) throw error;
+  return data.id as string;
+}
+
+export async function incrementCouponUsage(code: string) {
+  const supabase = await createServiceClient();
+  const { data: coupon } = await supabase
+    .from("coupon_codes")
+    .select("times_used")
+    .eq("code", code.toUpperCase())
+    .single();
+
+  if (!coupon) return;
+
+  await supabase
+    .from("coupon_codes")
+    .update({ times_used: (coupon.times_used ?? 0) + 1 })
+    .eq("code", code.toUpperCase());
 }
 
 export async function updatePayment(

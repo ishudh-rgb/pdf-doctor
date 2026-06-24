@@ -11,6 +11,18 @@ import {
   FILE_LIMITS,
   isUnlimitedFileSizeMB,
 } from "@/config/constants";
+import type { NextRequest } from "next/server";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
+
+function resolveGuestKey(guestIpHash: string | null | NextRequest): string {
+  if (guestIpHash && typeof guestIpHash === "object" && "headers" in guestIpHash) {
+    return getGuestUsageKey(guestIpHash);
+  }
+  if (typeof guestIpHash === "string" && guestIpHash.trim()) {
+    return guestIpHash.trim();
+  }
+  return "unknown-guest";
+}
 
 export interface UsageLimitResult {
   allowed: boolean;
@@ -21,10 +33,18 @@ export interface UsageLimitResult {
 
 export async function checkUsageLimit(
   userId: string | null,
-  guestIpHash: string | null,
+  guestIpHash: string | null | NextRequest,
   tool: string = "general"
 ): Promise<UsageLimitResult> {
   if (!isSupabaseConfigured()) {
+    if (process.env.NODE_ENV === "production") {
+      return {
+        allowed: false,
+        remaining: 0,
+        limit: 0,
+        message: "Service temporarily unavailable. Please try again shortly.",
+      };
+    }
     return { allowed: true, remaining: -1, limit: -1 };
   }
 
@@ -56,7 +76,7 @@ export async function checkUsageLimit(
       };
     }
 
-    const guestKey = guestIpHash || "unknown-guest";
+    const guestKey = resolveGuestKey(guestIpHash);
     const dailyLimit =
       typeof settings.free_daily_limit === "number"
         ? settings.free_daily_limit

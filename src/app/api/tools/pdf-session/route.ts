@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPdfSession, buildOwnerHash } from "@/lib/pdf/pdf-session-store";
+import { createPdfSession } from "@/lib/pdf/pdf-session-store";
+import { ownerHashFromRequest } from "@/lib/server/request-security";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const ownerHash = buildOwnerHash(user?.id ?? null, request.headers.get("x-forwarded-for"));
+    const ownerHash = ownerHashFromRequest(request, user?.id ?? null);
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

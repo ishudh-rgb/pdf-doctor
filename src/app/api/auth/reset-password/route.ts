@@ -4,9 +4,14 @@ import {
   isLocalDevAuthEnabled,
   localDevResetPasswordWithToken,
 } from "@/lib/auth/local-dev-auth";
+import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { toSafeApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   try {
+    const rate = checkAuthRateLimit(request);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+
     const { token, password } = await request.json();
 
     if (!password) {
@@ -56,8 +61,9 @@ export async function POST(request: NextRequest) {
       message: "Password updated successfully. You can now log in.",
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    console.error("Reset password error:", err);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: toSafeApiError(err, "Could not reset password") },
+      { status: 400 }
+    );
   }
 }

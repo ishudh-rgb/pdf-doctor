@@ -1,26 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
-
-async function verifyAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  const serviceClient = await createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("user_profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || profile.role !== "admin") return null;
-  return user;
-}
+import { createServiceClient } from "@/lib/supabase/server";
+import { verifyAdmin } from "@/lib/auth/verify-admin";
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await verifyAdmin();
+    const admin = await verifyAdmin(request);
     if (!admin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -39,7 +23,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const admin = await verifyAdmin();
+    const admin = await verifyAdmin(request);
     if (!admin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

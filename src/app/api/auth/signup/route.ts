@@ -5,9 +5,14 @@ import {
   isLocalDevAuthEnabled,
   localDevSignUp,
 } from "@/lib/auth/local-dev-auth";
+import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { toSafeApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   try {
+    const rate = checkAuthRateLimit(request);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+
     const { email, password, fullName } = await request.json();
 
     if (!email || !password) {

@@ -3,7 +3,9 @@ import { uploadFile, validateFile } from "@/lib/services/upload.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { createUploadedFileRecord, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { generateSecureFilename } from "@/lib/utils/file";
+import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { FILE_LIMITS } from "@/config/constants";
 
 export const maxDuration = 60;
@@ -21,7 +23,9 @@ export async function POST(request: NextRequest) {
       : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
     const maxSizeMB = sizeResult.maxSizeMB;
 
-    const usageResult = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"), "file-upload");
+    const sessionId = request.headers.get("x-session-id")?.trim() || null;
+
+    const usageResult = await checkUsageLimit(userId, getGuestUsageKey(request), "file-upload");
     if (!usageResult.allowed) {
       return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
     }
@@ -52,6 +56,11 @@ export async function POST(request: NextRequest) {
     const secureName = generateSecureFilename(file.name);
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    const magic = validateBufferMagic(buffer, ["pdf", "word", "image", "excel", "powerpoint", "html", "txt"]);
+    if (!magic.valid) {
+      return NextResponse.json({ error: magic.message ?? "Invalid file content." }, { status: 400 });
+    }
+
     const uploadResult = await uploadFile(buffer, secureName, file.type, userId);
 
     const record = await createUploadedFileRecord({
@@ -61,6 +70,7 @@ export async function POST(request: NextRequest) {
       mime_type: file.type,
       file_size_bytes: file.size,
       user_id: userId,
+      guest_session_id: userId ? null : sessionId,
     });
 
     return NextResponse.json({

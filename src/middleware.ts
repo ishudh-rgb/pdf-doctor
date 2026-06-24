@@ -5,12 +5,12 @@ import { getLocalDevUserIdFromRequestEdge } from "@/lib/auth/local-dev-session-e
 
 const PROTECTED_ROUTES = ["/dashboard", "/admin"];
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@only4pdf.com";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const { supabaseResponse, user: supabaseUser } = await updateSession(request);
+  const { supabaseResponse, user: supabaseUser, profileRole } =
+    await updateSession(request);
   const localDevUserId = isLocalDevAuthEnabled()
     ? await getLocalDevUserIdFromRequestEdge(request)
     : null;
@@ -28,8 +28,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAdminRoute && supabaseUser?.email && supabaseUser.email !== ADMIN_EMAIL) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (isAdminRoute && isAuthenticated) {
+    const isAdmin =
+      profileRole === "admin" ||
+      (isLocalDevAuthEnabled() && !!localDevUserId);
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   if (isAuthRoute && isAuthenticated) {

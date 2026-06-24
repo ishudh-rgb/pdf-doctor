@@ -3,6 +3,7 @@ import {
   getLocalDevSessionUser,
   isLocalDevAuthEnabled,
 } from "@/lib/auth/local-dev-auth";
+import { getUserProfile } from "@/lib/db/queries";
 
 export interface ApiUser {
   id: string;
@@ -29,9 +30,11 @@ export async function getApiUser(): Promise<ApiUser | null> {
 
   if (!user) return null;
 
+  const profile = await getUserProfile(user.id);
+
   return {
     id: user.id,
     email: user.email ?? "",
-    plan: "free",
+    plan: profile.plan === "pro" ? "pro" : "free",
   };
 }

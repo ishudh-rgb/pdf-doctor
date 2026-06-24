@@ -7,6 +7,8 @@ import { getApiUser } from "@/lib/auth/get-api-user";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { isAIProviderConfigured } from "@/lib/ai/config";
+import { clientIpForLogs } from "@/lib/server/request-security";
+import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
 
 export const maxDuration = 120;
 
@@ -44,6 +46,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
+    const toolRate = checkToolRateLimit(request, "ai-pdf-summarizer");
+    if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+
     const user = await getApiUser();
 
     if (!user) {
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
       userId,
       sessionId: request.headers.get("x-session-id") || "anonymous",
       toolSlug: "ai-pdf-summarizer",
-      ipAddress: request.headers.get("x-forwarded-for"),
+      ipAddress: clientIpForLogs(request),
       fileSize: buffer.length,
       processingTimeMs: processingTime,
       status: "completed",

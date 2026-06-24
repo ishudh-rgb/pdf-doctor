@@ -5,7 +5,8 @@ import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
-import { createPdfSession, buildOwnerHash } from "@/lib/pdf/pdf-session-store";
+import { createPdfSession } from "@/lib/pdf/pdf-session-store";
+import { clientIpForLogs, ownerHashFromRequest } from "@/lib/server/request-security";
 import { probePdfAccess } from "@/lib/pdf/pdf-password.server";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
     const maxSizeMB = sizeResult.maxSizeMB;
 
-    const usageResult = await checkUsageLimit(userId, request.headers.get("x-forwarded-for"), "html-to-pdf");
+    const usageResult = await checkUsageLimit(userId, request, "html-to-pdf");
     if (!usageResult.allowed) {
       return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
     }
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     const originalName = file.name.replace(/\.(html?|xhtml|mhtml|svg)$/i, "");
 
-    const ownerHash = buildOwnerHash(userId, request.headers.get("x-forwarded-for"));
+    const ownerHash = ownerHashFromRequest(request, userId);
     const probe = await probePdfAccess(pdfBuffer);
     const totalPages = probe.status === "ok" ? probe.pages : 0;
     const previewSessionId = await createPdfSession(pdfBuffer, ownerHash);
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       userId,
       sessionId: request.headers.get("x-session-id") || "anonymous",
       toolSlug: "html-to-pdf",
-      ipAddress: request.headers.get("x-forwarded-for"),
+      ipAddress: clientIpForLogs(request),
       fileSize: buffer.length,
       processingTimeMs: processingTime,
       status: "completed",

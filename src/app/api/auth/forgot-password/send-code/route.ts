@@ -5,9 +5,15 @@ import {
   localDevCreateResetCode,
 } from "@/lib/auth/local-dev-auth";
 import { sendPasswordResetCode } from "@/lib/auth/password-reset-mailer";
+import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { toSafeApiError } from "@/lib/server/safe-error";
+import { APP_URL } from "@/config/constants";
 
 export async function POST(request: NextRequest) {
   try {
+    const rate = checkAuthRateLimit(request);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+
     const { email } = await request.json();
 
     if (!email) {
@@ -18,12 +24,16 @@ export async function POST(request: NextRequest) {
       const code = await localDevCreateResetCode(email);
       const delivery = await sendPasswordResetCode(email.trim().toLowerCase(), code);
 
-      return NextResponse.json({
+      const body: Record<string, string> = {
         message: "Verification code sent to your email.",
         step: "verify-code",
         mode: "local-dev",
-        devCode: delivery.devCode,
-      });
+      };
+      if (process.env.NODE_ENV === "development" && delivery.devCode) {
+        body.devCode = delivery.devCode;
+      }
+
+      return NextResponse.json(body);
     }
 
     if (!isSupabaseConfigured()) {
@@ -37,9 +47,8 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
-    const origin = request.headers.get("origin") || "http://localhost:3000";
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/reset-password`,
+      redirectTo: `${APP_URL}/reset-password`,
     });
 
     if (error) {
@@ -52,8 +61,9 @@ export async function POST(request: NextRequest) {
       mode: "supabase",
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    console.error("Send reset code error:", err);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: toSafeApiError(err, "Could not send reset email") },
+      { status: 400 }
+    );
   }
 }

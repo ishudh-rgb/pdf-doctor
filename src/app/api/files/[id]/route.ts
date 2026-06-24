@@ -3,6 +3,7 @@ import { deleteFile, getFileUrl } from "@/lib/services/upload.service";
 import { getUploadedFileById, deleteUploadedFileRecord, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeFilename } from "@/lib/utils/file";
+import { toSafeApiError } from "@/lib/server/safe-error";
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +13,9 @@ export async function GET(
     const { id } = await params;
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const file = await getUploadedFileById(id);
 
@@ -29,8 +32,9 @@ export async function GET(
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     } else {
-      if (!user) {
-        return NextResponse.json({ error: "Authentication required to download this file" }, { status: 401 });
+      const sessionId = request.headers.get("x-session-id")?.trim();
+      if (!sessionId || !file.guest_session_id || file.guest_session_id !== sessionId) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     }
 
@@ -48,17 +52,17 @@ export async function GET(
       headers: {
         "Content-Type": file.mime_type,
         "Content-Disposition": `attachment; filename="${sanitizeFilename(file.original_name)}"`,
-        "Content-Length": String(file.size),
+        "Content-Length": String(file.file_size_bytes ?? fileBuffer.byteLength),
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to download file";
+    const message = toSafeApiError(error, "Failed to download file");
 
     await logError({
       user_id: null,
       tool_name: "file-download",
       error_type: "DOWNLOAD_ERROR",
-      error_message: message,
+      error_message: error instanceof Error ? error.message : message,
       stack_trace: error instanceof Error ? error.stack : undefined,
     }).catch(() => {});
 
@@ -74,7 +78,9 @@ export async function DELETE(
     const { id } = await params;
 
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -95,13 +101,13 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "File deleted successfully" });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to delete file";
+    const message = toSafeApiError(error, "Failed to delete file");
 
     await logError({
       user_id: null,
       tool_name: "file-delete",
       error_type: "DELETE_ERROR",
-      error_message: message,
+      error_message: error instanceof Error ? error.message : message,
       stack_trace: error instanceof Error ? error.stack : undefined,
     }).catch(() => {});
 

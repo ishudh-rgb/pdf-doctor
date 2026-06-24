@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { composePdfFromSlots, type ComposeSlot } from "@/lib/services/pdf-compose.service";
+import { composePdfFromSlots } from "@/lib/services/pdf-compose.service";
 import { buildPdfBuffersDownloadResponse } from "@/lib/pdf/pdf-buffers-response";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { splitPDF } from "@/lib/services/pdf-split.service";
-import { buildOwnerHash } from "@/lib/pdf/pdf-session-store";
+import { parseComposeSlots } from "@/lib/api/compose-validation";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { FILE_LIMITS } from "@/config/constants";
 import { createClient } from "@/lib/supabase/server";
+import { ownerHashFromRequest } from "@/lib/server/request-security";
+import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { toSafeApiError } from "@/lib/server/safe-error";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
+    const toolRate = checkToolRateLimit(request, "compose-pdf");
+    if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const ownerHash = buildOwnerHash(user?.id ?? null, request.headers.get("x-forwarded-for"));
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const ownerHash = ownerHashFromRequest(request, user?.id ?? null);
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -35,12 +44,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
     }
 
-    const slots = JSON.parse(slotsRaw) as ComposeSlot[];
+    const slots = parseComposeSlots(slotsRaw);
+    if (!slots) {
+      return NextResponse.json({ error: "Invalid or too many page slots." }, { status: 400 });
+    }
+
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+    const magic = validateBufferMagic(rawBuffer, ["pdf"]);
+    if (!magic.valid) {
+      return NextResponse.json(
+        { error: magic.message ?? "Invalid PDF file content." },
+        { status: 400 }
+      );
+    }
+
     const password = (formData.get("password") as string | null) || null;
     let buffer: Buffer;
 
     try {
-      buffer = await resolvePdfBuffer(Buffer.from(await file.arrayBuffer()), password);
+      buffer = await resolvePdfBuffer(rawBuffer, password);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to open PDF";
       if (msg === "PASSWORD_REQUIRED") {
@@ -97,8 +119,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to compose PDF";
-    console.error("[compose-pdf]", message, error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[compose-pdf]", error);
+    return NextResponse.json(
+      { error: toSafeApiError(error, "Failed to compose PDF") },
+      { status: 500 }
+    );
   }
 }

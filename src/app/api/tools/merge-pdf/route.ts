@@ -18,18 +18,7 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     userId = user?.id ?? null;
 
-    const ipHash = request.headers.get("x-forwarded-for") || "unknown";
-
-    const sizeResult = userId
-      ? await checkFileSizeLimit(userId, 0)
-      : { allowed: true, maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
-    const maxSizeMB = sizeResult.maxSizeMB;
-    const maxFiles =
-      isUnlimitedFileSizeMB(maxSizeMB) || maxSizeMB > 25
-        ? FILE_LIMITS.maxFilesPerMergePro
-        : FILE_LIMITS.maxFilesPerMerge;
-
-    const usageResult = await checkUsageLimit(userId, ipHash, "merge-pdf");
+    const usageResult = await checkUsageLimit(userId, request, "merge-pdf");
     if (!usageResult.allowed) {
       return NextResponse.json({ error: usageResult.message }, { status: 429 });
     }

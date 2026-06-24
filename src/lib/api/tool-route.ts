@@ -4,8 +4,12 @@ import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
-
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
+import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { toSafeApiError } from "@/lib/server/safe-error";
+import { validateBufferMagic } from "@/lib/utils/file-magic";
+import { clientIpForLogs } from "@/lib/server/request-security";
 
 interface ToolRouteOptions {
   toolSlug: string;
@@ -13,7 +17,6 @@ interface ToolRouteOptions {
   contentType: string;
   outputExtension: string;
   maxDuration?: number;
-  /** Queue heavy conversions (Puppeteer/Python/Office) — does not change convert logic. */
   heavy?: boolean;
   convert: (buffer: Buffer, file: File, formData: FormData) => Promise<Buffer>;
   outputName?: (originalName: string) => string;
@@ -25,6 +28,9 @@ export function createToolRoute(options: ToolRouteOptions) {
     let userId: string | null = null;
 
     try {
+      const toolRate = checkToolRateLimit(request, options.toolSlug);
+      if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+
       const supabase = await createClient();
       const {
         data: { user },
@@ -38,7 +44,7 @@ export function createToolRoute(options: ToolRouteOptions) {
 
       const usageResult = await checkUsageLimit(
         userId,
-        request.headers.get("x-forwarded-for"),
+        getGuestUsageKey(request),
         options.toolSlug
       );
       if (!usageResult.allowed) {
@@ -65,6 +71,15 @@ export function createToolRoute(options: ToolRouteOptions) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
+
+      const magic = validateBufferMagic(buffer, options.allowedTypes);
+      if (!magic.valid) {
+        return NextResponse.json(
+          { error: magic.message ?? "Invalid file content." },
+          { status: 400 }
+        );
+      }
+
       const runConvert = () => options.convert(buffer, file, formData);
       const outputBuffer = options.heavy
         ? await withHeavyJobGuard(runConvert)
@@ -78,7 +93,7 @@ export function createToolRoute(options: ToolRouteOptions) {
         userId,
         sessionId: request.headers.get("x-session-id") || "anonymous",
         toolSlug: options.toolSlug,
-        ipAddress: request.headers.get("x-forwarded-for"),
+        ipAddress: clientIpForLogs(request),
         fileSize: buffer.length,
         processingTimeMs: Date.now() - startTime,
         status: "completed",
@@ -93,13 +108,13 @@ export function createToolRoute(options: ToolRouteOptions) {
         },
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Processing failed";
+      const message = toSafeApiError(error, "Processing failed");
 
       await logError({
         user_id: userId,
         tool_name: options.toolSlug,
         error_type: "TOOL_ERROR",
-        error_message: message,
+        error_message: error instanceof Error ? error.message : message,
         stack_trace: error instanceof Error ? error.stack : undefined,
       }).catch(() => {});
 

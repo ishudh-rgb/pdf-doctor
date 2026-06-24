@@ -15,19 +15,29 @@ export async function createOrder(amount: number, currency: string = "INR", rece
   return order;
 }
 
+function timingSafeEqualHex(a: string, b: string): boolean {
+  try {
+    const bufA = Buffer.from(a, "hex");
+    const bufB = Buffer.from(b, "hex");
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
+}
+
+function verifyHmac(body: string, signature: string, secret: string): boolean {
+  const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
+  return timingSafeEqualHex(expected, signature);
+}
+
 export function verifyPayment(orderId: string, paymentId: string, signature: string): boolean {
   const body = orderId + "|" + paymentId;
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-    .update(body)
-    .digest("hex");
-  return expectedSignature === signature;
+  return verifyHmac(body, signature, process.env.RAZORPAY_KEY_SECRET!);
 }
 
 export function verifyWebhookSignature(body: string, signature: string): boolean {
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-    .update(body)
-    .digest("hex");
-  return expectedSignature === signature;
+  const webhookSecret =
+    process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET!;
+  return verifyHmac(body, signature, webhookSecret);
 }

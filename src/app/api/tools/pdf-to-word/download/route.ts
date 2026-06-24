@@ -1,16 +1,35 @@
 import { createReadStream } from "fs";
 import fs from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import {
   consumePdfToWordJob,
+  getPdfToWordJob,
   releasePdfToWordJob,
 } from "@/lib/services/pdf-to-word-jobs.service";
+import { assertJobOwner, resolveJobOwnerKey } from "@/lib/server/job-owner";
 import { sanitizeFilename } from "@/lib/utils/file";
 
 export async function GET(request: NextRequest) {
   const jobId = request.nextUrl.searchParams.get("jobId");
   if (!jobId) {
     return NextResponse.json({ error: "jobId is required" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const ownerKey = resolveJobOwnerKey(request, user?.id ?? null);
+  const peek = getPdfToWordJob(jobId);
+
+  if (!peek || peek.status !== "done" || !peek.outputPath) {
+    return NextResponse.json({ error: "File not ready or already downloaded" }, { status: 404 });
+  }
+
+  if (!assertJobOwner(peek.ownerKey, ownerKey)) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
   const job = await consumePdfToWordJob(jobId);

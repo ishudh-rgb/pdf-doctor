@@ -28,11 +28,11 @@ export function getMaxFileSizeMB(isPro: boolean): number {
 export const FILE_LIMITS = {
   maxFreeFileSizeMB: parseFileSizeLimitMb(
     process.env.MAX_FREE_FILE_SIZE_MB,
-    UNLIMITED_FILE_SIZE_MB
+    25
   ),
   maxProFileSizeMB: parseFileSizeLimitMb(
     process.env.MAX_PRO_FILE_SIZE_MB,
-    UNLIMITED_FILE_SIZE_MB
+    100
   ),
   fileRetentionHours: Number(process.env.FILE_RETENTION_HOURS) || 2,
   maxFreeUsesPerDay: 5,

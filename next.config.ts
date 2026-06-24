@@ -1,17 +1,54 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const maxBodyMb = Number(process.env.MAX_UPLOAD_BODY_MB) || 110;
+
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(self), microphone=(), geolocation=()",
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://apis.google.com https://www.dropbox.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com data:",
+      "img-src 'self' data: blob: https:",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.razorpay.com https://www.googleapis.com https://api.dropboxapi.com",
+      "frame-src 'self' https://checkout.razorpay.com https://docs.google.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; "),
+  },
+];
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   turbopack: {
     root: path.join(__dirname),
   },
   experimental: {
-    // Large PDF uploads — no practical cap for local/dev; increase if needed via env
-    proxyClientMaxBodySize: "1024mb",
+    proxyClientMaxBodySize: `${maxBodyMb}mb`,
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: securityHeaders,
+      },
+    ];
   },
   webpack: (config, { dev }) => {
-    // Avoid webpack pack-file cache OOM on Windows after heavy PDF tool builds (~2gb .next/cache)
     if (dev) {
       config.cache = { type: "memory" };
     }

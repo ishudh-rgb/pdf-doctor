@@ -5,9 +5,14 @@ import {
   isLocalDevAuthEnabled,
   localDevSignIn,
 } from "@/lib/auth/local-dev-auth";
+import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { toSafeApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   try {
+    const rate = checkAuthRateLimit(request);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -48,8 +53,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user: data.user, session: data.session });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    console.error("Login error:", err);
-    return NextResponse.json({ error: message }, { status: 401 });
+    return NextResponse.json(
+      { error: toSafeApiError(err, "Login failed") },
+      { status: 401 }
+    );
   }
 }
