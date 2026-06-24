@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { txtFileToPdf } from "@/lib/services/txt-to-pdf.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
@@ -16,6 +17,9 @@ function getFileExtension(name: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "txt-to-pdf");
+  if (rateLimited) return rateLimited;
+
   const startTime = Date.now();
   let userId: string | null = null;
 

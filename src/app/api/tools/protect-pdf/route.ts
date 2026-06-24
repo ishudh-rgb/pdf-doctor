@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { protectPDF } from "@/lib/services/pdf-security.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
@@ -10,6 +11,9 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "protect-pdf");
+  if (rateLimited) return rateLimited;
+
   const startTime = Date.now();
   let userId: string | null = null;
 

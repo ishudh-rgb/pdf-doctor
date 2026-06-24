@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest,
+  options?: { loadProfileRole?: boolean }
+) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -34,7 +37,7 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     let profileRole: string | null = null;
-    if (user) {
+    if (user && options?.loadProfileRole) {
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role")

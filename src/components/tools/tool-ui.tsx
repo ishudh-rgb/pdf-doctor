@@ -1,10 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Loader2, Download, AlertCircle, Upload, FileUp, Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/ui/circular-progress";
+
+const CloudSourceButtons = dynamic(
+  () =>
+    import("@/components/upload/cloud-source-buttons").then((m) => ({
+      default: m.CloudSourceButtons,
+    })),
+  { ssr: false }
+);
 
 export function ToolResultSizeBadge({
   sizeBytes,
@@ -32,6 +41,11 @@ interface ToolDropzoneProps {
   onChooseFiles: () => void;
   chooseLabel?: string;
   className?: string;
+  onCloudFiles?: (files: FileList | File[]) => void;
+  onCloudError?: (message: string) => void;
+  cloudAcceptExtensions?: string[];
+  cloudMimeTypes?: string;
+  cloudMultiple?: boolean;
 }
 
 export function ToolDropzone({
@@ -44,6 +58,11 @@ export function ToolDropzone({
   onChooseFiles,
   chooseLabel = "Select file",
   className,
+  onCloudFiles,
+  onCloudError,
+  cloudAcceptExtensions,
+  cloudMimeTypes,
+  cloudMultiple,
 }: ToolDropzoneProps) {
   return (
     <div className={cn("w-full", className)}>
@@ -75,6 +94,16 @@ export function ToolDropzone({
         <p className="mt-2 text-sm text-pd-muted">{hint}</p>
         {subHint && <p className="mt-1 text-xs text-pd-muted/90">{subHint}</p>}
       </div>
+      {onCloudFiles && (
+        <CloudSourceButtons
+          className="mt-3"
+          onFilesSelected={(files) => onCloudFiles(files)}
+          onError={onCloudError}
+          acceptExtensions={cloudAcceptExtensions}
+          mimeTypes={cloudMimeTypes}
+          multiple={cloudMultiple}
+        />
+      )}
     </div>
   );
 }

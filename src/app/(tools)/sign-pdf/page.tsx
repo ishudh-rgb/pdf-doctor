@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
-import { SignPdfWorkspace } from '@/components/tools/sign-pdf/sign-pdf-workspace';
+import { SignPdfWorkspace } from '@/components/tools/lazy-workspaces';
 import { PdfResultPreview } from '@/components/tools/pdf-result-preview';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
 import { ToolDropzone, ToolErrorBanner } from '@/components/tools/tool-ui';

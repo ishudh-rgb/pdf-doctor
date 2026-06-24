@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { applyEditPdfOperations, type EditPdfOperations } from "@/lib/services/pdf-edit.service";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
@@ -10,6 +11,9 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "edit-pdf");
+  if (rateLimited) return rateLimited;
+
   const startTime = Date.now();
   let userId: string | null = null;
 
@@ -62,8 +66,9 @@ export async function POST(request: NextRequest) {
       images.map(async (img) => Buffer.from(await img.arrayBuffer()))
     );
 
-    let pdfBuffer = Buffer.from(await file.arrayBuffer());
-    pdfBuffer = await applyEditPdfOperations(pdfBuffer, operations, imageBuffers);
+    const pdfBuffer = Buffer.from(await file.arrayBuffer());
+    const edited = await applyEditPdfOperations(pdfBuffer, operations, imageBuffers);
+    const outputBuffer = Buffer.from(edited);
 
     const processingTime = Date.now() - startTime;
     await logToolUsage({
@@ -76,12 +81,12 @@ export async function POST(request: NextRequest) {
       status: "completed",
     }).catch(() => {});
 
-    return new NextResponse(new Uint8Array(pdfBuffer), {
+    return new NextResponse(new Uint8Array(outputBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": 'attachment; filename="edited.pdf"',
-        "Content-Length": String(pdfBuffer.length),
+        "Content-Length": String(outputBuffer.length),
       },
     });
   } catch (error) {

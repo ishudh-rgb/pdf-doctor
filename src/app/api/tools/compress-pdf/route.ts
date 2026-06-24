@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { compressPDF } from "@/lib/services/pdf-compress.service";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
@@ -11,6 +12,9 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "compress-pdf");
+  if (rateLimited) return rateLimited;
+
   const startTime = Date.now();
   let userId: string | null = null;
 

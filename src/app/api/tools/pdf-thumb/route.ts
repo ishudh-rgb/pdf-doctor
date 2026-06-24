@@ -1,3 +1,4 @@
+import { guardPdfHelperRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import {
   cacheThumb,
@@ -16,10 +17,15 @@ function thumbCacheKey(page: number, width: number): string {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimited = await guardPdfHelperRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const ownerHash = ownerHashFromRequest(request, user?.id ?? null);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const ownerHash = ownerHashFromRequest(request, session?.user?.id ?? null);
 
     const sessionId = request.nextUrl.searchParams.get("session");
     const page = parseInt(request.nextUrl.searchParams.get("page") ?? "0", 10);

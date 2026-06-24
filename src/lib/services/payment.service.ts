@@ -37,7 +37,10 @@ export function verifyPayment(orderId: string, paymentId: string, signature: str
 }
 
 export function verifyWebhookSignature(body: string, signature: string): boolean {
-  const webhookSecret =
-    process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET!;
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    if (process.env.NODE_ENV === "production") return false;
+    return verifyHmac(body, signature, process.env.RAZORPAY_KEY_SECRET!);
+  }
   return verifyHmac(body, signature, webhookSecret);
 }

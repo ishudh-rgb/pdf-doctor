@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { uploadFile, validateFile } from "@/lib/services/upload.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
@@ -11,6 +12,9 @@ import { FILE_LIMITS } from "@/config/constants";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "file-upload");
+  if (rateLimited) return rateLimited;
+
   let userId: string | null = null;
 
   try {

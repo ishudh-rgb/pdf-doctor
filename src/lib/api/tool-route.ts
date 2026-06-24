@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
+import { checkUsageLimit } from "@/lib/services/usage-limit.service";
+import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
+import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
-import { FILE_LIMITS } from "@/config/constants";
-import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
-import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { toSafeApiError } from "@/lib/server/safe-error";
 import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { clientIpForLogs } from "@/lib/server/request-security";
@@ -28,8 +28,8 @@ export function createToolRoute(options: ToolRouteOptions) {
     let userId: string | null = null;
 
     try {
-      const toolRate = checkToolRateLimit(request, options.toolSlug);
-      if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+      const toolRate = await guardToolRateLimit(request, options.toolSlug);
+      if (toolRate) return toolRate;
 
       const supabase = await createClient();
       const {
@@ -37,10 +37,8 @@ export function createToolRoute(options: ToolRouteOptions) {
       } = await supabase.auth.getUser();
       userId = user?.id ?? null;
 
-      const sizeResult = userId
-        ? await checkFileSizeLimit(userId, 0)
-        : { allowed: true, maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
-      const maxSizeMB = sizeResult.maxSizeMB;
+      const userContext = await resolveToolUserContext(userId);
+      const maxSizeMB = userContext.maxSizeMB;
 
       const usageResult = await checkUsageLimit(
         userId,

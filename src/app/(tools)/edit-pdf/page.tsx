@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
-import { EditPdfWorkspace } from '@/components/tools/edit-pdf/edit-pdf-workspace';
+import { EditPdfWorkspace } from '@/components/tools/lazy-workspaces';
 import { mapRelatedTools } from '@/components/tools/tool-helpers';
 import { ToolDropzone, ToolErrorBanner } from '@/components/tools/tool-ui';
 import { TOOLS } from '@/config/constants';

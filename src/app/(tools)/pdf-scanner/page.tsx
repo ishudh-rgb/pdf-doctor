@@ -1,7 +1,7 @@
 "use client";
 
 import { ToolPageShell } from "@/components/layout/tool-page-shell";
-import { PdfScannerWorkspace } from "@/components/tools/pdf-scanner/pdf-scanner-workspace";
+import { PdfScannerWorkspace } from "@/components/tools/lazy-workspaces";
 import { mapFaqs, mapRelatedTools } from "@/components/tools/tool-helpers";
 
 const RELATED_TOOLS = [

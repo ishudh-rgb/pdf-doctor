@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { createReadStream } from "fs";
 import fs from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,6 +12,9 @@ import { assertJobOwner, resolveJobOwnerKey } from "@/lib/server/job-owner";
 import { sanitizeFilename } from "@/lib/utils/file";
 
 export async function GET(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "pdf-to-word");
+  if (rateLimited) return rateLimited;
+
   const jobId = request.nextUrl.searchParams.get("jobId");
   if (!jobId) {
     return NextResponse.json({ error: "jobId is required" }, { status: 400 });

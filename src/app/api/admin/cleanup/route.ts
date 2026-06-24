@@ -5,6 +5,7 @@ import { verifyAdmin } from "@/lib/auth/verify-admin";
 export async function GET(request: NextRequest) {
   try {
     const admin = await verifyAdmin(request);
+    if (admin instanceof Response) return admin;
     if (!admin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const admin = await verifyAdmin(request);
+    if (admin instanceof Response) return admin;
     if (!admin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

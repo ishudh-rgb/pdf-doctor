@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createClient as createBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -40,9 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createBrowserClient();
+  const supabase = useMemo(() => createBrowserClient(), []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data } = await supabase
         .from("user_profiles")
@@ -53,9 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Profile may not exist yet
     }
-  };
+  }, [supabase]);
 
-  const fetchLocalDevSession = async () => {
+  const fetchLocalDevSession = useCallback(async () => {
     try {
       const res = await fetch("/api/auth/session");
       if (!res.ok) {
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setProfile(null);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -123,9 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchLocalDevSession, fetchProfile, supabase]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     if (!isSupabaseConfigured()) {
       await fetch("/api/auth/logout", { method: "POST" });
     } else {
@@ -133,32 +133,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setProfile(null);
-  };
+  }, [supabase]);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (!user) return;
     if (!isSupabaseConfigured()) {
       await fetchLocalDevSession();
       return;
     }
     await fetchProfile(user.id);
-  };
+  }, [fetchLocalDevSession, fetchProfile, user]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        profile,
-        loading,
-        isAdmin: profile?.role === "admin",
-        isPro: profile?.plan === "pro",
-        signOut,
-        refreshProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      profile,
+      loading,
+      isAdmin: profile?.role === "admin",
+      isPro: profile?.plan === "pro",
+      signOut,
+      refreshProfile,
+    }),
+    [user, profile, loading, signOut, refreshProfile]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuthContext() {

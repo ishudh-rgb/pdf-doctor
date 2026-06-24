@@ -1,4 +1,5 @@
 import { createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { invalidateAdminSettingsCache } from "@/lib/db/admin-settings-cache";
 
 const DEFAULT_ADMIN_SETTINGS: Record<string, unknown> = {
   free_daily_limit: 5,
@@ -305,6 +306,7 @@ export async function updateAdminSetting(key: string, value: unknown) {
     .eq("key", key);
 
   if (error) throw error;
+  invalidateAdminSettingsCache();
 }
 
 export async function getAdminDashboardStats() {

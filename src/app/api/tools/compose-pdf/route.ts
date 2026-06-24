@@ -9,7 +9,7 @@ import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { FILE_LIMITS } from "@/config/constants";
 import { createClient } from "@/lib/supabase/server";
 import { ownerHashFromRequest } from "@/lib/server/request-security";
-import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { toSafeApiError } from "@/lib/server/safe-error";
 
 export const runtime = "nodejs";
@@ -17,8 +17,8 @@ export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
-    const toolRate = checkToolRateLimit(request, "compose-pdf");
-    if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+    const toolRate = await guardToolRateLimit(request, "compose-pdf");
+    if (toolRate) return toolRate;
 
     const supabase = await createClient();
     const {

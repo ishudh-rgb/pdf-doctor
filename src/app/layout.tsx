@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { LanguageProvider } from "@/i18n";
 import { LangSync } from "@/components/i18n/lang-sync";
+import { HindiFontLoader } from "@/components/i18n/hindi-font-loader";
 import { DesignPreviewProvider } from "@/components/design/design-preview-provider";
-import { DesignPreviewLab } from "@/components/design/design-preview-lab";
 import { LogoPreviewProvider } from "@/components/providers/logo-preview-provider";
 import { HeroVariantProvider } from "@/components/marketing/hero-variant-provider";
-import { HeroVariantSwitch } from "@/components/marketing/hero-variant-switch";
+import { DevPreviewOverlays } from "@/components/layout/dev-preview-overlays";
 import {
   DEFAULT_BRAND_THEME,
   DEFAULT_LAYOUT_STYLE,
@@ -28,13 +28,6 @@ const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
   weight: ["500", "600", "700", "800"],
-});
-
-const notoSansDevanagari = Noto_Sans_Devanagari({
-  variable: "--font-devanagari",
-  subsets: ["devanagari"],
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -79,7 +72,7 @@ export default function RootLayout({
       lang="en"
       data-brand-theme={DEFAULT_BRAND_THEME}
       data-layout-style={DEFAULT_LAYOUT_STYLE}
-      className={`${inter.variable} ${plusJakarta.variable} ${notoSansDevanagari.variable} ${LAYOUT_BODY_CLASS[DEFAULT_LAYOUT_STYLE]} h-full antialiased`}
+      className={`${inter.variable} ${plusJakarta.variable} ${LAYOUT_BODY_CLASS[DEFAULT_LAYOUT_STYLE]} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <a href="#main-content" className="pd-skip-link">
@@ -90,14 +83,14 @@ export default function RootLayout({
             <HeroVariantProvider>
               <LanguageProvider>
                 <LangSync />
+                <HindiFontLoader />
                 <AuthProvider>
                   <Header />
                   <main id="main-content" className="flex-1">
                     {children}
                   </main>
                   <Footer />
-                  <DesignPreviewLab />
-                  <HeroVariantSwitch />
+                  <DevPreviewOverlays />
                 </AuthProvider>
               </LanguageProvider>
             </HeroVariantProvider>

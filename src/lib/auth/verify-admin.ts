@@ -4,8 +4,16 @@ import {
   getLocalDevSessionUser,
   isLocalDevAuthEnabled,
 } from "@/lib/auth/local-dev-auth";
+import { guardAdminRateLimit } from "@/lib/server/rate-limiter";
 
-export async function verifyAdmin(_request?: NextRequest) {
+export type VerifyAdminResult = { id: string; email?: string } | Response | null;
+
+export async function verifyAdmin(request?: NextRequest): Promise<VerifyAdminResult> {
+  if (request) {
+    const limited = await guardAdminRateLimit(request);
+    if (limited) return limited;
+  }
+
   if (isLocalDevAuthEnabled()) {
     const user = await getLocalDevSessionUser();
     if (!user || user.role !== "admin") return null;
@@ -28,4 +36,8 @@ export async function verifyAdmin(_request?: NextRequest) {
 
   if (!profile || profile.role !== "admin") return null;
   return user;
+}
+
+export function isAdminRateLimited(result: VerifyAdminResult): result is Response {
+  return result instanceof Response;
 }

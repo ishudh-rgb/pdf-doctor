@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { createPdfSession } from "@/lib/pdf/pdf-session-store";
 import { ownerHashFromRequest } from "@/lib/server/request-security";
@@ -13,6 +14,9 @@ export const maxDuration = 60;
 const WRONG_PASSWORD_MSG = "Incorrect password. Please try again.";
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "pdf-session");
+  if (rateLimited) return rateLimited;
+
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

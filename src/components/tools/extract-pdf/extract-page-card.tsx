@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Copy,
   RotateCw,
@@ -33,7 +33,7 @@ function getRotationStyle(rotation: number): React.CSSProperties | undefined {
   };
 }
 
-export function ExtractPageCard({
+export const ExtractPageCard = memo(function ExtractPageCard({
   pageNum,
   fileName,
   thumb,
@@ -188,4 +188,4 @@ export function ExtractPageCard({
       </div>
     </div>
   );
-}
+});

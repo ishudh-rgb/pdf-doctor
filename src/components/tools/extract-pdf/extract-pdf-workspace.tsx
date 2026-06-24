@@ -331,7 +331,7 @@ export function ExtractPdfWorkspace({
       const hasExtraSlots = visibleSlots.some(
         (s) =>
           selectedSlotIds.has(s.id) &&
-          (s.kind === "blank" || s.kind === "imported" || s.kind === "duplicate")
+          (s.kind === "blank" || s.kind === "imported")
       );
 
       if (hasExtraSlots) {

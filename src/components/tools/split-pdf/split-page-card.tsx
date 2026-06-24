@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Copy,
   RotateCcw,
@@ -27,7 +27,7 @@ interface SplitPageCardProps {
   onRemove: () => void;
 }
 
-export function SplitPageCard({
+export const SplitPageCard = memo(function SplitPageCard({
   pageNum,
   fileName,
   thumb,
@@ -208,4 +208,4 @@ export function SplitPageCard({
       )}
     </div>
   );
-}
+});

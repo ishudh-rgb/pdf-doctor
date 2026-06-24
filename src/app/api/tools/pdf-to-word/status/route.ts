@@ -1,9 +1,13 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getPdfToWordJob } from "@/lib/services/pdf-to-word-jobs.service";
 import { assertJobOwner, resolveJobOwnerKey } from "@/lib/server/job-owner";
 
 export async function GET(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "pdf-to-word");
+  if (rateLimited) return rateLimited;
+
   const jobId = request.nextUrl.searchParams.get("jobId");
   if (!jobId) {
     return NextResponse.json({ error: "jobId is required" }, { status: 400 });

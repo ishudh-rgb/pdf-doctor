@@ -13,6 +13,10 @@ async function main() {
   const pdf = fs.readFileSync(pdfPath);
   const start = Date.now();
   const docx = await pdfToWordPdf2docx(pdf, { timeoutMs: 300_000 });
+  if (!docx) {
+    console.error("Conversion wrote no in-memory buffer (disk-only mode).");
+    process.exit(1);
+  }
   const out = path.join(process.cwd(), "test-pdf2docx-output.docx");
   fs.writeFileSync(out, docx);
   console.log(`Saved ${out} (${docx.length} bytes) in ${Date.now() - start}ms`);

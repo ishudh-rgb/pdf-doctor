@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { getApiUser } from "@/lib/auth/get-api-user";
 import {
@@ -9,6 +10,9 @@ import {
 const ALLOWED_FORMATS: SummaryExportFormat[] = ["txt", "docx", "pdf"];
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "ai-pdf-summarizer");
+  if (rateLimited) return rateLimited;
+
   try {
     const user = await getApiUser();
     if (!user) {

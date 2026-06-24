@@ -1,3 +1,4 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { wordToPdf } from "@/lib/services/word-to-pdf.service";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
@@ -11,6 +12,9 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "word-to-pdf");
+  if (rateLimited) return rateLimited;
+
   const startTime = Date.now();
   let userId: string | null = null;
 

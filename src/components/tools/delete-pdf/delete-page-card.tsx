@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Copy,
   RotateCw,
@@ -25,7 +25,7 @@ interface DeletePageCardProps {
   onRotateRight: () => void;
 }
 
-export function DeletePageCard({
+export const DeletePageCard = memo(function DeletePageCard({
   pageNum,
   fileName,
   thumb,
@@ -178,4 +178,4 @@ export function DeletePageCard({
       </div>
     </div>
   );
-}
+});

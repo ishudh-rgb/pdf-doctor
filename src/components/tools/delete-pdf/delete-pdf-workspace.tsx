@@ -329,7 +329,7 @@ export function DeletePdfWorkspace({
       }
 
       const hasExtraSlots = visibleSlots.some(
-        (s) => s.kind === "blank" || s.kind === "imported" || s.kind === "duplicate"
+        (s) => s.kind === "blank" || s.kind === "imported"
       );
 
       if (hasExtraSlots) {

@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import crypto from "crypto";
+import { requireIpHashSalt } from "@/lib/config/env-security";
 
 /**
  * Client IP from platform-trusted headers only (Vercel, Cloudflare).
@@ -22,7 +23,7 @@ export function getTrustedClientIp(request: NextRequest): string {
 }
 
 export function hashClientIp(ip: string): string {
-  const salt = process.env.IP_HASH_SALT || "onlymypdf-ip-salt";
+  const salt = requireIpHashSalt();
   return crypto
     .createHash("sha256")
     .update(`${salt}:${ip}`)

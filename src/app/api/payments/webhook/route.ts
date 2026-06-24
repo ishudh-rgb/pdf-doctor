@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/services/payment.service";
+import { fulfillPendingPayment } from "@/lib/services/payment-fulfillment.service";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -25,19 +26,18 @@ export async function POST(request: NextRequest) {
     switch (eventType) {
       case "payment.captured": {
         const paymentEntity = payload.payment?.entity;
-        if (!paymentEntity) break;
+        if (!paymentEntity?.order_id || !paymentEntity?.id) break;
 
-        const { error } = await supabase
-          .from("payments")
-          .update({
-            status: "completed",
-            amount: paymentEntity.amount,
-            payment_method: paymentEntity.method || null,
-          })
-          .eq("razorpay_order_id", paymentEntity.order_id);
+        const result = await fulfillPendingPayment({
+          razorpay_order_id: paymentEntity.order_id,
+          razorpay_payment_id: paymentEntity.id,
+          payment_method: paymentEntity.method || null,
+          amount: paymentEntity.amount,
+          requireSignature: false,
+        });
 
-        if (error) {
-          console.error("Failed to update payment on capture:", error.message);
+        if (!result.ok) {
+          console.error("Webhook payment fulfillment failed:", result.error);
         }
         break;
       }

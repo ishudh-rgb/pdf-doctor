@@ -23,6 +23,10 @@ export async function GET(
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
+    if (file.is_deleted) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
     if (file.expires_at && new Date(file.expires_at) < new Date()) {
       return NextResponse.json({ error: "File has expired" }, { status: 410 });
     }

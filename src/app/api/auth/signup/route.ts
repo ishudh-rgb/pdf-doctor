@@ -10,7 +10,7 @@ import { toSafeApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   try {
-    const rate = checkAuthRateLimit(request);
+    const rate = await checkAuthRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 
     const { email, password, fullName } = await request.json();

@@ -1,15 +1,21 @@
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { mergePDFs } from "@/lib/services/pdf-merge.service";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
-import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
+import { checkUsageLimit } from "@/lib/services/usage-limit.service";
+import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
 import { logUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
-import { FILE_LIMITS, isUnlimitedFileSizeMB } from "@/config/constants";
+import { FILE_LIMITS } from "@/config/constants";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
 
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardToolRateLimit(request, "merge-pdf");
+  if (rateLimited) return rateLimited;
+
   const startTime = Date.now();
   let userId: string | null = null;
 
@@ -22,6 +28,13 @@ export async function POST(request: NextRequest) {
     if (!usageResult.allowed) {
       return NextResponse.json({ error: usageResult.message }, { status: 429 });
     }
+
+    const userContext = await resolveToolUserContext(userId);
+    const maxSizeMB = userContext.maxSizeMB;
+    const maxFiles = userContext.isPro
+      ? FILE_LIMITS.maxFilesPerMergePro
+      : FILE_LIMITS.maxFilesPerMerge;
+    const ipHash = getGuestUsageKey(request);
 
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];

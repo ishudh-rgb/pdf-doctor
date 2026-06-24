@@ -8,7 +8,7 @@ import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { isAIProviderConfigured } from "@/lib/ai/config";
 import { clientIpForLogs } from "@/lib/server/request-security";
-import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 
 export const maxDuration = 120;
 
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    const toolRate = checkToolRateLimit(request, "ai-pdf-summarizer");
-    if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+    const toolRate = await guardToolRateLimit(request, "ai-pdf-summarizer");
+    if (toolRate) return toolRate;
 
     const user = await getApiUser();
 

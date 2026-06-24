@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
-import { MergePdfWorkspace } from '@/components/tools/merge-pdf/merge-pdf-workspace';
+import { MergePdfWorkspace } from '@/components/tools/lazy-workspaces';
 import { ToolDropzone, ToolErrorBanner } from '@/components/tools/tool-ui';
 
 const RELATED_TOOLS = [
@@ -69,7 +69,6 @@ export default function MergePdfPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onChooseFiles={() => fileInputRef.current?.click()}
-            multiple
           />
           <input
             ref={fileInputRef}

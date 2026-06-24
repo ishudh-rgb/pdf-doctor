@@ -1,3 +1,4 @@
+import { guardPdfHelperRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { renderPdfThumbnailsServer } from "@/lib/pdf/pdf-thumbnails.server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
@@ -7,6 +8,9 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
+  const rateLimited = await guardPdfHelperRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

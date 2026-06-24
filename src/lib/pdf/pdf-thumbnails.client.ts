@@ -128,11 +128,39 @@ export async function loadPdfThumbnailsBatched(
   const pagesToLoad = Math.min(totalPages, MAX_THUMBNAIL_PAGES);
   const truncated = session.truncated || totalPages > MAX_THUMBNAIL_PAGES;
 
-  const thumbnails = Array.from({ length: pagesToLoad }, (_, i) =>
+  const allThumbnails = Array.from({ length: pagesToLoad }, (_, i) =>
     thumbUrl(session.sessionId, i + 1)
   );
 
-  onBatch(thumbnails, totalPages, truncated);
+  const INITIAL_BATCH = 20;
+  const PROGRESS_BATCH = 24;
+
+  if (pagesToLoad <= INITIAL_BATCH) {
+    onBatch(allThumbnails, totalPages, truncated);
+    return { totalPages };
+  }
+
+  onBatch(allThumbnails.slice(0, INITIAL_BATCH), totalPages, truncated);
+
+  let loaded = INITIAL_BATCH;
+  const pump = () => {
+    if (loaded >= pagesToLoad) return;
+    loaded = Math.min(loaded + PROGRESS_BATCH, pagesToLoad);
+    onBatch(allThumbnails.slice(0, loaded), totalPages, truncated);
+    if (loaded < pagesToLoad) {
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(pump, { timeout: 250 });
+      } else {
+        window.setTimeout(pump, 16);
+      }
+    }
+  };
+
+  if (typeof requestIdleCallback !== "undefined") {
+    requestIdleCallback(pump, { timeout: 250 });
+  } else {
+    window.setTimeout(pump, 16);
+  }
 
   return { totalPages };
 }

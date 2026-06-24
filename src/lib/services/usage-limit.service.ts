@@ -2,8 +2,9 @@ import {
   getUserDailyUsage,
   getGuestDailyUsage,
   getUserProfile,
-  getAdminSettings,
 } from "@/lib/db/queries";
+import { getCachedAdminSettings } from "@/lib/db/admin-settings-cache";
+import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
 import { logError } from "@/lib/db/queries";
 import { isLocalDevAuthEnabled } from "@/lib/auth/auth-config";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
@@ -49,7 +50,7 @@ export async function checkUsageLimit(
   }
 
   try {
-    const settings = await getAdminSettings();
+    const settings = await getCachedAdminSettings();
 
     if (userId) {
       const profile = await getUserProfile(userId);
@@ -116,7 +117,7 @@ export async function checkAIUsageLimit(
       return { allowed: true, remaining: 3, limit: 3 };
     }
 
-    const settings = await getAdminSettings();
+    const settings = await getCachedAdminSettings();
     const profile = await getUserProfile(userId);
     const isPro = profile.plan === "pro";
 
@@ -153,16 +154,19 @@ export async function checkAIUsageLimit(
 
 export async function checkFileSizeLimit(
   userId: string | null,
-  fileSizeBytes?: number
+  fileSizeBytes?: number,
+  context?: Awaited<ReturnType<typeof resolveToolUserContext>>
 ): Promise<{ allowed: boolean; maxSizeMB: number }> {
   try {
     let maxSizeMB = FILE_LIMITS.maxFreeFileSizeMB;
 
     if (userId) {
-      const profile = await getUserProfile(userId);
+      const profile = context?.profile ?? (await getUserProfile(userId));
       if (profile.plan === "pro") {
         maxSizeMB = FILE_LIMITS.maxProFileSizeMB;
       }
+    } else if (context) {
+      maxSizeMB = context.maxSizeMB;
     }
 
     if (isUnlimitedFileSizeMB(maxSizeMB)) {

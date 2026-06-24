@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Copy,
   RotateCcw,
@@ -41,7 +41,7 @@ interface RotatePageCardProps {
   onRemove: () => void;
 }
 
-export function RotatePageCard({
+export const RotatePageCard = memo(function RotatePageCard({
   pageNum,
   fileName,
   thumb,
@@ -191,4 +191,4 @@ export function RotatePageCard({
       </div>
     </div>
   );
-}
+});

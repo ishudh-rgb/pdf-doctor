@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
-import { SplitPdfWorkspace } from '@/components/tools/split-pdf/split-pdf-workspace';
+import { SplitPdfWorkspace } from '@/components/tools/lazy-workspaces';
 import { ToolDropzone, ToolErrorBanner } from '@/components/tools/tool-ui';
 
 const RELATED_TOOLS = [

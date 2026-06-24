@@ -8,9 +8,11 @@ const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isAdminRoute = pathname.startsWith("/admin");
 
   const { supabaseResponse, user: supabaseUser, profileRole } =
-    await updateSession(request);
+    await updateSession(request, { loadProfileRole: isAdminRoute });
+
   const localDevUserId = isLocalDevAuthEnabled()
     ? await getLocalDevUserIdFromRequestEdge(request)
     : null;
@@ -20,7 +22,6 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
-  const isAdminRoute = pathname.startsWith("/admin");
 
   if (isProtectedRoute && !isAuthenticated) {
     const loginUrl = new URL("/login", request.url);

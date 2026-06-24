@@ -17,7 +17,7 @@ import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
-import { checkToolRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { resolveJobOwnerKey } from "@/lib/server/job-owner";
 
@@ -128,8 +128,8 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    const toolRate = checkToolRateLimit(request, "pdf-to-word");
-    if (!toolRate.allowed) return rateLimitResponse(toolRate.retryAfterSec);
+    const toolRate = await guardToolRateLimit(request, "pdf-to-word");
+    if (toolRate) return toolRate;
 
     const supabase = await createClient();
     const {

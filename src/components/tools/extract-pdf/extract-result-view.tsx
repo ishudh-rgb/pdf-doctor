@@ -192,7 +192,7 @@ export function ExtractResultView({
 
           {/* Action icons */}
           <div className="mt-4 flex items-center justify-center gap-1 border-b border-gray-100 pb-4">
-            {navigator.share && (
+            {"share" in navigator && (
               <button
                 type="button"
                 onClick={handleShare}

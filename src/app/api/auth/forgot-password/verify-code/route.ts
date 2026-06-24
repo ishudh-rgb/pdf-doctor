@@ -6,7 +6,7 @@ import { APP_URL } from "@/config/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const rate = checkAuthRateLimit(request);
+    const rate = await checkAuthRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 
     const { email, code } = await request.json();

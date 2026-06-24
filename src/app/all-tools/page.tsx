@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     "Browse every PDF tool available on Only4PDF — merge, split, compress, convert, edit, sign, protect, unlock, scan, and AI-powered summarization.",
 };
 
+export const revalidate = 3600;
+
 export default function AllToolsPage() {
   return <AllToolsPageContent />;
 }

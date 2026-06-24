@@ -135,7 +135,7 @@ function useActiveLogoConfig(variant: LogoVariant) {
   const option = LOGO_VARIANTS[logoVariant];
   const useEnvOverride = Boolean(process.env.NEXT_PUBLIC_BRAND_LOGO?.trim());
 
-  const placement =
+  const placement: "header" | "footer" | "icon" =
     variant === "wordmark" || variant === "full" ? "header" : "icon";
 
   if (useEnvOverride) {
@@ -232,7 +232,7 @@ export function Logo({
   return (
     <Link
       href={href}
-      className="pd-site-logo-link inline-flex shrink-0 items-center"
+      className="pd-site-logo-link inline-flex shrink-0 items-center justify-center"
     >
       {content}
     </Link>
