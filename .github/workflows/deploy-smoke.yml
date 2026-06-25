@@ -47,6 +47,23 @@ jobs:
           curl -fsS -o /dev/null -w "%{http_code}" "$BASE/robots.txt" | grep -E '^200$'
           curl -fsS -o /dev/null -w "%{http_code}" "$BASE/sitemap.xml" | grep -E '^200$'
 
+      - name: Detailed health check (authenticated)
+        if: steps.url.outputs.base != ''
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "Skipping detailed health (CRON_SECRET secret not configured)."
+            exit 0
+          fi
+          BASE="${{ steps.url.outputs.base }}"
+          curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$BASE/api/health" | tee health-detail.json
+          node -e "
+            const h = require('./health-detail.json');
+            if (!h.checks) throw new Error('Missing detailed health checks');
+            console.log('Detailed health:', h.status, Object.keys(h.checks));
+          "
+
       - name: Skip (no PRODUCTION_URL secret)
         if: steps.url.outputs.base == ''
         run: |

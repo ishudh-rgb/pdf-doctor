@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { getUserJobs } from "@/lib/db/queries";
+import { getUserJobs, getUserProfile, getUserDailyUsage } from "@/lib/db/queries";
 import { getApiUser } from "@/lib/auth/get-api-user";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
+import { getCachedAdminSettings } from "@/lib/db/admin-settings-cache";
 
 type ToolJobRow = {
   id: string;
@@ -103,6 +104,7 @@ export async function GET(request: NextRequest) {
         id: job.id,
         file_name: pickFileName(job, output),
         tool: formatToolLabel(job.tool_name),
+        tool_slug: job.tool_name,
         created_at: job.created_at,
         status: mapJobStatus(job.status),
         file_size: output?.file_size_bytes ?? job.file_size_bytes ?? 0,
@@ -115,7 +117,36 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ files });
+    const profile = await getUserProfile(user.id);
+    const settings = await getCachedAdminSettings();
+    const isPro = (profile as { plan?: string }).plan === "pro";
+    const filesLimit =
+      typeof settings.free_daily_limit === "number"
+        ? settings.free_daily_limit
+        : Number(settings.free_daily_limit) || 5;
+    const aiLimit =
+      typeof settings.free_daily_ai_limit === "number"
+        ? settings.free_daily_ai_limit
+        : Number(settings.free_daily_ai_limit) || 1;
+    const [filesUsed, aiUsedToday] = isPro
+      ? [0, 0]
+      : await Promise.all([
+          getUserDailyUsage(user.id),
+          getUserDailyUsage(user.id, "ai-pdf-summarizer"),
+        ]);
+
+    return NextResponse.json({
+      files,
+      usage: {
+        files_used: filesUsed,
+        files_limit: isPro ? -1 : filesLimit,
+        ai_used: isPro
+          ? ((profile as { ai_credits_used?: number }).ai_credits_used ?? 0)
+          : aiUsedToday,
+        ai_limit: isPro ? -1 : aiLimit,
+        total_processed: (profile as { total_files_processed?: number }).total_files_processed ?? 0,
+      },
+    });
   } catch (err) {
     console.error("GET /api/user/files:", err);
     return NextResponse.json({ files: [] });

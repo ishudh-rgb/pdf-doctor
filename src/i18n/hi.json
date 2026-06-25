@@ -164,6 +164,9 @@
     "processing": "आपकी फ़ाइल प्रोसेस हो रही है...",
     "processingSubtitle": "इसमें कुछ सेकंड लग सकते हैं",
     "downloadReady": "आपकी फ़ाइल तैयार है!",
+    "pdfReady": "PDF तैयार है",
+    "outputSize": "आउटपुट साइज़",
+    "chooseFileAria": "अपलोड के लिए फ़ाइल चुनें",
     "download": "डाउनलोड करें",
     "downloadAll": "सब डाउनलोड करें",
     "processAnother": "एक और फ़ाइल प्रोसेस करें",
@@ -606,6 +609,16 @@
     "maxSize": "कोई भी फ़ाइल साइज़",
     "supportedTypes": "सपोर्टेड: {types}",
     "removeAll": "सब हटाएँ"
+  },
+
+  "contact": {
+    "errors": {
+      "nameRequired": "नाम कम से कम 2 अक्षर का होना चाहिए।",
+      "emailInvalid": "कृपया एक वैध ईमेल दर्ज करें।",
+      "subjectInvalid": "कृपया एक वैध विषय चुनें।",
+      "messageRequired": "संदेश कम से कम 10 अक्षर का होना चाहिए।",
+      "messageTooLong": "संदेश बहुत लंबा है (अधिकतम 5000 अक्षर)।"
+    }
   },
 
   "footer": {

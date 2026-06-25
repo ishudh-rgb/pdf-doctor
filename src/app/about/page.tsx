@@ -15,8 +15,8 @@ export const revalidate = 3600;
 export default function AboutPage() {
   return (
     <>
-      <PageAeoSummary variant="about" />
       <AboutPageContent />
+      <PageAeoSummary variant="about" />
     </>
   );
 }

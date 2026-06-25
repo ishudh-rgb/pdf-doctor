@@ -59,7 +59,7 @@ export async function tryExportWithWord(
     const { stdout, stderr } = await execFileAsync(
       "cscript",
       ["//Nologo", WORD_EXPORT_SCRIPT, inputPath, outputPath],
-      { timeout: 120_000, windowsHide: true }
+      { timeout: 45_000, windowsHide: true }
     );
 
     const combined = `${stdout}\n${stderr}`.trim();

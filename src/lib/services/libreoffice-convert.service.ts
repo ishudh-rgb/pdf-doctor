@@ -27,10 +27,25 @@ export async function tryConvertWithLibreOffice(fileBuffer: Buffer): Promise<Buf
       callback: (err: Error | null, result: Buffer) => void
     ) => void;
 
-    return await new Promise<Buffer>((resolve, reject) => {
+    return await new Promise<Buffer | null>((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        console.warn("[libreoffice] Timed out after 30s");
+        resolve(null);
+      }, 30_000);
+
       convert(fileBuffer, ".pdf", undefined, (err, result) => {
-        if (err) reject(err);
-        else resolve(result);
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (err) {
+          console.warn("[libreoffice] Failed:", err.message);
+          resolve(null);
+          return;
+        }
+        resolve(result);
       });
     });
   } catch {

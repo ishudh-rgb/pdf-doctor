@@ -32,8 +32,8 @@ export default async function ToolsLayout({ children }: Props) {
     <>
       {slug && getToolSEO(slug) ? <ToolJsonLd slug={slug} /> : null}
       <ToolLayoutClient>
-        {slug && getToolAeo(slug) ? <ToolAeoBlock slug={slug} /> : null}
         {children}
+        {slug && getToolAeo(slug) ? <ToolAeoBlock slug={slug} /> : null}
       </ToolLayoutClient>
     </>
   );

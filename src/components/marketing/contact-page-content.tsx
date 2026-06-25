@@ -7,36 +7,37 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { MarketingPageShell } from "@/components/layout/marketing-page-shell";
 import { SUPPORT_EMAIL } from "@/config/constants";
+import { useTranslation } from "@/i18n";
+import {
+  getContactFieldErrors,
+  type ContactFieldErrors,
+} from "@/lib/validation/contact-validation";
 
 const inputClass =
   "mt-1.5 w-full rounded-xl border border-pd-border bg-pd-surface px-4 py-2.5 text-sm text-pd-foreground placeholder:text-pd-muted focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20";
 
 export function ContactPageContent() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "General",
     message: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<ContactFieldErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
   function validate() {
-    const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
+    const fieldErrors = getContactFieldErrors(formData);
+    const translated: ContactFieldErrors = {};
+    for (const [key, errorKey] of Object.entries(fieldErrors)) {
+      if (errorKey) {
+        translated[key as keyof ContactFieldErrors] = t(errorKey);
+      }
     }
-    if (!formData.message.trim()) {
-      newErrors.message = "Message is required";
-    } else if (formData.message.trim().length < 10) {
-      newErrors.message = "Message must be at least 10 characters";
-    }
-    return newErrors;
+    return translated;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -58,12 +59,12 @@ export function ContactPageContent() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "Could not send your message. Please try again.");
+        throw new Error(data.error || t("errors.generic"));
       }
       setSubmitted(true);
     } catch (err) {
       setSubmitError(
-        err instanceof Error ? err.message : "Could not send your message. Please try again."
+        err instanceof Error ? err.message : t("errors.generic")
       );
     } finally {
       setSubmitting(false);
@@ -156,6 +157,11 @@ export function ContactPageContent() {
                     <option value="Billing">Billing</option>
                     <option value="Other">Other</option>
                   </select>
+                  {errors.subject && (
+                    <p className="mt-1 text-xs text-pd-danger" role="alert">
+                      {errors.subject}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-pd-foreground">

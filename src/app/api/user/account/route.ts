@@ -7,6 +7,7 @@ import {
   getUserUploadedFilePaths,
   markFileDeleted,
   deleteUserConsentRecords,
+  deleteUserErrorLogs,
   getUserConsentRecords,
   getUserUsageLogsForExport,
   getUserAiUsageLogsForExport,
@@ -43,6 +44,7 @@ export async function DELETE(request: NextRequest) {
     await supabase.from("usage_logs").delete().eq("user_id", user.id);
     await supabase.from("ai_usage_logs").delete().eq("user_id", user.id);
     await deleteUserConsentRecords(user.id);
+    await deleteUserErrorLogs(user.id);
     await supabase.from("user_profiles").delete().eq("id", user.id);
 
     const { error: authError } = await supabase.auth.admin.deleteUser(user.id);

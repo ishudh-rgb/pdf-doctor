@@ -56,7 +56,20 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const pdfBuffer = await withHeavyJobGuard(() => wordToPdf(buffer));
+    const pdfBuffer = await Promise.race([
+      withHeavyJobGuard(() => wordToPdf(buffer)),
+      new Promise<never>((_, reject) => {
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                "Conversion timed out. Try a smaller file, or retry in a moment."
+              )
+            ),
+          55_000
+        );
+      }),
+    ]);
 
     const originalName = file.name.replace(/\.(doc|docx)$/i, "");
 

@@ -44,10 +44,16 @@ export function PageAeoSummary({ variant }: PageAeoSummaryProps) {
     <section
       id="aeo-summary"
       aria-label="Page summary for search and AI assistants"
-      className="border-b border-pd-border bg-pd-surface/50"
+      className="border-t border-pd-border bg-pd-background"
     >
-      <div className="pd-container max-w-3xl py-4">
-        <p id="aeo-short-answer" className="text-sm font-medium leading-relaxed text-pd-foreground">
+      <div className="pd-container max-w-3xl py-8 sm:py-10">
+        <p className="text-xs font-bold uppercase tracking-wider text-pd-muted">
+          About OnlyMyPDF
+        </p>
+        <p
+          id="aeo-short-answer"
+          className="mt-2 text-sm leading-relaxed text-pd-muted"
+        >
           {copy.shortAnswer}
         </p>
         {copy.extra ? (
@@ -55,8 +61,8 @@ export function PageAeoSummary({ variant }: PageAeoSummaryProps) {
         ) : null}
         {copy.keyFacts && copy.keyFacts.length > 0 ? (
           <>
-            <h2 className="mt-3 text-sm font-semibold text-pd-foreground">Key facts</h2>
-            <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-pd-muted">
+            <h2 className="mt-4 text-sm font-semibold text-pd-foreground">Key facts</h2>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-pd-muted">
               {copy.keyFacts.map((fact) => (
                 <li key={fact}>{fact}</li>
               ))}

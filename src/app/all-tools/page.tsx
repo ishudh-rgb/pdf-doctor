@@ -19,8 +19,8 @@ export default function AllToolsPage() {
   return (
     <>
       <JsonLd data={allToolsItemListJsonLd()} />
-      <PageAeoSummary variant="all-tools" />
       <AllToolsPageContent />
+      <PageAeoSummary variant="all-tools" />
     </>
   );
 }

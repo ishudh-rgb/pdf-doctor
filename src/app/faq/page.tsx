@@ -30,8 +30,8 @@ export default function FaqPage() {
           ...(faqSchema ? [faqSchema] : []),
         ]}
       />
-      <PageAeoSummary variant="faq" />
       <FaqPageContent />
+      <PageAeoSummary variant="faq" />
     </>
   );
 }

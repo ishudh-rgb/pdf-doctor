@@ -65,19 +65,33 @@ export default function WordToPdfPage() {
     setError(null);
     setProgress(20);
 
+    const progressTimer = window.setInterval(() => {
+      setProgress((p) => (p < 90 ? p + 1 : p));
+    }, 1500);
+
+    const controller = new AbortController();
+    const abortTimer = window.setTimeout(() => controller.abort(), 58_000);
+
     try {
       const formData = new FormData();
       formData.append('file', files[0]);
 
       setProgress(50);
-      const res = await fetch('/api/tools/word-to-pdf', { method: 'POST', body: formData });
+      const res = await fetch('/api/tools/word-to-pdf', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Failed to convert Word to PDF. Please try again.');
       }
 
-      setProgress(80);
+      setProgress(92);
       const blob = await res.blob();
+      if (!blob.size) {
+        throw new Error('Conversion returned an empty file. Please try again.');
+      }
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
       setResultSize(blob.size);
@@ -85,8 +99,15 @@ export default function WordToPdfPage() {
       setProgress(100);
       setCompleted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Conversion timed out. Word or LibreOffice may be busy — please retry.');
+      } else {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      }
+      setProgress(0);
     } finally {
+      window.clearInterval(progressTimer);
+      window.clearTimeout(abortTimer);
       setProcessing(false);
     }
   };

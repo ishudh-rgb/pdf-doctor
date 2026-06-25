@@ -670,6 +670,64 @@ export async function purgeOldUsageLogs(retentionDays = 90): Promise<number> {
   return data?.length ?? 0;
 }
 
+export async function purgeOldAiUsageLogs(retentionDays = 90): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+
+  const supabase = await createServiceClient();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - retentionDays);
+
+  const { data, error } = await supabase
+    .from("ai_usage_logs")
+    .delete()
+    .lt("created_at", cutoff.toISOString())
+    .select("id");
+
+  if (error) {
+    console.error("ai_usage_logs purge failed:", error.message);
+    return 0;
+  }
+
+  return data?.length ?? 0;
+}
+
+export async function purgeOldErrorLogs(retentionDays = 90): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+
+  const supabase = await createServiceClient();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - retentionDays);
+
+  const { data, error } = await supabase
+    .from("error_logs")
+    .delete()
+    .lt("created_at", cutoff.toISOString())
+    .select("id");
+
+  if (error) {
+    console.error("error_logs purge failed:", error.message);
+    return 0;
+  }
+
+  return data?.length ?? 0;
+}
+
+export async function deleteUserErrorLogs(userId: string): Promise<number> {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("error_logs")
+    .delete()
+    .eq("user_id", userId)
+    .select("id");
+
+  if (error) {
+    console.error("error_logs user delete failed:", error.message);
+    return 0;
+  }
+
+  return data?.length ?? 0;
+}
+
 export async function getUserConsentRecords(userId: string) {
   const supabase = await createServiceClient();
   const { data, error } = await supabase

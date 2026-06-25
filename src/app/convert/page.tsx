@@ -16,8 +16,8 @@ export const revalidate = 3600;
 export default function ConvertPage() {
   return (
     <>
-      <PageAeoSummary variant="convert" />
       <ConvertPageContent />
+      <PageAeoSummary variant="convert" />
     </>
   );
 }

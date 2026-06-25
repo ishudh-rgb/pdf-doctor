@@ -44,6 +44,7 @@ Copy this checklist when deploying to Vercel, Docker, or any host. **Conversion 
 | Secret | Purpose |
 |--------|---------|
 | `PRODUCTION_URL` | Post-deploy smoke test target (e.g. `https://onlymypdf.com`) |
+| `CRON_SECRET` | Optional: authenticated detailed health check in deploy-smoke |
 
 ## Database (run once per environment)
 
@@ -54,6 +55,7 @@ Execute in order in Supabase SQL Editor:
 3. `supabase/migrations/003_security_rls_payments.sql`
 4. `supabase/migrations/004_security_rls_admin_tables.sql`
 5. `supabase/migrations/005_scalability_privacy.sql`
+6. `supabase/migrations/006_payment_retention_on_delete.sql`
 
 Configure **Storage** bucket `pdf-files` as **private** (see `DEPLOYMENT_GUIDE.md`).
 

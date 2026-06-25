@@ -33,8 +33,8 @@ export default function HomePage() {
           ...(homeHowTo ? [homeHowTo] : []),
         ]}
       />
-      <PageAeoSummary variant="home" />
       <HomePageContent />
+      <PageAeoSummary variant="home" />
     </>
   );
 }

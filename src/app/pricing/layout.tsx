@@ -13,8 +13,8 @@ export const metadata: Metadata = buildPageMetadata({
 export default function PricingLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <PageAeoSummary variant="pricing" />
       {children}
+      <PageAeoSummary variant="pricing" />
     </>
   );
 }

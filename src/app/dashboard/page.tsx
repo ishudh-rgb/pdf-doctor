@@ -25,7 +25,8 @@ import { cn } from "@/lib/utils/cn";
 import { useTranslation } from "@/i18n";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-layout";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { slugToToolKey } from "@/lib/dashboard/tool-key";
 
 const quickAccessTools = [
   { slug: "merge-pdf", icon: Layers, nameKey: "tools.mergePdf.name", color: "from-blue-500 to-indigo-600" },
@@ -47,15 +48,16 @@ interface JobRow {
   date: string;
   status: JobStatus;
   downloadable: boolean;
+  downloadUrl: string | null;
 }
 
-const fallbackJobs: JobRow[] = [
-  { id: "1", toolKey: "tools.mergePdf.name", fileName: "merged-report.pdf", date: "Today, 2:30 PM", status: "completed", downloadable: true },
-  { id: "2", toolKey: "tools.compressPdf.name", fileName: "presentation.pdf", date: "Today, 1:15 PM", status: "processing", downloadable: false },
-  { id: "3", toolKey: "tools.pdfToWord.name", fileName: "contract.docx", date: "Today, 11:00 AM", status: "completed", downloadable: true },
-  { id: "4", toolKey: "tools.splitPdf.name", fileName: "chapter-3.pdf", date: "Yesterday, 4:45 PM", status: "failed", downloadable: false },
-  { id: "5", toolKey: "tools.compressPdf.name", fileName: "photos.pdf", date: "Yesterday, 9:20 AM", status: "completed", downloadable: false },
-];
+interface UsageStats {
+  filesUsed: number;
+  filesLimit: number;
+  aiUsed: number;
+  aiLimit: number;
+  totalProcessed: number;
+}
 
 function StatCard({
   label,
@@ -109,7 +111,14 @@ function StatCard({
 export default function DashboardPage() {
   const { t } = useTranslation();
   const { user, profile, isPro } = useAuthContext();
-  const [jobs, setJobs] = useState<JobRow[]>(fallbackJobs);
+  const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [usageStats, setUsageStats] = useState<UsageStats>({
+    filesUsed: 0,
+    filesLimit: 5,
+    aiUsed: 0,
+    aiLimit: 1,
+    totalProcessed: 0,
+  });
   const [search, setSearch] = useState("");
 
   const displayName =
@@ -126,26 +135,42 @@ export default function DashboardPage() {
         const files = json.files as Array<{
           id: string;
           file_name: string;
+          tool_slug?: string;
           tool: string;
           created_at: string;
           status: JobStatus;
           expired: boolean;
           download_url: string | null;
         }>;
-        if (files?.length) {
-          setJobs(
-            files.slice(0, 8).map((f) => ({
-              id: f.id,
-              toolKey: f.tool,
-              fileName: f.file_name,
-              date: new Date(f.created_at).toLocaleString(),
-              status: f.status,
-              downloadable: f.status === "completed" && !f.expired && !!f.download_url,
-            }))
-          );
+        if (json.usage) {
+          const u = json.usage as {
+            files_used?: number;
+            files_limit?: number;
+            ai_used?: number;
+            ai_limit?: number;
+            total_processed?: number;
+          };
+          setUsageStats({
+            filesUsed: u.files_used ?? 0,
+            filesLimit: u.files_limit ?? 5,
+            aiUsed: u.ai_used ?? 0,
+            aiLimit: u.ai_limit ?? 1,
+            totalProcessed: u.total_processed ?? 0,
+          });
         }
+        setJobs(
+          (files ?? []).slice(0, 8).map((f) => ({
+            id: f.id,
+            toolKey: f.tool_slug ? slugToToolKey(f.tool_slug) : f.tool,
+            fileName: f.file_name,
+            date: new Date(f.created_at).toLocaleString(),
+            status: f.status,
+            downloadable: f.status === "completed" && !f.expired && !!f.download_url,
+            downloadUrl: f.download_url,
+          }))
+        );
       } catch {
-        /* use fallback demo data */
+        /* keep empty state */
       }
     }
     void loadJobs();
@@ -157,11 +182,11 @@ export default function DashboardPage() {
     failed: { label: t("dashboard.failed"), className: "bg-red-100 text-red-700 ring-1 ring-red-200/60" },
   };
 
-  const filesUsed = 3;
-  const filesLimit = isPro ? 999 : 5;
-  const aiUsed = profile?.ai_credits_used ?? 1;
-  const aiLimit = isPro ? 50 : 3;
-  const totalProcessed = profile?.total_files_processed ?? 12;
+  const filesUsed = usageStats.filesUsed;
+  const filesLimit = isPro ? 999 : usageStats.filesLimit;
+  const aiUsed = usageStats.aiUsed;
+  const aiLimit = isPro ? 50 : usageStats.aiLimit;
+  const totalProcessed = usageStats.totalProcessed || profile?.total_files_processed || 0;
 
   const filteredJobs = jobs.filter(
     (j) =>
@@ -357,6 +382,19 @@ export default function DashboardPage() {
                       <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold", status.className)}>
                         {status.label}
                       </span>
+                      {job.downloadable && job.downloadUrl ? (
+                        <a
+                          href={job.downloadUrl}
+                          download
+                          aria-label={t("dashboard.download")}
+                          className={cn(
+                            buttonVariants({ variant: "ghost", size: "sm" }),
+                            "h-8 shrink-0 font-semibold text-pd-brand"
+                          )}
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -409,11 +447,18 @@ export default function DashboardPage() {
                             </span>
                           </td>
                           <td className="px-5 py-4">
-                            {job.status === "completed" && job.downloadable ? (
-                              <Button variant="ghost" size="sm" className="h-8 font-semibold text-pd-brand">
+                            {job.status === "completed" && job.downloadable && job.downloadUrl ? (
+                              <a
+                                href={job.downloadUrl}
+                                download
+                                className={cn(
+                                  buttonVariants({ variant: "ghost", size: "sm" }),
+                                  "h-8 font-semibold text-pd-brand"
+                                )}
+                              >
                                 <Download className="h-4 w-4" />
                                 {t("dashboard.download")}
-                              </Button>
+                              </a>
                             ) : job.status === "completed" && !job.downloadable ? (
                               <span className="inline-flex items-center gap-1 text-xs font-medium text-pd-muted">
                                 <Clock className="h-4 w-4" />

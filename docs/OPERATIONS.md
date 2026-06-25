@@ -48,7 +48,7 @@ Dependabot (`.github/dependabot.yml`) opens weekly npm/GitHub Actions update PRs
 
 | Job | Route | Auth |
 |-----|-------|------|
-| File cleanup + consent purge (3yr) + usage logs (90d) | `GET /api/cron/cleanup` | `Authorization: Bearer $CRON_SECRET` or Vercel `x-vercel-cron` (on Vercel only) |
+| File cleanup + consent purge (3yr) + usage logs (90d) + AI usage logs (90d) + error logs (90d) | `GET /api/cron/cleanup` | `Authorization: Bearer $CRON_SECRET` or Vercel `x-vercel-cron` (on Vercel only) |
 
 Configure in Vercel Cron or external scheduler with Bearer auth. Never expose `CRON_SECRET` in client code or query strings.
 

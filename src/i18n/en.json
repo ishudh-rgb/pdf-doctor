@@ -164,6 +164,9 @@
     "processing": "Processing your file...",
     "processingSubtitle": "This may take a few seconds",
     "downloadReady": "Your file is ready!",
+    "pdfReady": "PDF ready",
+    "outputSize": "Output size",
+    "chooseFileAria": "Choose file to upload",
     "download": "Download",
     "downloadAll": "Download All",
     "processAnother": "Process Another File",
@@ -607,6 +610,16 @@
     "maxSize": "Any file size",
     "supportedTypes": "Supported: {types}",
     "removeAll": "Remove All"
+  },
+
+  "contact": {
+    "errors": {
+      "nameRequired": "Name must be at least 2 characters.",
+      "emailInvalid": "Please enter a valid email address.",
+      "subjectInvalid": "Please select a valid subject.",
+      "messageRequired": "Message must be at least 10 characters.",
+      "messageTooLong": "Message is too long (max 5000 characters)."
+    }
   },
 
   "footer": {

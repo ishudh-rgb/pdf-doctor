@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { getExpiredFiles, markFileDeleted, logError, purgeOldConsentRecords, purgeOldUsageLogs as purgeOldUsageLogsFromDb } from "@/lib/db/queries";
+import { getExpiredFiles, markFileDeleted, logError, purgeOldConsentRecords, purgeOldUsageLogs as purgeOldUsageLogsFromDb, purgeOldAiUsageLogs as purgeOldAiUsageLogsFromDb, purgeOldErrorLogs as purgeOldErrorLogsFromDb } from "@/lib/db/queries";
 
 const STORAGE_BUCKET = "pdf-files";
 const BATCH_SIZE = 200;
@@ -81,6 +81,32 @@ export async function purgeOldUsageLogs(): Promise<number> {
     await logError({
       tool_name: "cleanup",
       error_type: "USAGE_LOG_PURGE_FAILED",
+      error_message: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
+}
+
+export async function purgeOldAiUsageLogs(): Promise<number> {
+  try {
+    return await purgeOldAiUsageLogsFromDb(90);
+  } catch (err) {
+    await logError({
+      tool_name: "cleanup",
+      error_type: "AI_USAGE_LOG_PURGE_FAILED",
+      error_message: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
+}
+
+export async function purgeOldErrorLogs(): Promise<number> {
+  try {
+    return await purgeOldErrorLogsFromDb(90);
+  } catch (err) {
+    await logError({
+      tool_name: "cleanup",
+      error_type: "ERROR_LOG_PURGE_FAILED",
       error_message: err instanceof Error ? err.message : String(err),
     });
     return 0;

@@ -18,12 +18,15 @@ export function ToolAeoBlock({ slug }: ToolAeoBlockProps) {
     <section
       id="aeo-summary"
       aria-label={`${toolName} overview for search and AI assistants`}
-      className="border-b border-pd-border bg-pd-surface/60"
+      className="border-t border-pd-border bg-pd-background"
     >
-      <div className="pd-container max-w-3xl py-4 sm:py-5">
+      <div className="pd-container max-w-3xl py-8 sm:py-10">
+        <p className="text-xs font-bold uppercase tracking-wider text-pd-muted">
+          About this tool
+        </p>
         <p
           id="aeo-short-answer"
-          className="text-sm font-medium leading-relaxed text-pd-foreground sm:text-base"
+          className="mt-2 text-sm leading-relaxed text-pd-muted"
         >
           {aeo.shortAnswer}
         </p>

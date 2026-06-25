@@ -74,6 +74,8 @@ export function ToolDropzone({
   onFileInputChange,
 }: ToolDropzoneProps) {
   const zoneId = useId();
+  const resolvedChooseLabel = chooseLabel;
+  const resolvedHint = hint;
 
   return (
     <div className={cn("w-full", className)}>
@@ -101,11 +103,11 @@ export function ToolDropzone({
 
         <Button type="button" size="md" className="gap-2" onClick={onChooseFiles}>
           <FileUp className="h-4 w-4" />
-          {chooseLabel}
+          {resolvedChooseLabel}
         </Button>
 
         <p id={zoneId} className="mt-2 text-sm text-pd-muted">
-          {hint}
+          {resolvedHint}
         </p>
         {subHint && <p className="mt-1 text-xs text-pd-muted/90">{subHint}</p>}
       </div>
@@ -188,9 +190,11 @@ export function ToolSuccessPanel({
   downloadLabel,
   resultSizeBytes,
   onReset,
-  resetLabel = "Process another file",
+  resetLabel,
   children,
 }: ToolSuccessPanelProps) {
+  const resolvedResetLabel = resetLabel ?? "Process another file";
+
   return (
     <div className="text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
@@ -210,7 +214,7 @@ export function ToolSuccessPanel({
         onClick={onReset}
         className="mx-auto mt-3 block text-sm text-pd-muted transition hover:text-pd-foreground"
       >
-        {resetLabel}
+        {resolvedResetLabel}
       </button>
     </div>
   );
@@ -228,27 +232,30 @@ interface ToolWorkspaceReadyPanelProps {
 }
 
 export function ToolWorkspaceReadyPanel({
-  title = "PDF ready",
+  title,
   description,
   downloadUrl,
   downloadFilename,
-  downloadLabel = "Download",
+  downloadLabel,
   resultSizeBytes,
   resetLabel,
   onReset,
 }: ToolWorkspaceReadyPanelProps) {
+  const resolvedTitle = title ?? "PDF ready";
+  const resolvedDownloadLabel = downloadLabel ?? "Download";
+
   return (
     <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
         <Check className="h-7 w-7 text-pd-brand" />
       </div>
-      <h2 className="text-lg font-bold text-pd-foreground">{title}</h2>
+      <h2 className="text-lg font-bold text-pd-foreground">{resolvedTitle}</h2>
       <p className="mt-2 text-sm text-pd-muted">{description}</p>
       {resultSizeBytes !== undefined && resultSizeBytes > 0 && (
         <ToolResultSizeBadge sizeBytes={resultSizeBytes} />
       )}
       <a href={downloadUrl} download={downloadFilename} className="mt-5 inline-block">
-        <Button size="md">{downloadLabel}</Button>
+        <Button size="md">{resolvedDownloadLabel}</Button>
       </a>
       <button
         type="button"
