@@ -25,7 +25,14 @@
       "security": "Security",
       "aiTools": "AI Tools",
       "scan": "Scan"
-    }
+    },
+    "compress": "Compress",
+    "convert": "Convert",
+    "merge": "Merge",
+    "sign": "Sign",
+    "aiPdf": "AI PDF",
+    "allTools": "All Tools",
+    "getPro": "Get Pro"
   },
 
   "hero": {

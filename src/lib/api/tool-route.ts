@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { guardToolRateLimit } from "@/lib/server/rate-limiter";
-import { toSafeApiError } from "@/lib/server/safe-error";
+import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
 import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -115,6 +115,8 @@ export function createToolRoute(options: ToolRouteOptions) {
         error_message: error instanceof Error ? error.message : message,
         stack_trace: error instanceof Error ? error.stack : undefined,
       }).catch(() => {});
+
+      captureApiError(error, { route: `tools/${options.toolSlug}`, user_id: userId });
 
       return NextResponse.json({ error: message }, { status: 500 });
     }

@@ -1,17 +1,14 @@
+import { getSentryInitOptions } from "@/lib/ops/sentry-config";
+
 let initialized = false;
 
 export async function initSentry() {
   if (initialized) return;
-  const dsn = process.env.SENTRY_DSN;
-  if (!dsn) return;
+  const options = getSentryInitOptions();
+  if (!options.dsn) return;
 
   const Sentry = await import("@sentry/nextjs");
-  Sentry.init({
-    dsn,
-    environment: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "development",
-    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
-    enabled: process.env.NODE_ENV === "production",
-  });
+  Sentry.init(options);
   initialized = true;
 }
 

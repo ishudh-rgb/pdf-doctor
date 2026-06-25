@@ -5,6 +5,7 @@ import { Trash2, RefreshCw, Clock, HardDrive, FileX, Loader2, CheckCircle } from
 
 interface CleanupStats {
   pendingFiles: number;
+  totalDeleted?: number;
   totalStorageUsed: string;
   lastCleanup: string | null;
 }
@@ -40,8 +41,11 @@ export default function AdminCleanupPage() {
       const res = await fetch("/api/admin/cleanup", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
-        setCleanResult(`${data.cleanedCount ?? 0} files cleaned up successfully.`);
+        const failedNote = data.failed ? ` (${data.failed} failed)` : "";
+        setCleanResult(`${data.cleanedCount ?? data.cleaned ?? 0} files cleaned from storage.${failedNote}`);
         await fetchStats();
+      } else {
+        setCleanResult("Cleanup failed. Please try again.");
       }
     } catch {
       setCleanResult("Cleanup failed. Please try again.");
@@ -71,14 +75,14 @@ export default function AdminCleanupPage() {
         </div>
         <div className="rounded-2xl bg-pd-surface p-6 shadow-sm border border-pd-border">
           <HardDrive className="h-8 w-8 text-pd-brand mb-3" />
-          <p className="text-sm text-pd-muted">Storage Used</p>
-          <p className="text-3xl font-bold text-pd-foreground">{stats?.totalStorageUsed ?? "0 MB"}</p>
-          <p className="text-xs text-pd-muted mt-1">Total file storage</p>
+          <p className="text-sm text-pd-muted">Storage Cleanup</p>
+          <p className="text-3xl font-bold text-pd-foreground">{stats?.totalDeleted ?? 0}</p>
+          <p className="text-xs text-pd-muted mt-1">{stats?.totalStorageUsed ?? "Marked deleted in DB"}</p>
         </div>
         <div className="rounded-2xl bg-pd-surface p-6 shadow-sm border border-pd-border">
           <Clock className="h-8 w-8 text-green-600 mb-3" />
-          <p className="text-sm text-pd-muted">Last Cleanup</p>
-          <p className="text-lg font-bold text-pd-foreground">{stats?.lastCleanup ?? "Never"}</p>
+          <p className="text-sm text-pd-muted">Last Checked</p>
+          <p className="text-lg font-bold text-pd-foreground">{stats?.lastCleanup ?? "Just now"}</p>
           <p className="text-xs text-pd-muted mt-1">Cron job runs every hour</p>
         </div>
       </div>
@@ -86,8 +90,7 @@ export default function AdminCleanupPage() {
       <div className="rounded-2xl bg-pd-surface p-6 shadow-sm mb-6 border border-pd-border">
         <h2 className="font-semibold text-pd-foreground mb-4">Manual Cleanup</h2>
         <p className="text-sm text-pd-muted mb-4">
-          Run cleanup now to delete all files that have exceeded the 2-hour retention period.
-          This operation marks expired files as deleted in the database.
+          Run cleanup now to delete expired files from Supabase Storage and mark them deleted in the database.
         </p>
 
         {cleanResult && (
@@ -112,12 +115,9 @@ export default function AdminCleanupPage() {
         </h2>
         <div className="space-y-3 text-sm text-pd-muted">
           <p><span className="font-medium text-pd-foreground">Schedule:</span> Every 1 hour via Vercel Cron</p>
-          <p><span className="font-medium text-pd-foreground">Retention:</span> Files auto-delete after 2 hours</p>
+          <p><span className="font-medium text-pd-foreground">Retention:</span> Files auto-delete after plan retention period</p>
           <p><span className="font-medium text-pd-foreground">Endpoint:</span> <code className="bg-pd-background px-2 py-0.5 rounded text-xs border border-pd-border">/api/cron/cleanup</code></p>
-          <p className="text-xs text-pd-muted mt-4">
-            The cleanup job marks expired files as deleted in the database.
-            Supabase Storage lifecycle policies can be configured separately for physical file removal.
-          </p>
+          <p><span className="font-medium text-pd-foreground">Auth:</span> <code className="bg-pd-background px-2 py-0.5 rounded text-xs border border-pd-border">Authorization: Bearer $CRON_SECRET</code></p>
         </div>
       </div>
     </div>

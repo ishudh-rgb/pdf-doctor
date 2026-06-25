@@ -62,6 +62,14 @@ export async function fulfillPendingPayment(
     }
   }
 
+  if (amount != null && pendingOrder.amount != null) {
+    const expectedPaise = Math.round(Number(pendingOrder.amount));
+    const capturedPaise = Math.round(Number(amount));
+    if (expectedPaise !== capturedPaise) {
+      return { ok: false, status: 400, error: "Payment amount mismatch" };
+    }
+  }
+
   const duration = pendingOrder.plan_duration === "yearly" ? "yearly" : "monthly";
   const periodEnd = new Date();
   if (duration === "yearly") {

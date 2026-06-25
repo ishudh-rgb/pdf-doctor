@@ -3,6 +3,11 @@ import path from "path";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const maxBodyMb = Number(process.env.MAX_UPLOAD_BODY_MB) || 110;
+const isProd = process.env.NODE_ENV === "production";
+
+const scriptSrc = isProd
+  ? "'self' 'unsafe-inline' https://checkout.razorpay.com https://apis.google.com https://www.dropbox.com"
+  : "'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://apis.google.com https://www.dropbox.com";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -20,7 +25,7 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://apis.google.com https://www.dropbox.com",
+      "script-src " + scriptSrc,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",

@@ -6,10 +6,16 @@ import {
   getUserProfile,
   getUserUploadedFilePaths,
   markFileDeleted,
+  deleteUserConsentRecords,
+  getUserConsentRecords,
+  getUserUsageLogsForExport,
+  getUserAiUsageLogsForExport,
+  getUserUploadedFilesMetadata,
 } from "@/lib/db/queries";
 import { deleteFile } from "@/lib/services/upload.service";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
+import { buildGdprExportPayload } from "@/lib/privacy/gdpr-export";
 
 export async function DELETE(request: NextRequest) {
   const rateLimited = await guardGeneralApiRateLimit(request);
@@ -36,6 +42,7 @@ export async function DELETE(request: NextRequest) {
     await supabase.from("tool_jobs").delete().eq("user_id", user.id);
     await supabase.from("usage_logs").delete().eq("user_id", user.id);
     await supabase.from("ai_usage_logs").delete().eq("user_id", user.id);
+    await deleteUserConsentRecords(user.id);
     await supabase.from("user_profiles").delete().eq("id", user.id);
 
     const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
@@ -72,28 +79,34 @@ export async function GET(request: NextRequest) {
     const profile = await getUserProfile(user.id);
     const jobs = await getUserJobs(user.id, 100);
 
-    const { data: payments } = await supabase
-      .from("payments")
-      .select("id, amount, currency, status, created_at, plan_tier")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    const [
+      { data: payments },
+      { data: subscriptions },
+      consentRecords,
+      usageLogs,
+      aiUsageLogs,
+      uploadedFiles,
+    ] = await Promise.all([
+      supabase
+        .from("payments")
+        .select("id, amount, currency, status, created_at, plan_tier")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("subscriptions")
+        .select("id, plan_tier, status, current_period_end, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      getUserConsentRecords(user.id),
+      getUserUsageLogsForExport(user.id),
+      getUserAiUsageLogsForExport(user.id),
+      getUserUploadedFilesMetadata(user.id),
+    ]);
 
-    const { data: subscriptions } = await supabase
-      .from("subscriptions")
-      .select("id, plan_tier, status, current_period_end, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    const exportPayload = {
-      exported_at: new Date().toISOString(),
-      format: "onlymypdf-gdpr-export-v1",
-      account: {
-        id: user.id,
-        email: user.email,
-        plan: user.plan,
-      },
+    const exportPayload = buildGdprExportPayload({
+      user: { id: user.id, email: user.email, plan: user.plan },
       profile: profile
         ? {
             full_name: profile.full_name,
@@ -103,7 +116,7 @@ export async function GET(request: NextRequest) {
             created_at: profile.created_at,
           }
         : null,
-      tool_jobs: jobs.map((j: Record<string, unknown>) => ({
+      toolJobs: jobs.map((j: Record<string, unknown>) => ({
         id: j.id,
         tool_name: j.tool_name,
         status: j.status,
@@ -113,7 +126,11 @@ export async function GET(request: NextRequest) {
       })),
       payments: payments ?? [],
       subscriptions: subscriptions ?? [],
-    };
+      consentRecords,
+      usageLogs,
+      aiUsageLogs,
+      uploadedFiles,
+    });
 
     return new NextResponse(JSON.stringify(exportPayload, null, 2), {
       status: 200,

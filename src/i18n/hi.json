@@ -25,7 +25,14 @@
       "security": "सुरक्षा",
       "aiTools": "AI टूल्स",
       "scan": "स्कैन"
-    }
+    },
+    "compress": "कम्प्रेस",
+    "convert": "कन्वर्ट",
+    "merge": "मर्ज",
+    "sign": "साइन",
+    "aiPdf": "AI PDF",
+    "allTools": "सभी टूल्स",
+    "getPro": "Pro लें"
   },
 
   "hero": {
@@ -602,7 +609,7 @@
   },
 
   "footer": {
-    "description": "Only4PDF एक फ्री ऑनलाइन PDF टूलकिट है। अपने ब्राउज़र से PDF मर्ज, स्प्लिट, कम्प्रेस, कन्वर्ट, एडिट, साइन और प्रोटेक्ट करें।",
+    "description": "OnlyMyPDF एक फ्री ऑनलाइन PDF टूलकिट है। अपने ब्राउज़र से PDF मर्ज, स्प्लिट, कम्प्रेस, कन्वर्ट, एडिट, साइन और प्रोटेक्ट करें।",
     "tools": "PDF टूल्स",
     "company": "कंपनी",
     "about": "हमारे बारे में",
@@ -620,7 +627,7 @@
     "reportBug": "बग रिपोर्ट करें",
     "featureRequest": "फ़ीचर रिक्वेस्ट",
     "madeInIndia": "भारत में ❤️ से बनाया",
-    "allRightsReserved": "© {year} Only4PDF. सर्वाधिकार सुरक्षित।"
+    "allRightsReserved": "© {year} OnlyMyPDF. सर्वाधिकार सुरक्षित।"
   },
 
   "seo": {

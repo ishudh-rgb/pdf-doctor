@@ -5,6 +5,6 @@ describe("webSiteJsonLd", () => {
   it("does not include broken SearchAction", () => {
     const data = webSiteJsonLd() as Record<string, unknown>;
     expect(data.potentialAction).toBeUndefined();
-    expect(data.inLanguage).toEqual(["en", "hi"]);
+    expect(data.inLanguage).toBe("en");
   });
 });

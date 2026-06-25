@@ -29,7 +29,7 @@ export function organizationJsonLd() {
       "@type": "ContactPoint",
       contactType: "customer support",
       url: `${APP_URL}/contact`,
-      availableLanguage: ["English", "Hindi"],
+      availableLanguage: ["English"],
     },
     knowsAbout: [
       "PDF merge",
@@ -49,7 +49,7 @@ export function webSiteJsonLd() {
     name: APP_NAME,
     url: APP_URL,
     description: APP_DESCRIPTION,
-    inLanguage: ["en", "hi"],
+    inLanguage: "en",
   };
 }
 

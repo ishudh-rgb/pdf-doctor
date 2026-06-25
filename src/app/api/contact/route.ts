@@ -1,46 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendContactEmail } from "@/lib/email/contact-mailer";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
-
-const SUBJECTS = new Set(["General", "Billing", "Bug Report", "Feature Request", "Other"]);
+import { validateContactPayload } from "@/lib/validation/contact-validation";
+import { captureApiError, toSafeApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   const rateLimited = await guardGeneralApiRateLimit(request);
   if (rateLimited) return rateLimited;
 
   try {
-    const body = (await request.json()) as {
-      name?: string;
-      email?: string;
-      subject?: string;
-      message?: string;
-    };
+    const body = (await request.json()) as Parameters<typeof validateContactPayload>[0];
+    const validated = validateContactPayload(body);
 
-    const name = body.name?.trim() ?? "";
-    const email = body.email?.trim() ?? "";
-    const subject = body.subject?.trim() ?? "General";
-    const message = body.message?.trim() ?? "";
-
-    if (!name || name.length < 2) {
-      return NextResponse.json({ error: "Name is required." }, { status: 400 });
-    }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
-    }
-    if (!SUBJECTS.has(subject)) {
-      return NextResponse.json({ error: "Invalid subject." }, { status: 400 });
-    }
-    if (!message || message.length < 10) {
-      return NextResponse.json(
-        { error: "Message must be at least 10 characters." },
-        { status: 400 }
-      );
-    }
-    if (message.length > 5000) {
-      return NextResponse.json({ error: "Message is too long." }, { status: 400 });
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: validated.status });
     }
 
-    const result = await sendContactEmail({ name, email, subject, message });
+    const result = await sendContactEmail(validated.data);
 
     return NextResponse.json({
       success: true,
@@ -48,7 +24,8 @@ export async function POST(request: NextRequest) {
       mode: result.mode,
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to send message";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    captureApiError(err, { route: "contact" });
+    const message = toSafeApiError(err, "Failed to send message");
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

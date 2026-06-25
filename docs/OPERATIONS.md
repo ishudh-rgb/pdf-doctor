@@ -9,13 +9,19 @@ Production operations guide for monitoring, deployments, backups, and incident r
 | `GET /api/health` | Liveness: app + env sanity (returns `200` JSON) |
 | Vercel/host dashboard | Process uptime, memory, cold starts |
 
-**Probe example**
+**Probe example (public liveness)**
 
 ```bash
 curl -fsS https://yourdomain.com/api/health
 ```
 
-Expected fields: `status`, `timestamp`, `version` (when configured).
+**Detailed diagnostics (requires secret)**
+
+```bash
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://yourdomain.com/api/health
+```
+
+Public response: `{ "status": "ok", "timestamp": "..." }`. Authenticated response includes `checks` (secrets, Upstash, database, storage cleanup).
 
 ## CI/CD
 
@@ -42,9 +48,9 @@ Dependabot (`.github/dependabot.yml`) opens weekly npm/GitHub Actions update PRs
 
 | Job | Route | Auth |
 |-----|-------|------|
-| File cleanup + consent purge (3yr) | `GET /api/cron/cleanup` | `Authorization: Bearer $CRON_SECRET`, `?secret=`, or Vercel `x-vercel-cron` |
+| File cleanup + consent purge (3yr) + usage logs (90d) | `GET /api/cron/cleanup` | `Authorization: Bearer $CRON_SECRET` or Vercel `x-vercel-cron` (on Vercel only) |
 
-Configure in Vercel Cron or external scheduler. Never expose `CRON_SECRET` in client code.
+Configure in Vercel Cron or external scheduler with Bearer auth. Never expose `CRON_SECRET` in client code or query strings.
 
 ## Database migrations
 
@@ -57,6 +63,7 @@ Run in order in Supabase SQL Editor (or `supabase db push`):
 | `003_security_rls_payments.sql` | Payment tables RLS |
 | `004_security_rls_admin_tables.sql` | Admin RLS |
 | `005_scalability_privacy.sql` | Indexes, `consent_records`, retention helpers |
+| `006_payment_retention_on_delete.sql` | Billing records retained on account delete |
 
 After each migration, verify in Table Editor and run a smoke test (upload → convert → download).
 
@@ -76,11 +83,17 @@ RAZORPAY_KEY_SECRET=
 RAZORPAY_WEBHOOK_SECRET=
 ```
 
-Recommended for scale:
+Recommended for scale and observability:
 
 ```env
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
+SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_DSN=
+SENTRY_ORG=
+SENTRY_PROJECT=
+RESEND_API_KEY=
+CONTACT_INBOX_EMAIL=
 ```
 
 Optional: `GEMINI_API_KEY` (AI summarizer), `RESEND_API_KEY` (contact + password reset), `SENTRY_DSN` (error monitoring), LibreOffice/Puppeteer service URLs per deployment guide.

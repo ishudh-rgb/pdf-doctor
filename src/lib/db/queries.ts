@@ -670,6 +670,74 @@ export async function purgeOldUsageLogs(retentionDays = 90): Promise<number> {
   return data?.length ?? 0;
 }
 
+export async function getUserConsentRecords(userId: string) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("consent_records")
+    .select("id, consent_version, essential, analytics, marketing, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function deleteUserConsentRecords(userId: string): Promise<number> {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("consent_records")
+    .delete()
+    .eq("user_id", userId)
+    .select("id");
+
+  if (error) throw error;
+  return data?.length ?? 0;
+}
+
+export async function getUserUsageLogsForExport(userId: string, limit = 500) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("usage_logs")
+    .select("id, tool_name, file_size_bytes, processing_time_ms, status, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getUserAiUsageLogsForExport(userId: string, limit = 200) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("ai_usage_logs")
+    .select(
+      "id, tool_name, input_tokens, output_tokens, estimated_cost, provider, model, status, created_at"
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getUserUploadedFilesMetadata(userId: string, limit = 200) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("uploaded_files")
+    .select(
+      "id, original_name, mime_type, file_size_bytes, is_deleted, expires_at, created_at"
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getUserUploadedFilePaths(userId: string): Promise<
   { id: string; storage_path: string }[]
 > {
@@ -709,5 +777,18 @@ export async function logError(data: {
     });
   } catch {
     console.error("Failed to log error to database:", data.error_message);
+  }
+
+  if (process.env.NODE_ENV === "production" && process.env.SENTRY_DSN) {
+    const err = new Error(data.error_message);
+    err.name = data.error_type;
+    void import("@/lib/ops/sentry").then(({ captureException }) =>
+      captureException(err, {
+        tool_name: data.tool_name,
+        error_type: data.error_type,
+        user_id: data.user_id,
+        ...data.metadata,
+      })
+    );
   }
 }

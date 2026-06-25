@@ -123,12 +123,23 @@ const megaMenuCategories: ToolCategory[] = [
 ];
 
 const navLinks = [
-  { name: "Compress", href: "/compress-pdf" },
-  { name: "Convert", href: "/convert" },
-  { name: "Merge", href: "/merge-pdf" },
-  { name: "Sign", href: "/sign-pdf" },
-  { name: "AI PDF", href: "/ai-pdf-summarizer" },
+  { nameKey: "nav.compress", href: "/compress-pdf" },
+  { nameKey: "nav.convert", href: "/convert" },
+  { nameKey: "nav.merge", href: "/merge-pdf" },
+  { nameKey: "nav.sign", href: "/sign-pdf" },
+  { nameKey: "nav.aiPdf", href: "/ai-pdf-summarizer" },
 ];
+
+const MEGA_MENU_TITLE_KEYS: Record<string, string> = {
+  "Organize PDF": "nav.megaMenu.organize",
+  "Optimize PDF": "nav.megaMenu.optimize",
+  "Convert from PDF": "nav.megaMenu.convertFrom",
+  "Convert to PDF": "nav.megaMenu.convertTo",
+  "Edit & Sign": "nav.megaMenu.editSign",
+  "Security": "nav.megaMenu.security",
+  "AI Tools": "nav.megaMenu.aiTools",
+  "Scan": "nav.megaMenu.scan",
+};
 
 const HOVER_COLORS: Record<string, { bg: string; shadow: string; text: string }> = {
   "text-blue-600":    { bg: "#dbeafe", shadow: "0 2px 10px rgba(59,130,246,0.18)",  text: "#2563eb" },
@@ -189,13 +200,21 @@ function MegaToolLink({ tool, onClose }: { tool: ToolLink; onClose: () => void }
   );
 }
 
-function MegaCol({ categories, onClose }: { categories: ToolCategory[]; onClose: () => void }) {
+function MegaCol({
+  categories,
+  onClose,
+  t,
+}: {
+  categories: ToolCategory[];
+  onClose: () => void;
+  t: (key: string) => string;
+}) {
   return (
     <>
       {categories.map((category) => (
         <div key={category.title}>
           <h3 className={cn("mb-2 text-[11px] font-bold uppercase tracking-wider", category.titleColor)}>
-            {category.title}
+            {t(MEGA_MENU_TITLE_KEYS[category.title] ?? category.title)}
           </h3>
           <div className="space-y-0.5">
             {category.tools.map((tool) => (
@@ -276,11 +295,11 @@ export function Header() {
         <nav className="pd-nav-links hidden items-center lg:flex" aria-label="Main navigation">
           {navLinks.map((link) => (
             <Link
-              key={link.name}
+              key={link.nameKey}
               href={link.href}
               className={navItemClass}
             >
-              {link.name}
+              {t(link.nameKey)}
             </Link>
           ))}
 
@@ -299,7 +318,7 @@ export function Header() {
                   : undefined
               )}
             >
-              All Tools
+              {t("nav.allTools")}
               <ChevronDown
                 className={cn(
                   "h-5 w-5 shrink-0 transition-transform duration-200",
@@ -318,20 +337,20 @@ export function Header() {
               >
                 <div className="grid grid-cols-4 gap-6">
                   <div>
-                    <MegaCol categories={[megaMenuCategories[0]]} onClose={() => setMegaMenuOpen(false)} />
+                    <MegaCol categories={[megaMenuCategories[0]]} onClose={() => setMegaMenuOpen(false)} t={t} />
                   </div>
                   <div>
-                    <MegaCol categories={[megaMenuCategories[3]]} onClose={() => setMegaMenuOpen(false)} />
+                    <MegaCol categories={[megaMenuCategories[3]]} onClose={() => setMegaMenuOpen(false)} t={t} />
                   </div>
                   <div className="space-y-5">
-                    <MegaCol categories={[megaMenuCategories[2]]} onClose={() => setMegaMenuOpen(false)} />
-                    <MegaCol categories={[megaMenuCategories[1]]} onClose={() => setMegaMenuOpen(false)} />
-                    <MegaCol categories={[megaMenuCategories[6]]} onClose={() => setMegaMenuOpen(false)} />
+                    <MegaCol categories={[megaMenuCategories[2]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[1]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[6]]} onClose={() => setMegaMenuOpen(false)} t={t} />
                   </div>
                   <div className="space-y-5">
-                    <MegaCol categories={[megaMenuCategories[4]]} onClose={() => setMegaMenuOpen(false)} />
-                    <MegaCol categories={[megaMenuCategories[5]]} onClose={() => setMegaMenuOpen(false)} />
-                    <MegaCol categories={[megaMenuCategories[7]]} onClose={() => setMegaMenuOpen(false)} />
+                    <MegaCol categories={[megaMenuCategories[4]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[5]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[7]]} onClose={() => setMegaMenuOpen(false)} t={t} />
                   </div>
                 </div>
               </div>
@@ -380,7 +399,7 @@ export function Header() {
           )}
           <Link href="/pricing">
             <Button size="sm" className="text-base font-bold px-4 py-2.5">
-              Get Pro
+              {t("nav.getPro")}
             </Button>
           </Link>
         </div>
@@ -492,7 +511,7 @@ export function Header() {
                       </Button>
                     </Link>
                     <Link href="/pricing" className="flex-1" onClick={() => setMobileOpen(false)}>
-                      <Button className="w-full">Get Pro</Button>
+                      <Button className="w-full">{t("nav.getPro")}</Button>
                     </Link>
                   </>
                 )}

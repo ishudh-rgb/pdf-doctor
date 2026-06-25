@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Shield,
@@ -16,6 +18,7 @@ import {
 } from "lucide-react";
 import { FooterLogo } from "@/components/common/logo";
 import { APP_NAME, SUPPORT_EMAIL } from "@/config/constants";
+import { useTranslation } from "@/i18n";
 
 const toolLinks = [
   { name: "Compress PDF", href: "/compress-pdf", icon: Minimize2, color: "text-orange-500" },
@@ -28,16 +31,18 @@ const toolLinks = [
 ];
 
 const companyLinks = [
-  { name: "About", href: "/about" },
-  { name: "Contact", href: "/contact" },
-  { name: "Privacy Policy", href: "/privacy" },
-  { name: "Cookie Policy", href: "/cookies" },
-  { name: "Terms of Service", href: "/terms" },
-  { name: "FAQ", href: "/faq" },
-  { name: "Pricing", href: "/pricing" },
+  { nameKey: "footer.about", href: "/about" },
+  { nameKey: "footer.contact", href: "/contact" },
+  { nameKey: "footer.privacy", href: "/privacy" },
+  { nameKey: "footer.cookies", href: "/cookies" },
+  { nameKey: "footer.terms", href: "/terms" },
+  { nameKey: "footer.faq", href: "/faq" },
+  { nameKey: "nav.pricing", href: "/pricing" },
 ];
 
 export function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="relative overflow-hidden border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
       {/* Decorative blobs */}
@@ -53,7 +58,7 @@ export function Footer() {
               <FooterLogo />
             </Link>
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-gray-500">
-              Every PDF tool you need, right in your browser. Fast, free, and secure. Trusted by 10,000+ users across 50+ countries.
+              {t("footer.description")}
             </p>
 
             {/* Security badge */}
@@ -81,7 +86,7 @@ export function Footer() {
           <nav className="lg:col-span-3" aria-label="PDF tools">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-              PDF Tools
+              {t("footer.tools")}
             </h3>
             <ul className="mt-4 space-y-1.5">
               {toolLinks.map((link) => (
@@ -103,16 +108,16 @@ export function Footer() {
           <nav className="lg:col-span-2" aria-label="Company">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-violet-500 to-purple-500" />
-              Company
+              {t("footer.company")}
             </h3>
             <ul className="mt-4 space-y-1.5">
               {companyLinks.map((link) => (
-                <li key={link.name}>
+                <li key={link.nameKey}>
                   <Link
                     href={link.href}
                     className="group/link flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900"
                   >
-                    <span>{link.name}</span>
+                    <span>{t(link.nameKey)}</span>
                     <ArrowUpRight className="ml-auto h-3 w-3 text-gray-300 opacity-0 transition-opacity group-hover/link:opacity-100" />
                   </Link>
                 </li>
@@ -171,7 +176,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-200 pt-6 sm:flex-row">
           <p className="text-[13px] text-gray-400">
-            © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+            {t("footer.allRightsReserved", { year: String(new Date().getFullYear()) })}
           </p>
           <p className="flex items-center gap-1 text-[12px] text-gray-400">
             Made with <Heart className="h-3 w-3 fill-rose-500 text-rose-500" /> in India for the world

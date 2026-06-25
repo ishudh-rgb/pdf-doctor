@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/services/payment.service";
 import { fulfillPendingPayment } from "@/lib/services/payment-fulfillment.service";
 import { createServiceClient } from "@/lib/supabase/server";
+import { captureApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (err) {
+    captureApiError(err, { route: "payments/webhook" });
     console.error("Webhook processing error:", err);
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
