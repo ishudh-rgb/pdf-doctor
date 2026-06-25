@@ -586,15 +586,41 @@ export const logToolUsage = async (data: {
   fileSize?: number;
   processingTimeMs?: number;
   status?: string;
+  inputFileNames?: string[];
+  output?: {
+    buffer: Buffer;
+    fileName: string;
+    mimeType: string;
+  };
 }) => {
-  return logUsage({
+  const toolSlug = data.toolSlug ?? "unknown";
+  const succeeded =
+    data.status !== "failed" &&
+    (data.status === "completed" || data.status === "success" || !data.status);
+
+  await logUsage({
     user_id: data.userId ?? null,
-    guest_ip_hash: data.ipAddress ?? null,
-    tool_name: data.toolSlug ?? "unknown",
+    guest_ip_hash: data.userId ? null : (data.ipAddress ?? null),
+    tool_name: toolSlug,
     file_size_bytes: data.fileSize ?? null,
     processing_time_ms: data.processingTimeMs ?? null,
-    status: (data.status === "completed" ? "success" : data.status === "failed" ? "failed" : "success") as "success" | "failed",
+    status: succeeded ? "success" : "failed",
   });
+
+  if (data.userId && succeeded && data.output) {
+    const { persistCompletedToolJob } = await import(
+      "@/lib/services/tool-job-persistence.service"
+    );
+    await persistCompletedToolJob({
+      userId: data.userId,
+      toolName: toolSlug,
+      inputFileNames: data.inputFileNames,
+      outputBuffer: data.output.buffer,
+      outputFileName: data.output.fileName,
+      mimeType: data.output.mimeType,
+      processingTimeMs: data.processingTimeMs,
+    }).catch(() => {});
+  }
 };
 
 export const createUploadedFileRecord = createUploadedFile;

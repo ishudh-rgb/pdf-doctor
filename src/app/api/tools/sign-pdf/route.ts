@@ -129,6 +129,12 @@ export async function POST(request: NextRequest) {
       fileSize: pdfBuffer.length,
       processingTimeMs: processingTime,
       status: "completed",
+      inputFileNames: [file.name],
+      output: {
+        buffer: signedPdf,
+        fileName: "signed.pdf",
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(signedPdf), {

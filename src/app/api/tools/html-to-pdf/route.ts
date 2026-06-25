@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
     const previewSessionId = await createPdfSession(pdfBuffer, ownerHash);
 
     const processingTime = Date.now() - startTime;
+    const outputFileName = `${sanitizeFilename(originalName)}.pdf`;
     await logToolUsage({
       userId,
       sessionId: request.headers.get("x-session-id") || "anonymous",
@@ -92,13 +93,19 @@ export async function POST(request: NextRequest) {
       fileSize: buffer.length,
       processingTimeMs: processingTime,
       status: "completed",
+      inputFileNames: [file.name],
+      output: {
+        buffer: pdfBuffer,
+        fileName: outputFileName,
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${sanitizeFilename(originalName)}.pdf"`,
+        "Content-Disposition": `attachment; filename="${outputFileName}"`,
         "Content-Length": String(pdfBuffer.length),
         "X-Pdf-Session-Id": previewSessionId,
         "X-Pdf-Total-Pages": String(totalPages),

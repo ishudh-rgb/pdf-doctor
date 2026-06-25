@@ -93,6 +93,12 @@ export async function POST(request: NextRequest) {
       fileSize: originalSize,
       processingTimeMs: processingTime,
       status: "completed",
+      inputFileNames: [file.name],
+      output: {
+        buffer: result.buffer,
+        fileName: "compressed.pdf",
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(result.buffer), {

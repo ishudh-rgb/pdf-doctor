@@ -4,7 +4,7 @@ import { mergePDFs } from "@/lib/services/pdf-merge.service";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
 import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
-import { logUsage, logError } from "@/lib/db/queries";
+import { logToolUsage, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
@@ -106,13 +106,19 @@ export async function POST(request: NextRequest) {
     const mergedPdf = await mergePDFs(buffers);
 
     const processingTime = Date.now() - startTime;
-    await logUsage({
-      user_id: userId,
-      guest_ip_hash: userId ? null : ipHash,
-      tool_name: "merge-pdf",
-      file_size_bytes: buffers.reduce((sum, b) => sum + b.length, 0),
-      processing_time_ms: processingTime,
-      status: "success",
+    await logToolUsage({
+      userId,
+      toolSlug: "merge-pdf",
+      ipAddress: userId ? null : ipHash,
+      fileSize: buffers.reduce((sum, b) => sum + b.length, 0),
+      processingTimeMs: processingTime,
+      status: "completed",
+      inputFileNames: files.map((f) => f.name),
+      output: {
+        buffer: mergedPdf,
+        fileName: "merged.pdf",
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(mergedPdf), {

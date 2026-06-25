@@ -174,6 +174,16 @@ export default function DashboardPage() {
       }
     }
     void loadJobs();
+    const onFocus = () => void loadJobs();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void loadJobs();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   const statusConfig: Record<JobStatus, { label: string; className: string }> = {

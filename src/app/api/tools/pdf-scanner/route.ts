@@ -111,6 +111,12 @@ export async function POST(request: NextRequest) {
       fileSize: files.reduce((sum, f) => sum + f.size, 0),
       processingTimeMs: processingTime,
       status: "completed",
+      inputFileNames: files.map((f) => f.name),
+      output: {
+        buffer: pdfBuffer,
+        fileName: "scanned-document.pdf",
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(pdfBuffer), {

@@ -2,6 +2,7 @@ import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { splitPDF, splitAllPages, extractPages } from "@/lib/services/pdf-split.service";
 import { buildPdfBuffersDownloadResponse } from "@/lib/pdf/pdf-buffers-response";
+import { buildZip } from "@/lib/services/zip-builder";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
@@ -119,15 +120,6 @@ export async function POST(request: NextRequest) {
     }
 
     const processingTime = Date.now() - startTime;
-    await logToolUsage({
-      userId,
-      sessionId: request.headers.get("x-session-id") || "anonymous",
-      toolSlug: "split-pdf",
-      ipAddress: clientIpForLogs(request),
-      fileSize: buffer.length,
-      processingTimeMs: processingTime,
-      status: "completed",
-    }).catch(() => {});
 
     if (Array.isArray(result)) {
       const rangeParts =
@@ -140,6 +132,41 @@ export async function POST(request: NextRequest) {
         return `page-${safeName}.pdf`;
       });
 
+      let outputBuffer: Buffer;
+      let outputFileName: string;
+      let mimeType: string;
+
+      if (result.length === 1) {
+        outputBuffer = result[0];
+        outputFileName = "split.pdf";
+        mimeType = "application/pdf";
+      } else {
+        const filesMap: Record<string, Buffer> = {};
+        result.forEach((buffer, index) => {
+          const name = zipEntryNames[index] ?? `part-${index + 1}.pdf`;
+          filesMap[name] = buffer;
+        });
+        outputBuffer = await buildZip(filesMap);
+        outputFileName = "split-pages.zip";
+        mimeType = "application/zip";
+      }
+
+      await logToolUsage({
+        userId,
+        sessionId: request.headers.get("x-session-id") || "anonymous",
+        toolSlug: "split-pdf",
+        ipAddress: clientIpForLogs(request),
+        fileSize: buffer.length,
+        processingTimeMs: processingTime,
+        status: "completed",
+        inputFileNames: [file.name],
+        output: {
+          buffer: outputBuffer,
+          fileName: outputFileName,
+          mimeType,
+        },
+      }).catch(() => {});
+
       return buildPdfBuffersDownloadResponse(
         result,
         "split.pdf",
@@ -147,6 +174,22 @@ export async function POST(request: NextRequest) {
         zipEntryNames
       );
     }
+
+    await logToolUsage({
+      userId,
+      sessionId: request.headers.get("x-session-id") || "anonymous",
+      toolSlug: "split-pdf",
+      ipAddress: clientIpForLogs(request),
+      fileSize: buffer.length,
+      processingTimeMs: processingTime,
+      status: "completed",
+      inputFileNames: [file.name],
+      output: {
+        buffer: result,
+        fileName: filename,
+        mimeType: "application/pdf",
+      },
+    }).catch(() => {});
 
     return new NextResponse(new Uint8Array(result), {
       status: 200,

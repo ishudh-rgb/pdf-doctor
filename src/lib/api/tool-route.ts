@@ -86,6 +86,7 @@ export function createToolRoute(options: ToolRouteOptions) {
       const baseName = options.outputName
         ? options.outputName(file.name)
         : file.name.replace(/\.[^.]+$/, "");
+      const outputFileName = `${sanitizeFilename(baseName)}.${options.outputExtension}`;
 
       await logToolUsage({
         userId,
@@ -95,13 +96,19 @@ export function createToolRoute(options: ToolRouteOptions) {
         fileSize: buffer.length,
         processingTimeMs: Date.now() - startTime,
         status: "completed",
+        inputFileNames: [file.name],
+        output: {
+          buffer: outputBuffer,
+          fileName: outputFileName,
+          mimeType: options.contentType,
+        },
       }).catch(() => {});
 
       return new NextResponse(new Uint8Array(outputBuffer), {
         status: 200,
         headers: {
           "Content-Type": options.contentType,
-          "Content-Disposition": `attachment; filename="${sanitizeFilename(baseName)}.${options.outputExtension}"`,
+          "Content-Disposition": `attachment; filename="${outputFileName}"`,
           "Content-Length": String(outputBuffer.length),
         },
       });

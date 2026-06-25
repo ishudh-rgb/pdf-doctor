@@ -86,6 +86,12 @@ export async function POST(request: NextRequest) {
       fileSize: buffer.length,
       processingTimeMs: processingTime,
       status: "completed",
+      inputFileNames: [file.name],
+      output: {
+        buffer: unlockedPdf,
+        fileName: "unlocked.pdf",
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(unlockedPdf), {

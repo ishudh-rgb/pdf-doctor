@@ -79,6 +79,12 @@ export async function POST(request: NextRequest) {
       fileSize: file.size,
       processingTimeMs: processingTime,
       status: "completed",
+      inputFileNames: [file.name],
+      output: {
+        buffer: outputBuffer,
+        fileName: "edited.pdf",
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(outputBuffer), {

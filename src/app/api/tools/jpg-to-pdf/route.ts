@@ -98,6 +98,12 @@ export async function POST(request: NextRequest) {
       fileSize: imageBuffers.reduce((sum, img) => sum + img.length, 0),
       processingTimeMs: processingTime,
       status: "completed",
+      inputFileNames: files.map((f) => f.name),
+      output: {
+        buffer: pdfBuffer,
+        fileName: "images-to-pdf.pdf",
+        mimeType: "application/pdf",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
