@@ -139,7 +139,9 @@ export default function CompressPdfPage() {
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || 'compressed.pdf'}
           downloadLabel="Download Compressed PDF"
+          originalSizeBytes={originalSize}
           resultSizeBytes={compressedSize}
+          savedPercent={compressionPercentage > 0 ? compressionPercentage : undefined}
           resetLabel="Compress another file"
           onReset={() => {
             setCompleted(false);
@@ -149,27 +151,10 @@ export default function CompressPdfPage() {
           }}
         >
           {compressionPercentage === 0 ? (
-            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
               This PDF is already well optimized. No further size reduction was possible without lowering quality.
             </p>
-          ) : (
-            <div className="mt-4 inline-flex items-center gap-6 rounded-xl bg-pd-background p-4">
-              <div className="text-center">
-                <p className="mb-1 text-xs text-pd-muted">Before</p>
-                <p className="text-sm font-bold text-pd-foreground">{formatFileSize(originalSize)}</p>
-              </div>
-              <div className="text-2xl text-pd-border">&rarr;</div>
-              <div className="text-center">
-                <p className="mb-1 text-xs text-pd-muted">After</p>
-                <p className="text-sm font-bold text-pd-brand">{formatFileSize(compressedSize)}</p>
-              </div>
-              <div className="h-10 w-px bg-pd-border" />
-              <div className="text-center">
-                <p className="mb-1 text-xs text-pd-muted">Saved</p>
-                <p className="text-sm font-bold text-green-600">{compressionPercentage}%</p>
-              </div>
-            </div>
-          )}
+          ) : null}
         </ToolSuccessPanel>
       ) : (
         <>

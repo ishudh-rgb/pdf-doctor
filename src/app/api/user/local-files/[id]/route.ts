@@ -9,12 +9,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const rateLimited = await guardGeneralApiRateLimit(request);
-  if (rateLimited) return rateLimited;
-
   try {
     const user = await getApiUser();
     if (!user) {
+      const rateLimited = await guardGeneralApiRateLimit(request);
+      if (rateLimited) return rateLimited;
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 

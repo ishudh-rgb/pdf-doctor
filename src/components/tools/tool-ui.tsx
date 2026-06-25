@@ -177,9 +177,61 @@ interface ToolSuccessPanelProps {
   downloadFilename: string;
   downloadLabel: string;
   resultSizeBytes?: number;
+  originalSizeBytes?: number;
+  savedPercent?: number;
   onReset: () => void;
   resetLabel?: string;
   children?: React.ReactNode;
+}
+
+function FileSizeComparison({
+  originalSizeBytes,
+  resultSizeBytes,
+  savedPercent,
+}: {
+  originalSizeBytes: number;
+  resultSizeBytes: number;
+  savedPercent?: number;
+}) {
+  return (
+    <div className="mt-5 w-full rounded-2xl border border-pd-border bg-pd-background p-4">
+      <div
+        className={cn(
+          "grid items-center gap-3",
+          savedPercent !== undefined
+            ? "grid-cols-1 sm:grid-cols-[1fr_auto_1fr_auto_1fr]"
+            : "grid-cols-1 sm:grid-cols-[1fr_auto_1fr]"
+        )}
+      >
+        <div className="rounded-xl border border-pd-border/80 bg-pd-surface px-4 py-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-wide text-pd-muted">Original</p>
+          <p className="mt-1 text-base font-bold tabular-nums text-pd-foreground">
+            {formatFileSize(originalSizeBytes)}
+          </p>
+        </div>
+        <div className="hidden text-lg text-pd-muted sm:block" aria-hidden>
+          &rarr;
+        </div>
+        <div className="rounded-xl border border-pd-brand/25 bg-pd-brand-muted/50 px-4 py-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-wide text-pd-muted">Output</p>
+          <p className="mt-1 text-base font-bold tabular-nums text-pd-brand">
+            {formatFileSize(resultSizeBytes)}
+          </p>
+        </div>
+        {savedPercent !== undefined && (
+          <>
+            <div className="hidden h-10 w-px bg-pd-border sm:block" aria-hidden />
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
+              <p className="text-xs font-medium uppercase tracking-wide text-emerald-700/80">Saved</p>
+              <p className="mt-1 text-base font-bold tabular-nums text-emerald-700">
+                {savedPercent}%
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function ToolSuccessPanel({
@@ -189,33 +241,54 @@ export function ToolSuccessPanel({
   downloadFilename,
   downloadLabel,
   resultSizeBytes,
+  originalSizeBytes,
+  savedPercent,
   onReset,
   resetLabel,
   children,
 }: ToolSuccessPanelProps) {
   const resolvedResetLabel = resetLabel ?? "Process another file";
+  const showComparison =
+    originalSizeBytes !== undefined &&
+    originalSizeBytes > 0 &&
+    resultSizeBytes !== undefined &&
+    resultSizeBytes > 0;
 
   return (
-    <div className="text-center">
+    <div className="mx-auto w-full max-w-lg text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
         <Download className="h-7 w-7 text-pd-brand" />
       </div>
       <h2 className="text-lg font-bold text-pd-foreground">{title}</h2>
       {description && <p className="mt-2 text-sm text-pd-muted">{description}</p>}
-      {resultSizeBytes !== undefined && resultSizeBytes > 0 && (
-        <ToolResultSizeBadge sizeBytes={resultSizeBytes} />
-      )}
-      {children}
-      <a href={downloadUrl} download={downloadFilename} className="mt-5 inline-block">
-        <Button size="md">{downloadLabel}</Button>
-      </a>
-      <button
-        type="button"
-        onClick={onReset}
-        className="mx-auto mt-3 block text-sm text-pd-muted transition hover:text-pd-foreground"
-      >
-        {resolvedResetLabel}
-      </button>
+
+      {showComparison ? (
+        <FileSizeComparison
+          originalSizeBytes={originalSizeBytes}
+          resultSizeBytes={resultSizeBytes}
+          savedPercent={savedPercent}
+        />
+      ) : resultSizeBytes !== undefined && resultSizeBytes > 0 ? (
+        <ToolResultSizeBadge sizeBytes={resultSizeBytes} className="mt-3" />
+      ) : null}
+
+      {children ? <div className="mt-4 w-full text-left">{children}</div> : null}
+
+      <div className="mt-6 flex w-full flex-col items-stretch gap-3">
+        <a href={downloadUrl} download={downloadFilename} className="w-full">
+          <Button size="lg" className="h-11 w-full gap-2 font-semibold">
+            <Download className="h-4 w-4" />
+            {downloadLabel}
+          </Button>
+        </a>
+        <button
+          type="button"
+          onClick={onReset}
+          className="text-sm text-pd-muted transition hover:text-pd-foreground"
+        >
+          {resolvedResetLabel}
+        </button>
+      </div>
     </div>
   );
 }

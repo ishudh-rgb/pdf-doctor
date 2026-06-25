@@ -30,5 +30,11 @@ export function createClient() {
 }
 
 export function isSupabaseConfigured(): boolean {
-  return isValidSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return (
+    isValidSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    !!key &&
+    key.length > 20 &&
+    !key.includes("your_supabase")
+  );
 }

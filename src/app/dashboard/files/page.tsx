@@ -74,7 +74,10 @@ export default function MyFilesPage() {
   useEffect(() => {
     async function fetchFiles() {
       try {
-        const res = await fetch("/api/user/files");
+        const res = await fetch("/api/user/files", {
+          cache: "no-store",
+          credentials: "include",
+        });
         if (res.ok) {
           const json = await res.json();
           setFiles(json.files || []);

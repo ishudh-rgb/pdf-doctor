@@ -172,6 +172,8 @@ export default function AddWatermarkPage() {
       setResultFilename(file.name.replace(/\.pdf$/i, "-watermarked.pdf"));
       setResultSize(blob.size);
       setCompleted(true);
+      const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
+      notifyActivityUpdated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Processing failed.");
     } finally {
@@ -221,6 +223,7 @@ export default function AddWatermarkPage() {
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || "watermarked.pdf"}
           downloadLabel="Download PDF"
+          originalSizeBytes={file?.size}
           resultSizeBytes={resultSize}
           resetLabel="Watermark another file"
           onReset={() => {
@@ -229,25 +232,7 @@ export default function AddWatermarkPage() {
             setResultUrl(null);
             setResultSize(0);
           }}
-        >
-          <div className="mt-4 inline-flex items-center gap-6 rounded-xl border border-pd-border bg-pd-background px-5 py-3">
-            {file && (
-              <>
-                <div className="text-center">
-                  <p className="mb-1 text-xs text-pd-muted">Original</p>
-                  <p className="text-sm font-bold text-pd-foreground">{formatFileSize(file.size)}</p>
-                </div>
-                <div className="text-xl text-pd-border">&rarr;</div>
-              </>
-            )}
-            <div className="text-center">
-              <p className="mb-1 text-xs text-pd-muted">Output file</p>
-              <p className="text-sm font-bold text-pd-brand">
-                {resultSize > 0 ? formatFileSize(resultSize) : "—"}
-              </p>
-            </div>
-          </div>
-        </ToolSuccessPanel>
+        />
       ) : (
         <>
           <ToolDropzone

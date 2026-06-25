@@ -130,8 +130,16 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadJobs() {
       try {
-        const res = await fetch("/api/user/files", { cache: "no-store" });
-        if (!res.ok) return;
+        const res = await fetch("/api/user/files", {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Dashboard files fetch failed:", res.status);
+          }
+          return;
+        }
         const json = await res.json();
         const files = json.files as Array<{
           id: string;

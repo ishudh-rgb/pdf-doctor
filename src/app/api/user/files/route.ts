@@ -58,64 +58,76 @@ function mapJobStatus(status: string): "completed" | "processing" | "failed" {
   return "processing";
 }
 
-export async function GET(request: NextRequest) {
-  const rateLimited = await guardGeneralApiRateLimit(request);
-  if (rateLimited) return rateLimited;
+async function buildLocalDevFilesResponse(userId: string) {
+  const settings = await getCachedAdminSettings();
+  const filesLimit =
+    typeof settings.free_daily_limit === "number"
+      ? settings.free_daily_limit
+      : Number(settings.free_daily_limit) || 5;
+  const aiLimit =
+    typeof settings.free_daily_ai_limit === "number"
+      ? settings.free_daily_ai_limit
+      : Number(settings.free_daily_ai_limit) || 1;
 
+  const jobs = await getLocalDevJobs(userId, 50);
+  const now = Date.now();
+  const files = jobs.map((job) => {
+    const expired = new Date(job.expires_at).getTime() < now;
+    return {
+      id: job.id,
+      file_name: job.file_name,
+      tool: formatToolLabel(job.tool_name),
+      tool_slug: job.tool_name,
+      created_at: job.created_at,
+      status: mapJobStatus(job.status),
+      file_size: job.file_size_bytes,
+      download_url:
+        !expired && job.storage_path ? `/api/user/local-files/${job.id}` : null,
+      file_id: job.id,
+      expired,
+    };
+  });
+
+  const [filesUsed, aiUsedToday, totalProcessed] = await Promise.all([
+    getLocalDevDailyUsage(userId),
+    getLocalDevDailyUsage(userId, "ai-pdf-summarizer"),
+    getLocalDevTotalProcessed(userId),
+  ]);
+
+  return NextResponse.json({
+    files,
+    usage: {
+      files_used: filesUsed,
+      files_limit: filesLimit,
+      ai_used: aiUsedToday,
+      ai_limit: aiLimit,
+      total_processed: totalProcessed,
+    },
+  });
+}
+
+export async function GET(request: NextRequest) {
   try {
     const user = await getApiUser();
     if (!user) {
+      const rateLimited = await guardGeneralApiRateLimit(request);
+      if (rateLimited) return rateLimited;
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
+    if (isLocalDevActivityEnabled()) {
+      return buildLocalDevFilesResponse(user.id);
+    }
+
     if (!isSupabaseConfigured()) {
-      if (!isLocalDevActivityEnabled()) {
-        return NextResponse.json({ files: [], usage: { files_used: 0, files_limit: 5, ai_used: 0, ai_limit: 1, total_processed: 0 } });
-      }
-
-      const settings = await getCachedAdminSettings();
-      const filesLimit =
-        typeof settings.free_daily_limit === "number"
-          ? settings.free_daily_limit
-          : Number(settings.free_daily_limit) || 5;
-      const aiLimit =
-        typeof settings.free_daily_ai_limit === "number"
-          ? settings.free_daily_ai_limit
-          : Number(settings.free_daily_ai_limit) || 1;
-
-      const jobs = await getLocalDevJobs(user.id, 50);
-      const now = Date.now();
-      const files = jobs.map((job) => {
-        const expired = new Date(job.expires_at).getTime() < now;
-        return {
-          id: job.id,
-          file_name: job.file_name,
-          tool: formatToolLabel(job.tool_name),
-          tool_slug: job.tool_name,
-          created_at: job.created_at,
-          status: mapJobStatus(job.status),
-          file_size: job.file_size_bytes,
-          download_url:
-            !expired && job.storage_path ? `/api/user/local-files/${job.id}` : null,
-          file_id: job.id,
-          expired,
-        };
-      });
-
-      const [filesUsed, aiUsedToday, totalProcessed] = await Promise.all([
-        getLocalDevDailyUsage(user.id),
-        getLocalDevDailyUsage(user.id, "ai-pdf-summarizer"),
-        getLocalDevTotalProcessed(user.id),
-      ]);
-
       return NextResponse.json({
-        files,
+        files: [],
         usage: {
-          files_used: filesUsed,
-          files_limit: filesLimit,
-          ai_used: aiUsedToday,
-          ai_limit: aiLimit,
-          total_processed: totalProcessed,
+          files_used: 0,
+          files_limit: 5,
+          ai_used: 0,
+          ai_limit: 1,
+          total_processed: 0,
         },
       });
     }
@@ -203,6 +215,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error("GET /api/user/files:", err);
-    return NextResponse.json({ files: [] });
+    return NextResponse.json({
+      files: [],
+      usage: {
+        files_used: 0,
+        files_limit: 5,
+        ai_used: 0,
+        ai_limit: 1,
+        total_processed: 0,
+      },
+    });
   }
 }
