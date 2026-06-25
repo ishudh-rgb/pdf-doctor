@@ -31,8 +31,9 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR to `main` or `
 2. `npm run lint`
 3. `npm run typecheck`
 4. `npm run test` (Vitest unit tests)
-5. `npm audit --audit-level=high` (non-blocking)
-6. `npm run build`
+5. `npm run test:e2e` (Playwright smoke: home, tools, health, legal)
+6. `npm audit --audit-level=high` (non-blocking)
+7. `npm run build`
 
 Local equivalent:
 

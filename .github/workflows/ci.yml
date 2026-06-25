@@ -45,3 +45,19 @@ jobs:
           RAZORPAY_KEY_ID: rzp_test_ci
           RAZORPAY_KEY_SECRET: ci_secret
           RAZORPAY_WEBHOOK_SECRET: ci_webhook
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke tests
+        run: npm run test:e2e
+        env:
+          CI: true
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder
+          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder
+          IP_HASH_SALT: ci-test-salt
+          CRON_SECRET: ci-cron-secret
+          RAZORPAY_KEY_ID: rzp_test_ci
+          RAZORPAY_KEY_SECRET: ci_secret
+          RAZORPAY_WEBHOOK_SECRET: ci_webhook

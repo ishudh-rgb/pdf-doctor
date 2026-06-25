@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "test:all": "npm run test && npm run test:e2e",
     "audit:ci": "npm audit --audit-level=high",
     "clean:next": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
   },
@@ -64,6 +67,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.5",

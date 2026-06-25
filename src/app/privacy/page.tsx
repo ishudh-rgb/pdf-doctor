@@ -23,7 +23,7 @@ export default function PrivacyPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  When you use Only4PDF, we may collect the following types of
+                  When you use OnlyMyPDF, we may collect the following types of
                   information:
                 </p>
                 <ul className="list-disc space-y-2 pl-5">
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
                   </li>
                   <li>
                     <strong>No Human Access:</strong> Your files are processed
-                    automatically. No Only4PDF employee views or accesses your
+                    automatically. No OnlyMyPDF employee views or accesses your
                     file contents.
                   </li>
                   <li>
@@ -131,7 +131,7 @@ export default function PrivacyPage() {
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
                   We work with trusted third-party services to operate
-                  Only4PDF:
+                  OnlyMyPDF:
                 </p>
                 <ul className="list-disc space-y-2 pl-5">
                   <li>
@@ -216,7 +216,7 @@ export default function PrivacyPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  Only4PDF is not intended for use by children under the age of
+                  OnlyMyPDF is not intended for use by children under the age of
                   13. We do not knowingly collect personal information from
                   children under 13. If we become aware that a child under 13
                   has provided us with personal information, we will take steps
@@ -237,7 +237,7 @@ export default function PrivacyPage() {
                   encourage you to review this page periodically for any changes.
                 </p>
                 <p>
-                  Continued use of Only4PDF after changes are posted
+                  Continued use of OnlyMyPDF after changes are posted
                   constitutes your acceptance of the revised policy.
                 </p>
               </div>

@@ -21,7 +21,7 @@ export default function TermsPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  By accessing or using Only4PDF (&ldquo;the Service&rdquo;),
+                  By accessing or using OnlyMyPDF (&ldquo;the Service&rdquo;),
                   you agree to be bound by these Terms of Service. If you do not
                   agree to these terms, please do not use the Service.
                 </p>
@@ -39,7 +39,7 @@ export default function TermsPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  Only4PDF provides online PDF tools including but not limited
+                  OnlyMyPDF provides online PDF tools including but not limited
                   to: merging, splitting, compressing, converting, editing,
                   signing, protecting, unlocking, scanning, and AI-powered
                   summarization of PDF documents.
@@ -99,7 +99,7 @@ export default function TermsPage() {
                   intended only for removing passwords from PDFs you own or have
                   authorization to access. Using this tool to bypass security on
                   PDFs you do not own is prohibited and may violate applicable
-                  laws. Only4PDF is not responsible for misuse of this tool.
+                  laws. OnlyMyPDF is not responsible for misuse of this tool.
                 </p>
               </div>
             </section>
@@ -195,7 +195,7 @@ export default function TermsPage() {
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
                   The Service, including its design, code, features, and
-                  branding, is owned by Only4PDF. You retain full ownership of
+                  branding, is owned by OnlyMyPDF. You retain full ownership of
                   any files you upload — we claim no rights over your content.
                 </p>
                 <p>
@@ -211,7 +211,7 @@ export default function TermsPage() {
               </h2>
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <p>
-                  To the maximum extent permitted by law, Only4PDF shall not be
+                  To the maximum extent permitted by law, OnlyMyPDF shall not be
                   liable for:
                 </p>
                 <ul className="list-disc space-y-2 pl-5">

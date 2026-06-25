@@ -1,4 +1,4 @@
-.PHONY: install dev build lint typecheck test ci health
+.PHONY: install dev build lint typecheck test test-e2e ci health
 
 install:
 	npm ci
@@ -18,7 +18,10 @@ typecheck:
 test:
 	npm run test
 
-ci: lint typecheck test build
+ci: lint typecheck test build test:e2e
+
+test-e2e:
+	npm run test:e2e
 
 health:
 	curl -fsS http://localhost:3000/api/health | jq .
