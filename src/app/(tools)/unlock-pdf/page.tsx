@@ -80,6 +80,8 @@ export default function UnlockPdfPage() {
       setResultFilename(files[0].name.replace('.pdf', '-unlocked.pdf'));
       setResultSize(blob.size);
       setCompleted(true);
+      const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
+      notifyActivityUpdated();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {

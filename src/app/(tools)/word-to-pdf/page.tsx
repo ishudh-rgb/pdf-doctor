@@ -98,6 +98,8 @@ export default function WordToPdfPage() {
       setResultFilename(files[0].name.replace(/\.docx?$/, '.pdf'));
       setProgress(100);
       setCompleted(true);
+      const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
+      notifyActivityUpdated();
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         setError('Conversion timed out. Word or LibreOffice may be busy — please retry.');

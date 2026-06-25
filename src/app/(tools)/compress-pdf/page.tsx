@@ -106,6 +106,8 @@ export default function CompressPdfPage() {
       if (pw) setPdfPassword(pw);
       setPasswordPrompt(null);
       setCompleted(true);
+      const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
+      notifyActivityUpdated();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {

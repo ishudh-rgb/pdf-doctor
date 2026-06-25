@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { applyEditPdfOperations, type EditPdfOperations } from "@/lib/services/pdf-edit.service";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
-import { createClient } from "@/lib/supabase/server";
+import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
@@ -18,11 +18,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    userId = user?.id ?? null;
+    userId = await getToolRequestUserId();
 
-    const isPro = user ? (await getUserProfile(user.id)).plan === "pro" : false;
+    const isPro = userId ? (await getUserProfile(userId)).plan === "pro" : false;
     const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
 
     const usageResult = await checkUsageLimit(userId, request, "edit-pdf");

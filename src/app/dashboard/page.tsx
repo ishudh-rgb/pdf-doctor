@@ -27,6 +27,7 @@ import { useAuthContext } from "@/components/providers/auth-provider";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-layout";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { slugToToolKey } from "@/lib/dashboard/tool-key";
+import { ACTIVITY_UPDATED_EVENT } from "@/lib/client/activity-events";
 
 const quickAccessTools = [
   { slug: "merge-pdf", icon: Layers, nameKey: "tools.mergePdf.name", color: "from-blue-500 to-indigo-600" },
@@ -110,7 +111,7 @@ function StatCard({
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { user, profile, isPro } = useAuthContext();
+  const { user, profile, isPro, refreshProfile } = useAuthContext();
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [usageStats, setUsageStats] = useState<UsageStats>({
     filesUsed: 0,
@@ -129,7 +130,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadJobs() {
       try {
-        const res = await fetch("/api/user/files");
+        const res = await fetch("/api/user/files", { cache: "no-store" });
         if (!res.ok) return;
         const json = await res.json();
         const files = json.files as Array<{
@@ -173,18 +174,27 @@ export default function DashboardPage() {
         /* keep empty state */
       }
     }
-    void loadJobs();
-    const onFocus = () => void loadJobs();
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void loadJobs();
+
+    const refreshDashboard = () => {
+      void loadJobs();
+      void refreshProfile();
     };
+
+    refreshDashboard();
+    const onFocus = () => refreshDashboard();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshDashboard();
+    };
+    const onActivityUpdated = () => refreshDashboard();
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener(ACTIVITY_UPDATED_EVENT, onActivityUpdated);
     return () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener(ACTIVITY_UPDATED_EVENT, onActivityUpdated);
     };
-  }, []);
+  }, [refreshProfile]);
 
   const statusConfig: Record<JobStatus, { label: string; className: string }> = {
     completed: { label: t("dashboard.completed"), className: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200/60" },

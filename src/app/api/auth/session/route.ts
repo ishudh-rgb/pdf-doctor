@@ -4,6 +4,11 @@ import {
   getLocalDevSessionUser,
   isLocalDevAuthEnabled,
 } from "@/lib/auth/local-dev-auth";
+import {
+  getLocalDevDailyUsage,
+  getLocalDevTotalProcessed,
+  isLocalDevActivityEnabled,
+} from "@/lib/auth/local-dev-activity";
 
 export async function GET() {
   try {
@@ -12,6 +17,13 @@ export async function GET() {
       if (!user) {
         return NextResponse.json({ user: null, profile: null });
       }
+
+      const [totalProcessed, aiUsedToday] = isLocalDevActivityEnabled()
+        ? await Promise.all([
+            getLocalDevTotalProcessed(user.id),
+            getLocalDevDailyUsage(user.id, "ai-pdf-summarizer"),
+          ])
+        : [0, 0];
 
       return NextResponse.json({
         user: {
@@ -26,8 +38,8 @@ export async function GET() {
           role: user.role,
           plan: user.plan,
           plan_expires_at: null,
-          total_files_processed: 0,
-          ai_credits_used: 0,
+          total_files_processed: totalProcessed,
+          ai_credits_used: aiUsedToday,
         },
       });
     }

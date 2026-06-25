@@ -122,6 +122,8 @@ export default function ProtectPdfPage() {
       setResultFilename(files[0].name.replace(/\.pdf$/i, '-protected.pdf'));
       setResultSize(blob.size);
       setCompleted(true);
+      const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
+      notifyActivityUpdated();
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         setError('Protection timed out after 2 minutes. Try a smaller PDF or refresh and retry.');

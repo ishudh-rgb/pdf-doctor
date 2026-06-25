@@ -3,7 +3,7 @@ import { checkUsageLimit } from "@/lib/services/usage-limit.service";
 import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { logToolUsage, logError } from "@/lib/db/queries";
-import { createClient } from "@/lib/supabase/server";
+import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { guardToolRateLimit } from "@/lib/server/rate-limiter";
@@ -31,11 +31,7 @@ export function createToolRoute(options: ToolRouteOptions) {
       const toolRate = await guardToolRateLimit(request, options.toolSlug);
       if (toolRate) return toolRate;
 
-      const supabase = await createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      userId = user?.id ?? null;
+      userId = await getToolRequestUserId();
 
       const userContext = await resolveToolUserContext(userId);
       const maxSizeMB = userContext.maxSizeMB;

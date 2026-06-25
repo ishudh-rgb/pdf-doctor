@@ -81,6 +81,8 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
         setResult(processingResult);
         setStatus("completed");
         onSuccess?.(processingResult);
+        const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
+        notifyActivityUpdated();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Processing failed";
         setError(message);
@@ -139,6 +141,8 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
         setResult(processingResult);
         setStatus("completed");
         onSuccess?.(processingResult);
+        const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
+        notifyActivityUpdated();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Processing failed";
         setError(message);

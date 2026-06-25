@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { txtFileToPdf } from "@/lib/services/txt-to-pdf.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
-import { createClient } from "@/lib/supabase/server";
+import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
@@ -24,9 +24,7 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    userId = user?.id ?? null;
+    userId = await getToolRequestUserId();
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)

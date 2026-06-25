@@ -12,7 +12,12 @@ const DEFAULT_ADMIN_SETTINGS: Record<string, unknown> = {
 
 export async function getUserProfile(userId: string) {
   if (!isSupabaseConfigured()) {
-    return { id: userId, plan: "free" as const };
+    const { getLocalDevTotalProcessed, isLocalDevActivityEnabled } = await import(
+      "@/lib/auth/local-dev-activity"
+    );
+    const total_files_processed =
+      isLocalDevActivityEnabled() ? await getLocalDevTotalProcessed(userId) : 0;
+    return { id: userId, plan: "free" as const, total_files_processed };
   }
 
   const supabase = await createServiceClient();
@@ -222,7 +227,21 @@ export async function logUsage(data: {
   processing_time_ms?: number | null;
   status: "success" | "failed";
 }) {
-  if (!isSupabaseConfigured()) return;
+  if (!isSupabaseConfigured()) {
+    if (data.user_id) {
+      const { recordLocalDevUsage, isLocalDevActivityEnabled } = await import(
+        "@/lib/auth/local-dev-activity"
+      );
+      if (isLocalDevActivityEnabled()) {
+        await recordLocalDevUsage({
+          userId: data.user_id,
+          toolName: data.tool_name,
+          status: data.status,
+        });
+      }
+    }
+    return;
+  }
 
   const supabase = await createServiceClient();
   const { error } = await supabase.from("usage_logs").insert({
@@ -263,7 +282,15 @@ export async function logAIUsage(data: {
 }
 
 export async function getUserDailyUsage(userId: string, toolName?: string) {
-  if (!isSupabaseConfigured()) return 0;
+  if (!isSupabaseConfigured()) {
+    const { getLocalDevDailyUsage, isLocalDevActivityEnabled } = await import(
+      "@/lib/auth/local-dev-activity"
+    );
+    if (isLocalDevActivityEnabled()) {
+      return getLocalDevDailyUsage(userId, toolName);
+    }
+    return 0;
+  }
 
   const supabase = await createServiceClient();
   const todayStart = new Date();

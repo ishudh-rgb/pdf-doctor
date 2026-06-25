@@ -19,7 +19,24 @@ export async function persistCompletedToolJob(data: {
   mimeType: string;
   processingTimeMs?: number;
 }): Promise<void> {
-  if (!isSupabaseConfigured()) return;
+  if (!isSupabaseConfigured()) {
+    const { recordLocalDevJob, isLocalDevActivityEnabled } = await import(
+      "@/lib/auth/local-dev-activity"
+    );
+    if (isLocalDevActivityEnabled()) {
+      try {
+        await recordLocalDevJob({
+          userId: data.userId,
+          toolName: data.toolName,
+          fileName: data.outputFileName,
+          outputBuffer: data.outputBuffer,
+        });
+      } catch (err) {
+        console.error("recordLocalDevJob failed:", err);
+      }
+    }
+    return;
+  }
 
   try {
     const inputFiles = (data.inputFileNames ?? []).map((name) => ({ name }));
