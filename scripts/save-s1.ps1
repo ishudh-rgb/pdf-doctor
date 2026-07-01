@@ -165,6 +165,15 @@ foreach ($rel in $pyExtra) {
   }
 }
 
+# --- Global styles (theme A + layout B fonts/spacing) ---
+$stylesSrc = Join-Path $Root "src\styles"
+$stylesDst = Join-Path $snapDir "src-styles"
+if (Test-Path $stylesSrc) {
+  if (Test-Path $stylesDst) { Remove-Item $stylesDst -Recurse -Force }
+  Copy-Item $stylesSrc $stylesDst -Recurse -Force
+  Write-Host "  src/styles copied to .snapshots/s1/src-styles/" -ForegroundColor Gray
+}
+
 # --- S1 manifest doc into snapshot folder ---
 $snapDoc = Join-Path $Root "S1-SNAPSHOT.md"
 if (Test-Path $snapDoc) {
@@ -174,12 +183,18 @@ if (Test-Path $snapDoc) {
 git add -A
 $status = git status --porcelain
 if ($status) {
-  $msg = "S1: OnlyMyPDF snapshot - Logo D lock, dashboard/pricing redesign, PDF Scanner UI, user files API, AI Summarizer polish. Revert: scripts/revert-to-s1.ps1"
+  $msg = @"
+S1: OnlyMyPDF full snapshot — auth, pricing, tool UI, Pro 200MB, enterprise ops.
+
+Includes: centered file-size badges, cloud buttons removed, tool header layout,
+login/auth fixes, pricing+i18n sync with MAX_PRO_FILE_SIZE_MB=200, dashboard,
+audit log, Hindi legal, E2E tests. Revert: scripts/revert-to-s1.ps1
+"@
   git commit -m $msg
 }
 
 $null = git tag -d S1 2>&1
-git tag -a S1 -m "S1 OnlyMyPDF - dashboard, pricing, Logo D, PDF Scanner, user files API"
+git tag -a S1 -m "S1 OnlyMyPDF - auth, pricing, tool UI, Pro 200MB, enterprise ops"
 
 $null = git branch -D s1-backup 2>&1
 git branch s1-backup
@@ -202,11 +217,16 @@ $manifestLines = @(
   "  .snapshots/s1/excel-to-pdf-src/",
   "  .snapshots/s1/pdf-to-excel-src/",
   "  .snapshots/s1/sign-pdf-src/",
+  "  .snapshots/s1/src-styles/",
   "  .snapshots/s1/public/",
   "  .snapshots/s1/S1-SNAPSHOT.md",
   "",
   "Design lock: Theme A + Layout B, OnlyMyPDF Logo D",
-  "Dashboard: overview, files, pricing + layout wrapper",
+  "Pro file limit: 200 MB (MAX_PRO_FILE_SIZE_MB)",
+  "Free file limit: 25 MB",
+  "Tool UI: centered file-size badge, no cloud import buttons",
+  "Auth: server logout + header session sync",
+  "Pricing: dynamic FILE_SIZE_MARKETING on compare tables",
   "Excel-to-PDF: Excel COM primary, SheetJS fallback",
   "PDF-to-Excel: financial + document layout modes",
   "Sign PDF: multi-annotation workspace"

@@ -10,16 +10,19 @@ import {
   updatePdfToWordJobProgress,
 } from "@/lib/services/pdf-to-word-jobs.service";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
-import { createClient } from "@/lib/supabase/server";
+import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
+import { logToolUsage, logError } from "@/lib/db/queries";
+import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
-import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
+import { heavyJobCapacityResponse, isHeavyJobCapacityError } from "@/lib/server/heavy-job-http";
+import { userBlockedResponse } from "@/lib/server/user-blocked-http";
+import { guardMaintenanceMode } from "@/lib/server/tool-request-guards";
 import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
-import { resolveJobOwnerKey } from "@/lib/server/job-owner";
+import { resolveToolJobOwnerKey } from "@/lib/server/job-owner";
 
 export const maxDuration = 600;
 
@@ -80,8 +83,12 @@ async function runConversionJob(
     startTime: number;
     fileSize: number;
     pdfPassword?: string;
+    outputFileName: string;
   }
 ) {
+  const docxMime =
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
   try {
     const inputStat = await fs.stat(inputPath);
     const result = await withHeavyJobGuard(() =>
@@ -90,29 +97,46 @@ async function runConversionJob(
         inputPath,
         outputPath,
         pdfPassword: meta.pdfPassword,
-        onProgress: (percent) => updatePdfToWordJobProgress(jobId, percent),
+        onProgress: (percent) => void updatePdfToWordJobProgress(jobId, percent),
       })
     );
 
-    completePdfToWordJob(jobId, {
-      outputPath: result.outputPath ?? outputPath,
+    const finalOutputPath = result.outputPath ?? outputPath;
+
+    await completePdfToWordJob(jobId, {
+      outputPath: finalOutputPath,
       workDir,
       engine: result.engine,
     });
 
-    void logToolUsage({
+    const usageBase = {
       userId: meta.userId,
       sessionId: meta.sessionId,
-      toolSlug: "pdf-to-word",
+      toolSlug: "pdf-to-word" as const,
       ipAddress: meta.ipAddress,
       fileSize: inputStat.size,
       processingTimeMs: Date.now() - meta.startTime,
-      status: "completed",
-    }).catch(() => {});
+      status: "completed" as const,
+      inputFileNames: [fileName],
+    };
+
+    if (meta.userId) {
+      const outputBuffer = await fs.readFile(finalOutputPath);
+      void logToolUsage({
+        ...usageBase,
+        output: {
+          buffer: outputBuffer,
+          fileName: meta.outputFileName,
+          mimeType: docxMime,
+        },
+      }).catch(() => {});
+    } else {
+      void logToolUsage(usageBase).catch(() => {});
+    }
   } catch (error) {
     const raw = error instanceof Error ? error.message : "Failed to convert PDF to Word";
-    const message = mapPdfToWordError(raw);
-    failPdfToWordJob(jobId, message, workDir);
+    const message = isHeavyJobCapacityError(error) ? raw : mapPdfToWordError(raw);
+    await failPdfToWordJob(jobId, message, workDir);
     await logError({
       user_id: meta.userId,
       tool_name: "pdf-to-word",
@@ -128,17 +152,15 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
+    const maintenance = await guardMaintenanceMode();
+    if (maintenance) return maintenance;
+
     const toolRate = await guardToolRateLimit(request, "pdf-to-word");
     if (toolRate) return toolRate;
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    userId = user?.id ?? null;
-
-    const isPro = user ? (await getUserProfile(user.id)).plan === "pro" : false;
-    const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+    userId = await getToolRequestUserId();
+    const userContext = await resolveToolUserContext(userId);
+    const maxSizeMB = userContext.maxSizeMB;
 
     const usage = await checkUsageLimit(userId, getGuestUsageKey(request));
     if (!usage.allowed) {
@@ -183,8 +205,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (wantsJobMode(request)) {
-      const ownerKey = resolveJobOwnerKey(request, userId);
-      const jobId = createPdfToWordJob(outputFilename, ownerKey);
+      const ownerKey = await resolveToolJobOwnerKey(request);
+      const jobId = await createPdfToWordJob(outputFilename, ownerKey);
       const workDir = await fs.mkdtemp(path.join(os.tmpdir(), "pdfdoctor-ptw-job-"));
       const inputPath = path.join(workDir, "input.pdf");
       const outputPath = path.join(workDir, outputFilename);
@@ -197,6 +219,7 @@ export async function POST(request: NextRequest) {
         startTime,
         fileSize: prepared.length,
         pdfPassword,
+        outputFileName: outputFilename,
       });
       return NextResponse.json({ jobId });
     }
@@ -221,6 +244,13 @@ export async function POST(request: NextRequest) {
       fileSize: prepared.length,
       processingTimeMs: Date.now() - startTime,
       status: "completed",
+      inputFileNames: [file.name],
+      output: {
+        buffer: docxBuffer,
+        fileName: outputFilename,
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      },
     }).catch(() => {});
 
     return new NextResponse(new Uint8Array(docxBuffer), {
@@ -234,6 +264,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    const blocked = userBlockedResponse(error);
+    if (blocked) return blocked;
+
+    const capacity = heavyJobCapacityResponse(error);
+    if (capacity) return capacity;
+
     const raw = error instanceof Error ? error.message : "Failed to convert PDF to Word";
     const message = mapPdfToWordError(raw);
 

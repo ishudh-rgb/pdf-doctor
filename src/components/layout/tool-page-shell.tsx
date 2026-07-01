@@ -13,6 +13,65 @@ interface FAQ {
   answer: string;
 }
 
+function splitToolCardTitle(title: string): { lead: string; suffix: string | null } {
+  const separator = " — ";
+  const index = title.indexOf(separator);
+  if (index === -1) {
+    return { lead: title, suffix: null };
+  }
+  return {
+    lead: title.slice(0, index),
+    suffix: title.slice(index),
+  };
+}
+
+function ToolCardInlineHeader({
+  title,
+  description,
+  compactWorkspace,
+  bordered = true,
+}: {
+  title: string;
+  description: string;
+  compactWorkspace?: boolean;
+  bordered?: boolean;
+}) {
+  const { lead, suffix } = splitToolCardTitle(title);
+
+  return (
+    <header
+      className={cn(
+        bordered && "border-b border-pd-border",
+        compactWorkspace ? "mb-2 pb-1.5" : "mb-2 pb-2"
+      )}
+    >
+      <h1
+        className={cn(
+          "pd-tool-card-header-title w-full font-bold leading-snug text-pd-foreground",
+          compactWorkspace ? "text-base sm:text-lg" : "text-lg sm:text-xl"
+        )}
+      >
+        {suffix ? (
+          <>
+            <span>{lead}</span>
+            <span>{suffix}</span>
+          </>
+        ) : (
+          title
+        )}
+      </h1>
+      <p
+        className={cn(
+          "pd-tool-card-header-desc mt-1.5 w-full leading-snug text-pd-muted",
+          compactWorkspace ? "text-xs sm:text-[13px]" : "text-sm"
+        )}
+      >
+        {description}
+      </p>
+    </header>
+  );
+}
+
 interface ToolPageShellProps {
   title: string;
   description: string;
@@ -123,10 +182,7 @@ function Workspace({
       <section className="bg-pd-background py-3 sm:py-4">
         <div className="pd-container mx-auto w-full max-w-7xl">
           {inlineHeader && (
-            <header className="mb-3">
-              <h1 className="text-lg font-bold text-pd-foreground sm:text-xl">{title}</h1>
-              <p className="mt-0.5 text-sm text-pd-muted">{description}</p>
-            </header>
+            <ToolCardInlineHeader title={title} description={description} bordered={false} />
           )}
           <div className="pd-tool-workspace w-full">{children}</div>
         </div>
@@ -164,29 +220,11 @@ function Workspace({
               )}
             >
               {inlineHeader && (
-                <header
-                  className={cn(
-                    "border-b border-pd-border",
-                    compactWorkspace ? "mb-2 pb-2" : "mb-3 pb-2.5"
-                  )}
-                >
-                  <h1
-                    className={cn(
-                      "font-bold text-pd-foreground",
-                      compactWorkspace ? "text-base sm:text-lg" : "text-lg sm:text-xl"
-                    )}
-                  >
-                    {title}
-                  </h1>
-                  <p
-                    className={cn(
-                      "text-pd-muted",
-                      compactWorkspace ? "mt-0.5 text-xs sm:text-[13px]" : "mt-0.5 text-sm"
-                    )}
-                  >
-                    {description}
-                  </p>
-                </header>
+                <ToolCardInlineHeader
+                  title={title}
+                  description={description}
+                  compactWorkspace={compactWorkspace}
+                />
               )}
               <div className="pd-tool-workspace w-full">{children}</div>
               <footer

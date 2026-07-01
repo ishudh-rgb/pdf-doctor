@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyAdmin } from "@/lib/auth/verify-admin";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
+import { toSafeApiError } from "@/lib/server/safe-error";
+import { logAdminAction } from "@/lib/admin/audit-log";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,13 +24,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ coupons: data ?? [] });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to fetch coupons";
+    const message = toSafeApiError(err, "Failed to fetch coupons");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const originBlocked = guardMutationOrigin(request);
+    if (originBlocked) return originBlocked;
+
     const admin = await verifyAdmin(request);
     if (admin instanceof Response) return admin;
     if (!admin) {
@@ -64,15 +71,28 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
+    await logAdminAction({
+      adminId: admin.id,
+      adminEmail: admin.email ?? "admin",
+      action: "coupon.create",
+      targetType: "coupon",
+      targetId: data.id,
+      payload: { code: data.code, discount_percent: data.discount_percent },
+      ipHash: getGuestUsageKey(request),
+    });
+
     return NextResponse.json({ coupon: data }, { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to create coupon";
+    const message = toSafeApiError(err, "Failed to create coupon");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
+    const originBlocked = guardMutationOrigin(request);
+    if (originBlocked) return originBlocked;
+
     const admin = await verifyAdmin(request);
     if (admin instanceof Response) return admin;
     if (!admin) {
@@ -95,9 +115,19 @@ export async function PATCH(request: NextRequest) {
 
     if (error) throw error;
 
+    await logAdminAction({
+      adminId: admin.id,
+      adminEmail: admin.email ?? "admin",
+      action: "coupon.update",
+      targetType: "coupon",
+      targetId: id,
+      payload: { is_active },
+      ipHash: getGuestUsageKey(request),
+    });
+
     return NextResponse.json({ coupon: data });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to update coupon";
+    const message = toSafeApiError(err, "Failed to update coupon");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

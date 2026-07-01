@@ -1,4 +1,4 @@
-import { APP_DESCRIPTION, APP_NAME, APP_URL, getToolBySlug } from "@/config/constants";
+import { APP_DESCRIPTION, APP_NAME, APP_URL, PRO_PRICING, getToolBySlug } from "@/config/constants";
 import { getToolSEO } from "@/config/tools";
 import { getToolAeo } from "@/config/tool-aeo";
 import type { HowToStep } from "@/types";
@@ -29,7 +29,7 @@ export function organizationJsonLd() {
       "@type": "ContactPoint",
       contactType: "customer support",
       url: `${APP_URL}/contact`,
-      availableLanguage: ["English"],
+      availableLanguage: ["English", "Hindi"],
     },
     knowsAbout: [
       "PDF merge",
@@ -67,6 +67,34 @@ export function webApplicationJsonLd() {
       priceCurrency: "INR",
     },
     description: APP_DESCRIPTION,
+  };
+}
+
+export function pricingProProductJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `${APP_NAME} Pro`,
+    description: "Pro PDF tools plan with 100 daily uses, Sign PDF, AI summarizer, and priority processing.",
+    brand: { "@type": "Brand", name: APP_NAME },
+    offers: [
+      {
+        "@type": "Offer",
+        name: "Pro Monthly",
+        price: String(PRO_PRICING.monthlyInr),
+        priceCurrency: "INR",
+        availability: "https://schema.org/InStock",
+        url: `${APP_URL}/pricing`,
+      },
+      {
+        "@type": "Offer",
+        name: "Pro Yearly",
+        price: String(PRO_PRICING.yearlyInr),
+        priceCurrency: "INR",
+        availability: "https://schema.org/InStock",
+        url: `${APP_URL}/pricing`,
+      },
+    ],
   };
 }
 

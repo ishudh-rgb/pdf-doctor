@@ -39,6 +39,19 @@ export async function POST(request: NextRequest) {
 
         if (!result.ok) {
           console.error("Webhook payment fulfillment failed:", result.error);
+          captureApiError(new Error(result.error), {
+            route: "payments/webhook",
+            razorpay_order_id: paymentEntity.order_id,
+            status: result.status,
+          });
+          if (result.status >= 400 && result.status < 500) {
+            return NextResponse.json({
+              received: true,
+              skipped: true,
+              reason: result.error,
+            });
+          }
+          return NextResponse.json({ error: result.error }, { status: 500 });
         }
         break;
       }

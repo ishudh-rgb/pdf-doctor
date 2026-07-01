@@ -1,4 +1,14 @@
 import type { ToolSEO } from "@/types";
+import {
+  FILE_LIMITS,
+  formatFileSizeMarketingLabel,
+} from "@/config/constants";
+
+function planFileSizeFaqLine(): string {
+  const free = formatFileSizeMarketingLabel(FILE_LIMITS.maxFreeFileSizeMB).toLowerCase();
+  const pro = formatFileSizeMarketingLabel(FILE_LIMITS.maxProFileSizeMB).toLowerCase();
+  return `Free: ${free}; Pro: ${pro}.`;
+}
 
 export const TOOL_SEO: Record<string, ToolSEO> = {
   "merge-pdf": {
@@ -79,7 +89,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "What is the maximum file size I can compress?",
         answer:
-          "There is no file size limit — compress PDFs of any size.",
+          `${planFileSizeFaqLine()} Compress PDFs within your plan limit.`,
       },
     ],
   },
@@ -95,7 +105,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "How accurate is the PDF to Word conversion?",
         answer:
-          "We use the pdf2docx engine (same class as professional converters) when available — preserving tables, fonts, alignment, and layout like Smallpdf. Install Python + pdf2docx on the server for best results.",
+          "We use a multi-engine pipeline for Smallpdf-class results: ConvertAPI (when configured), Microsoft Word or LibreOffice on the server, then pdf2docx (Python). Complex layouts like tax invoices keep tables, fonts, and images. The basic text-only fallback is never used when a quality engine is available.",
       },
       {
         question: "Can I convert a scanned PDF to Word?",
@@ -136,7 +146,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "Is there a file size limit?",
         answer:
-          "There is no file size limit — convert PDFs of any size.",
+          `${planFileSizeFaqLine()} Convert PDFs within your plan limit.`,
       },
     ],
   },
@@ -229,7 +239,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "Is there a file size limit?",
         answer:
-          "There is no file size limit — convert text files of any size to PDF.",
+          `${planFileSizeFaqLine()} Convert text files within your plan limit.`,
       },
     ],
   },
@@ -431,12 +441,12 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       "Convert PDF files to PowerPoint presentations (.pptx) online for free. Turn PDF pages into editable slides.",
     h1: "Convert PDF to PowerPoint — Free Online Tool",
     seoContent:
-      "Transform PDF content into an editable PowerPoint presentation (.pptx). Each PDF page becomes one or more slides with extracted text organized as titles and bullet points. Ideal for repurposing reports and documents into presentations.",
+      "Transform PDF pages into a PowerPoint presentation (.pptx). Each PDF page is rendered as a full slide image that preserves layout, fonts, and graphics — ideal for repurposing reports and invoices into presentations.",
     faqs: [
       {
-        question: "Are images from the PDF included?",
+        question: "Are images and layout preserved?",
         answer:
-          "Currently, the converter extracts text content. Images and complex graphics are not transferred to the slides.",
+          "Yes. Each PDF page becomes one slide with the page rendered as a high-quality image, so charts, logos, and formatting stay intact.",
       },
       {
         question: "Can I edit the slides after conversion?",
@@ -594,7 +604,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "Is there a page or file size limit?",
         answer:
-          "There is no file size limit. Edit PDFs of any size with no page restrictions.",
+          `${planFileSizeFaqLine()} Edit PDFs within your plan limit.`,
       },
     ],
   },

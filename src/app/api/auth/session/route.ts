@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import {
   getLocalDevSessionUser,
@@ -10,7 +10,22 @@ import {
   isLocalDevActivityEnabled,
 } from "@/lib/auth/local-dev-activity";
 
-export async function GET() {
+/** Session bootstrap — higher limit than general API (header auth sync). */
+async function guardSessionRateLimit(request: NextRequest): Promise<Response | null> {
+  const { checkRateLimit, rateLimitResponse } = await import("@/lib/server/rate-limiter");
+  const rate = await checkRateLimit(request, {
+    keyPrefix: "auth-session",
+    maxRequests: 300,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+  return null;
+}
+
+export async function GET(request: NextRequest) {
+  const rateLimited = await guardSessionRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   try {
     if (isLocalDevAuthEnabled()) {
       const user = await getLocalDevSessionUser();

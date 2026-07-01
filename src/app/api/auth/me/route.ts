@@ -1,12 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserProfile } from "@/lib/db/queries";
 import {
   getLocalDevSessionUser,
   isLocalDevAuthEnabled,
 } from "@/lib/auth/local-dev-auth";
+import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rateLimited = await guardGeneralApiRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   try {
     if (isLocalDevAuthEnabled()) {
       const user = await getLocalDevSessionUser();

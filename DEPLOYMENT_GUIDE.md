@@ -85,7 +85,14 @@ Run **all** SQL migrations in order (new projects and upgrades):
    - `003_security_rls_payments.sql`
    - `004_security_rls_admin_tables.sql`
    - `005_scalability_privacy.sql`
+   - `006_payment_retention_on_delete.sql`
+   - `007_payment_processing_status.sql`
+   - `008_user_blocked_storage.sql`
+   - `009_profile_block_coupon_atomic.sql`
+   - `010_admin_audit_log.sql`
 4. Paste the full file contents, click **Run**, confirm **Success** before the next file
+
+**Docker (self-hosted):** pass `NEXT_PUBLIC_*` as build args — see `Dockerfile` and `docker-compose.yml`. Runtime `--env-file` cannot fix inlined client vars.
 
 For day-to-day operations (health checks, cron, CI, backups), see `docs/OPERATIONS.md`.  
 For production env vars, see `docs/PRODUCTION_CHECKLIST.md`.
@@ -96,10 +103,7 @@ For production env vars, see `docs/PRODUCTION_CHECKLIST.md`.
 3. Bucket name: `pdf-files`
 4. Toggle "Public bucket" OFF (we want private)
 5. Click "Create bucket"
-6. Go to bucket Policies and add:
-   - Allow authenticated users to upload
-   - Allow authenticated users to read their own files
-   - Allow service role full access
+6. Go to bucket Policies — for production, use **private bucket + service-role access only** (see migration `008_user_blocked_storage.sql`). Do not expose public read on user uploads.
 
 ---
 

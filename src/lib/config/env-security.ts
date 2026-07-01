@@ -1,8 +1,10 @@
 /** Production secret checks — wired via instrumentation.ts on server boot. */
 
 const REQUIRED_IN_PRODUCTION = [
+  "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "NEXT_PUBLIC_RAZORPAY_KEY_ID",
   "SUPABASE_SERVICE_ROLE_KEY",
   "CRON_SECRET",
   "IP_HASH_SALT",
@@ -12,6 +14,8 @@ const REQUIRED_IN_PRODUCTION = [
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
 ] as const;
+
+const RECOMMENDED_IN_PRODUCTION = ["SENTRY_DSN", "RESEND_API_KEY", "CONVERTAPI_SECRET"] as const;
 
 const PLACEHOLDER_MARKERS = ["your_", "placeholder", "change_me", "change_this"];
 
@@ -30,6 +34,15 @@ export function assertProductionSecrets(): void {
 
   if (missing.length > 0) {
     throw new Error(`Missing production secrets: ${missing.join(", ")}`);
+  }
+
+  const missingRecommended = RECOMMENDED_IN_PRODUCTION.filter((key) =>
+    isMissingOrPlaceholder(process.env[key])
+  );
+  if (missingRecommended.length > 0) {
+    console.warn(
+      `[env-security] Recommended production secrets not set: ${missingRecommended.join(", ")}`
+    );
   }
 }
 

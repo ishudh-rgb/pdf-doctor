@@ -20,3 +20,7 @@ Write-Host "Add to .env.local:" -ForegroundColor Yellow
 Write-Host "PDF2DOCX_PYTHON=$py312"
 Write-Host ""
 Write-Host "Restart dev server, then PDF to Word will use Smallpdf-quality engine." -ForegroundColor Green
+Write-Host ""
+Write-Host "For best PDF-to-Word layout (invoices, forms), also install LibreOffice:" -ForegroundColor Yellow
+Write-Host "  winget install TheDocumentFoundation.LibreOffice"
+Write-Host "Or set CONVERTAPI_SECRET in .env.local for cloud Smallpdf-class conversion."

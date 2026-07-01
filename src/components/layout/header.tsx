@@ -12,6 +12,7 @@ import {
   FileDown,
   FileUp,
   FileImage,
+  PenLine,
   PenTool,
   Lock,
   Unlock,
@@ -94,6 +95,7 @@ const megaMenuCategories: ToolCategory[] = [
     title: "Edit & Sign",
     titleColor: "text-rose-600",
     tools: [
+      { name: "Edit PDF", href: "/edit-pdf", icon: <PenLine className="h-4 w-4" />, iconBg: "bg-cyan-100", iconText: "text-cyan-600", hoverBg: "hover:bg-cyan-100/80" },
       { name: "Sign PDF", href: "/sign-pdf", icon: <PenTool className="h-4 w-4" />, iconBg: "bg-rose-100", iconText: "text-rose-600", hoverBg: "hover:bg-rose-100/80" },
       { name: "Add Watermark", href: "/add-watermark", icon: <Stamp className="h-4 w-4" />, iconBg: "bg-fuchsia-100", iconText: "text-fuchsia-600", hoverBg: "hover:bg-fuchsia-100/80" },
     ],
@@ -239,8 +241,9 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = React.useState(false);
   const megaMenuRef = React.useRef<HTMLDivElement>(null);
-  const { user, loading, signOut } = useAuthContext();
+  const { user, profile, loading, signOut } = useAuthContext();
   const { t } = useTranslation();
+  const isLoggedIn = !loading && !!(user || profile);
 
   React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -369,7 +372,7 @@ export function Header() {
           >
             {t("nav.pricing")}
           </Link>
-          {!loading && user ? (
+          {isLoggedIn ? (
             <>
               <Link href="/dashboard">
                 <Button
@@ -485,7 +488,7 @@ export function Header() {
                 <LanguageSwitch />
               </div>
               <div className="flex gap-3 pt-2">
-                {!loading && user ? (
+                {isLoggedIn ? (
                   <>
                     <Link href="/dashboard" className="flex-1" onClick={() => setMobileOpen(false)}>
                       <Button variant="outline" className="w-full">

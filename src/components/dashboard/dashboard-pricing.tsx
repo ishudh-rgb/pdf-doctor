@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Check,
@@ -25,10 +25,12 @@ import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n";
 import { useAuthContext } from "@/components/providers/auth-provider";
+import { PRO_PRICING, planFileSizeMarketingLabel } from "@/config/constants";
+import { useProCheckout } from "@/hooks/use-pro-checkout";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-layout";
 
-const PRO_MONTHLY = 299;
-const PRO_YEARLY = 2399;
+const PRO_MONTHLY = PRO_PRICING.monthlyInr;
+const PRO_YEARLY = PRO_PRICING.yearlyInr;
 
 type CompareRow = {
   labelKey: string;
@@ -42,7 +44,7 @@ const COMPARE_SECTIONS: { titleKey: string; rows: CompareRow[] }[] = [
     titleKey: "sectionUsage",
     rows: [
       { labelKey: "dailyUses", free: "daily5", pro: "daily100", highlight: true },
-      { labelKey: "fileSize", free: "unlimited", pro: "unlimited" },
+      { labelKey: "fileSize", free: "fileSizeFree", pro: "fileSizePro" },
       { labelKey: "batch", free: "no", pro: "yes" },
     ],
   },
@@ -74,6 +76,12 @@ const PRO_HIGHLIGHTS = [
 ] as const;
 
 const FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6"] as const;
+
+function resolveCompareValue(key: string, t: (path: string) => string): string {
+  if (key === "fileSizeFree") return planFileSizeMarketingLabel(false);
+  if (key === "fileSizePro") return planFileSizeMarketingLabel(true);
+  return t(`dashboard.pricing.val.${key}`);
+}
 
 const FREE_FEATURES = [
   "featMergeSplit",
@@ -160,13 +168,37 @@ function FaqAccordion({
 
 export function DashboardPricingContent() {
   const { t } = useTranslation();
-  const { profile, isPro } = useAuthContext();
+  const { user, profile, isPro } = useAuthContext();
+  const { checkout, loading: checkoutLoading, error: checkoutError } = useProCheckout();
   const [isYearly, setIsYearly] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [filesUsed, setFilesUsed] = useState(0);
+  const [filesLimit, setFilesLimit] = useState(isPro ? 100 : 5);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadUsage() {
+      try {
+        const res = await fetch("/api/user/files", { cache: "no-store", credentials: "include" });
+        if (!res.ok || cancelled) return;
+        const json = await res.json();
+        const usage = json.usage as { files_used?: number; files_limit?: number } | undefined;
+        if (usage) {
+          setFilesUsed(usage.files_used ?? 0);
+          setFilesLimit(usage.files_limit ?? (isPro ? 100 : 5));
+        }
+      } catch {
+        /* keep defaults */
+      }
+    }
+    void loadUsage();
+    return () => {
+      cancelled = true;
+    };
+  }, [isPro]);
 
   const proPrice = isYearly ? PRO_YEARLY : PRO_MONTHLY;
   const monthlyEq = Math.round(PRO_YEARLY / 12);
-  const filesUsed = 3;
-  const filesLimit = isPro ? 100 : 5;
 
   const renewDate = profile?.plan_expires_at
     ? new Date(profile.plan_expires_at).toLocaleDateString(undefined, {
@@ -175,6 +207,16 @@ export function DashboardPricingContent() {
         year: "numeric",
       })
     : null;
+
+  async function handleUpgrade() {
+    if (!user) return;
+    await checkout({
+      duration: isYearly ? "yearly" : "monthly",
+      userName: profile?.full_name ?? undefined,
+      userEmail: user.email,
+      couponCode: couponCode.trim() || undefined,
+    });
+  }
 
   return (
     <div className={cn("space-y-8 pb-8", !isPro && "pb-24 lg:pb-8")}>
@@ -435,7 +477,23 @@ export function DashboardPricingContent() {
               ))}
             </ul>
 
-            <div className="mt-7">
+            <div className="mt-7 space-y-3">
+              {!isPro ? (
+                <div>
+                  <label htmlFor="coupon-code" className="mb-1.5 block text-xs font-medium text-white/70">
+                    {t("dashboard.pricing.couponLabel")}
+                  </label>
+                  <input
+                    id="coupon-code"
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder={t("dashboard.pricing.couponPlaceholder")}
+                    className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-amber-400/60"
+                    autoComplete="off"
+                  />
+                </div>
+              ) : null}
               {isPro ? (
                 <Button
                   disabled
@@ -445,14 +503,21 @@ export function DashboardPricingContent() {
                   {t("dashboard.pricing.currentPlanBtn")}
                 </Button>
               ) : (
-                <Link href="/signup" className="block">
-                  <Button className="h-12 w-full rounded-2xl border-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-base font-bold text-white shadow-xl shadow-orange-500/30 transition hover:shadow-2xl hover:shadow-orange-500/40">
-                    {t("dashboard.pricing.upgradeNow")}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
+                <Button
+                  className="h-12 w-full rounded-2xl border-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-base font-bold text-white shadow-xl shadow-orange-500/30 transition hover:shadow-2xl hover:shadow-orange-500/40"
+                  loading={checkoutLoading}
+                  onClick={() => void handleUpgrade()}
+                >
+                  {t("dashboard.pricing.upgradeNow")}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
               )}
             </div>
+            {checkoutError ? (
+              <p className="mt-2 text-center text-sm text-red-300" role="alert">
+                {checkoutError}
+              </p>
+            ) : null}
           </div>
         </div>
       </section>
@@ -526,7 +591,7 @@ export function DashboardPricingContent() {
                           value={
                             ["yes", "no"].includes(row.free)
                               ? row.free
-                              : t(`dashboard.pricing.val.${row.free}`)
+                              : resolveCompareValue(row.free, t)
                           }
                         />
                       </td>
@@ -535,7 +600,7 @@ export function DashboardPricingContent() {
                           value={
                             ["yes", "no"].includes(row.pro)
                               ? row.pro
-                              : t(`dashboard.pricing.val.${row.pro}`)
+                              : resolveCompareValue(row.pro, t)
                           }
                         />
                       </td>
@@ -629,15 +694,15 @@ export function DashboardPricingContent() {
           <h2 className="mt-3 text-xl font-bold sm:text-2xl">{t("dashboard.pricing.ctaTitle")}</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-white/80">{t("dashboard.pricing.ctaDesc")}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/signup">
-              <Button
-                size="lg"
-                className="rounded-2xl bg-white px-8 font-bold text-indigo-700 shadow-lg hover:bg-white/95"
-              >
-                <Crown className="mr-2 h-5 w-5" />
-                {t("dashboard.pricing.upgradeNow")}
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              className="rounded-2xl bg-white px-8 font-bold text-indigo-700 shadow-lg hover:bg-white/95"
+              loading={checkoutLoading}
+              onClick={() => void handleUpgrade()}
+            >
+              <Crown className="mr-2 h-5 w-5" />
+              {t("dashboard.pricing.upgradeNow")}
+            </Button>
             <Link href="/contact">
               <Button
                 size="lg"
@@ -654,11 +719,13 @@ export function DashboardPricingContent() {
       {/* Sticky mobile CTA */}
       {!isPro && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-pd-border/80 bg-white/95 p-3 shadow-[0_-8px_30px_-8px_rgba(0,0,0,0.12)] backdrop-blur-md lg:hidden">
-          <Link href="/signup" className="block">
-            <Button className="h-12 w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-base font-bold shadow-lg">
-              {t("dashboard.pricing.upgradeNow")} · ₹{proPrice.toLocaleString("en-IN")}
-            </Button>
-          </Link>
+          <Button
+            className="h-12 w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-base font-bold shadow-lg"
+            loading={checkoutLoading}
+            onClick={() => void handleUpgrade()}
+          >
+            {t("dashboard.pricing.upgradeNow")} · ₹{proPrice.toLocaleString("en-IN")}
+          </Button>
         </div>
       )}
     </div>

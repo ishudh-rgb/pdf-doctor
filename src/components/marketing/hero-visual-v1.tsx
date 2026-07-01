@@ -22,7 +22,7 @@ export function HeroVisualV1() {
         <div className="overflow-hidden rounded-[1.25rem] border border-pd-border">
           <Image
             src="/images/hero-product-main.webp"
-            alt="Only4PDF merge PDF tool interface screenshot"
+            alt="OnlyMyPDF merge PDF tool interface screenshot"
             width={1200}
             height={750}
             priority

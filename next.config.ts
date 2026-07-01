@@ -44,6 +44,17 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.join(__dirname),
   poweredByHeader: false,
+  /** Mirror server file-size env to client so SSR and browser marketing text match. */
+  env: {
+    NEXT_PUBLIC_MAX_FREE_FILE_SIZE_MB:
+      process.env.NEXT_PUBLIC_MAX_FREE_FILE_SIZE_MB ??
+      process.env.MAX_FREE_FILE_SIZE_MB ??
+      "25",
+    NEXT_PUBLIC_MAX_PRO_FILE_SIZE_MB:
+      process.env.NEXT_PUBLIC_MAX_PRO_FILE_SIZE_MB ??
+      process.env.MAX_PRO_FILE_SIZE_MB ??
+      "200",
+  },
   turbopack: {
     root: path.join(__dirname),
   },

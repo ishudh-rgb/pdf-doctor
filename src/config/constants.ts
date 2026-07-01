@@ -1,5 +1,12 @@
 import type { Tool, MegaMenuCategory, PricingPlan } from "@/types";
 
+export const PRO_PRICING = {
+  monthlyInr: 299,
+  yearlyInr: 2399,
+  monthlyPaise: 29900,
+  yearlyPaise: 239900,
+} as const;
+
 export const APP_NAME = "OnlyMyPDF";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "support@onlymypdf.in";
@@ -22,8 +29,28 @@ export function isUnlimitedFileSizeMB(maxSizeMB: number): boolean {
   return maxSizeMB <= 0;
 }
 
+/** Client-safe marketing copy — must match on server and browser (use NEXT_PUBLIC_*). */
+export function formatFileSizeMarketingLabel(maxSizeMB: number): string {
+  if (isUnlimitedFileSizeMB(maxSizeMB)) {
+    return "Generous file size limits";
+  }
+  return `Up to ${maxSizeMB} MB per file`;
+}
+
+function marketingFileSizeMb(
+  publicEnv: string | undefined,
+  fallback: number
+): number {
+  return parseFileSizeLimitMb(publicEnv, fallback);
+}
+
 export function getMaxFileSizeMB(isPro: boolean): number {
   return isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+}
+
+/** Pricing / compare tables — reads live limits from env (matches upload enforcement). */
+export function planFileSizeMarketingLabel(isPro: boolean): string {
+  return isPro ? FILE_SIZE_MARKETING.proLabel : FILE_SIZE_MARKETING.freeLabel;
 }
 
 export const FILE_LIMITS = {
@@ -33,13 +60,22 @@ export const FILE_LIMITS = {
   ),
   maxProFileSizeMB: parseFileSizeLimitMb(
     process.env.MAX_PRO_FILE_SIZE_MB,
-    100
+    200
   ),
   fileRetentionHours: Number(process.env.FILE_RETENTION_HOURS) || 2,
   maxFreeUsesPerDay: 5,
   maxProUsesPerDay: 100,
   maxFilesPerMerge: 20,
   maxFilesPerMergePro: 50,
+} as const;
+
+export const FILE_SIZE_MARKETING = {
+  freeLabel: formatFileSizeMarketingLabel(
+    marketingFileSizeMb(process.env.NEXT_PUBLIC_MAX_FREE_FILE_SIZE_MB, 25)
+  ),
+  proLabel: formatFileSizeMarketingLabel(
+    marketingFileSizeMb(process.env.NEXT_PUBLIC_MAX_PRO_FILE_SIZE_MB, 200)
+  ),
 } as const;
 
 export const SUPPORTED_FILE_TYPES = {
@@ -261,6 +297,18 @@ export const TOOLS: Tool[] = [
     maxFiles: 1,
   },
   {
+    name: "Edit PDF",
+    slug: "edit-pdf",
+    description: "Add text and whiteout edits to PDF pages",
+    icon: "PenLine",
+    category: "edit",
+    color: "#06B6D4",
+    requiresLogin: false,
+    isPro: false,
+    acceptedFileTypes: ["pdf"],
+    maxFiles: 1,
+  },
+  {
     name: "Sign PDF",
     slug: "sign-pdf",
     description: "Add signature to PDF",
@@ -373,6 +421,7 @@ export const MEGA_MENU_CATEGORIES: MegaMenuCategory[] = [
   {
     label: "Edit & Sign",
     tools: [
+      { name: "Edit PDF", slug: "edit-pdf", icon: "PenLine", color: "#06B6D4" },
       { name: "Sign PDF", slug: "sign-pdf", icon: "PenTool", color: "#F57C00" },
       { name: "Add Watermark", slug: "add-watermark", icon: "Stamp", color: "#0891B2" },
     ],
@@ -407,7 +456,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     currency: "INR",
     features: [
       "5 tool uses per day",
-      "No file size limit",
+      FILE_SIZE_MARKETING.freeLabel,
       "Basic PDF tools",
       "Standard processing speed",
       "Files deleted after 2 hours",
@@ -420,11 +469,11 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: "Pro",
     tier: "pro",
     monthlyPrice: 299,
-    yearlyPrice: 2399,
+    yearlyPrice: PRO_PRICING.yearlyInr,
     currency: "INR",
     features: [
       "100 tool uses per day",
-      "No file size limit",
+      FILE_SIZE_MARKETING.proLabel,
       "All PDF tools including Edit & Sign",
       "AI PDF Summarizer",
       "Priority processing speed",
@@ -449,4 +498,4 @@ export function getToolsByCategory(category: string): Tool[] {
 export const PROTECTED_ROUTES = ["/dashboard", "/admin"];
 export const AUTH_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@only4pdf.com";
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@onlymypdf.in";

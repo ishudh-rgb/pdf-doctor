@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   cleanupExpiredFiles,
+  cleanupExpiredTempSessions,
   purgeExpiredConsentRecords,
   purgeOldUsageLogs,
   purgeOldAiUsageLogs,
   purgeOldErrorLogs,
 } from "@/lib/services/cleanup.service";
+import { releaseStaleProcessingPayments, downgradeExpiredProProfiles } from "@/lib/db/queries";
+import { purgeOldAdminAuditLogs } from "@/lib/admin/purge-audit-logs";
 import { isCronAuthorized } from "@/lib/ops/cron-auth";
 import { captureApiError } from "@/lib/server/safe-error";
 
@@ -22,6 +25,10 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await cleanupExpiredFiles();
+    const tempSessions = await cleanupExpiredTempSessions();
+    const stalePayments = await releaseStaleProcessingPayments();
+    const proDowngraded = await downgradeExpiredProProfiles();
+    const auditLogsPurged = await purgeOldAdminAuditLogs();
     const consentPurged = await purgeExpiredConsentRecords();
     const usageLogsPurged = await purgeOldUsageLogs();
     const aiUsageLogsPurged = await purgeOldAiUsageLogs();
@@ -31,6 +38,12 @@ export async function GET(request: NextRequest) {
       deleted: result.deleted,
       failed: result.failed,
       batches: result.batches,
+      temp_sessions_deleted: tempSessions.deleted,
+      temp_sessions_failed: tempSessions.failed,
+      temp_sessions_scanned: tempSessions.scanned,
+      stale_payments_reset: stalePayments,
+      pro_profiles_downgraded: proDowngraded,
+      admin_audit_logs_purged: auditLogsPurged,
       consent_records_purged: consentPurged,
       usage_logs_purged: usageLogsPurged,
       ai_usage_logs_purged: aiUsageLogsPurged,

@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyAdmin } from "@/lib/auth/verify-admin";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
+import {
+  canonicalAdminSettingKey,
+  isAllowedAdminSettingKey,
+  normalizeAdminSettingValue,
+} from "@/lib/admin/settings-allowlist";
+import { updateAdminSetting } from "@/lib/db/queries";
+import { toSafeApiError } from "@/lib/server/safe-error";
+import { logAdminAction } from "@/lib/admin/audit-log";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,13 +27,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ settings: data ?? [] });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to fetch settings";
+    const message = toSafeApiError(err, "Failed to fetch settings");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
+    const originBlocked = guardMutationOrigin(request);
+    if (originBlocked) return originBlocked;
+
     const admin = await verifyAdmin(request);
     if (admin instanceof Response) return admin;
     if (!admin) {
@@ -32,25 +45,34 @@ export async function PATCH(request: NextRequest) {
 
     const { key, value } = await request.json();
 
-    if (!key) {
+    if (!key || typeof key !== "string") {
       return NextResponse.json({ error: "Key is required" }, { status: 400 });
     }
 
-    const serviceClient = await createServiceClient();
-    const { data, error } = await serviceClient
-      .from("admin_settings")
-      .upsert(
-        { key, value, updated_at: new Date().toISOString() },
-        { onConflict: "key" }
-      )
-      .select()
-      .single();
+    if (!isAllowedAdminSettingKey(key)) {
+      return NextResponse.json({ error: "Setting key is not allowed" }, { status: 400 });
+    }
 
-    if (error) throw error;
+    const canonicalKey = canonicalAdminSettingKey(key);
+    const normalizedValue = normalizeAdminSettingValue(key, value);
 
-    return NextResponse.json({ setting: data });
+    await updateAdminSetting(canonicalKey, normalizedValue);
+
+    await logAdminAction({
+      adminId: admin.id,
+      adminEmail: admin.email ?? "admin",
+      action: "settings.update",
+      targetType: "admin_settings",
+      targetId: canonicalKey,
+      payload: { value: normalizedValue },
+      ipHash: getGuestUsageKey(request),
+    });
+
+    return NextResponse.json({
+      setting: { key: canonicalKey, value: normalizedValue },
+    });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to update setting";
+    const message = toSafeApiError(err, "Failed to update setting");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

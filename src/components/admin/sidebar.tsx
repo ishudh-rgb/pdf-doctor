@@ -15,6 +15,7 @@ import {
   Trash2,
   ArrowLeft,
   X,
+  ScrollText,
 } from "lucide-react";
 import { Logo } from "@/components/common/logo";
 
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Jobs", href: "/admin/jobs", icon: Clock },
   { label: "Settings", href: "/admin/settings", icon: Settings },
   { label: "Coupons", href: "/admin/coupons", icon: Tag },
+  { label: "Audit log", href: "/admin/audit", icon: ScrollText },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
   { label: "Error Logs", href: "/admin/errors", icon: AlertTriangle },
   { label: "Cleanup", href: "/admin/cleanup", icon: Trash2 },

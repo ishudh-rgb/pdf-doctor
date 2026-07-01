@@ -20,6 +20,44 @@ export async function syncConsentToServer(state: CookieConsentState) {
   });
 }
 
+export function consentStateFromServer(record: {
+  consent_version: string;
+  analytics: boolean;
+  marketing: boolean;
+  created_at: string;
+}): CookieConsentState {
+  return {
+    version: record.consent_version,
+    essential: true,
+    analytics: record.analytics,
+    marketing: record.marketing,
+    decidedAt: record.created_at,
+  };
+}
+
+export async function hydrateConsentFromServerIfMissing() {
+  if (typeof window === "undefined") return;
+  if (localStorage.getItem(CONSENT_STORAGE_KEY)) return;
+
+  try {
+    const res = await fetch("/api/privacy/consent");
+    if (!res.ok) return;
+    const data = (await res.json()) as {
+      consent?: {
+        consent_version: string;
+        analytics: boolean;
+        marketing: boolean;
+        created_at: string;
+      } | null;
+    };
+    if (data.consent) {
+      persistConsentLocal(consentStateFromServer(data.consent));
+    }
+  } catch {
+    /* non-blocking */
+  }
+}
+
 export async function applyConsent(state: CookieConsentState) {
   persistConsentLocal(state);
   try {

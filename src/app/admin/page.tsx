@@ -73,7 +73,7 @@ const mockData: DashboardData = {
     { id: "2", user: "john@company.com", action: "Processed 5 files (Merge PDF)", time: "5 min ago" },
     { id: "3", user: "sara@startup.io", action: "Payment completed - ₹299", time: "12 min ago" },
     { id: "4", user: "dev@test.com", action: "Account created", time: "18 min ago" },
-    { id: "5", user: "admin@only4pdf.com", action: "Ran cleanup job", time: "1 hour ago" },
+    { id: "5", user: "admin@onlymypdf.in", action: "Ran cleanup job", time: "1 hour ago" },
   ],
   systemHealth: {
     database: "healthy",
@@ -107,11 +107,9 @@ export default function AdminDashboard() {
         if (res.ok) {
           const json = await res.json();
           setData(json);
-        } else {
-          setData(mockData);
         }
       } catch {
-        setData(mockData);
+        // Leave empty — no mock data in production admin
       } finally {
         setLoading(false);
       }
@@ -122,7 +120,15 @@ export default function AdminDashboard() {
   async function handleQuickAction(action: string) {
     setActionLoading(action);
     try {
-      await fetch(`/api/admin/${action}`, { method: "POST" });
+      if (action === "cleanup") {
+        await fetch("/api/admin/cleanup", { method: "POST" });
+      } else {
+        await fetch("/api/admin/dashboard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        });
+      }
     } catch {
       // Silently handle
     } finally {
@@ -130,7 +136,7 @@ export default function AdminDashboard() {
     }
   }
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-pd-foreground">Dashboard</h2>
@@ -139,22 +145,23 @@ export default function AdminDashboard() {
             <StatCardSkeleton key={i} />
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6 h-72 animate-pulse">
-            <div className="h-5 w-32 bg-pd-border rounded mb-4" />
-            <div className="h-full bg-pd-background rounded-xl" />
-          </div>
-          <div className="rounded-2xl bg-pd-surface border border-pd-border shadow-sm p-6 h-72 animate-pulse">
-            <div className="h-5 w-32 bg-pd-border rounded mb-4" />
-            <div className="h-full bg-pd-background rounded-xl" />
-          </div>
-        </div>
       </div>
     );
   }
 
-  const maxUsage = Math.max(...data.dailyUsage.map((d) => d.count));
-  const maxPopularity = Math.max(...data.toolPopularity.map((d) => d.count));
+  if (!data) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-pd-foreground">Dashboard</h2>
+        <p className="text-sm text-pd-muted">
+          Could not load dashboard data. Check admin API and database connection.
+        </p>
+      </div>
+    );
+  }
+
+  const maxUsage = Math.max(...data.dailyUsage.map((d) => d.count), 1);
+  const maxPopularity = Math.max(...data.toolPopularity.map((d) => d.count), 1);
 
   return (
     <div className="space-y-6">

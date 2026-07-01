@@ -9,5 +9,5 @@ export const POST = createToolRoute({
   contentType: "application/pdf",
   outputExtension: "pdf",
   heavy: true,
-  convert: (buffer) => pptToPdf(buffer),
+  convert: (buffer, file) => pptToPdf(buffer, file.name),
 });

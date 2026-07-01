@@ -89,7 +89,7 @@ def optimal_settings(page_count: int = 1, *, image_heavy: bool = False) -> dict:
         "ignore_page_error": True,
         "delete_end_line_hyphen": True,
         "parse_lattice_table": parse_tables,
-        "parse_stream_table": False,
+        "parse_stream_table": parse_tables,
         "list_not_table": False,
     }
 

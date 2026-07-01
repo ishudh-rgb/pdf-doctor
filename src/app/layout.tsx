@@ -11,6 +11,7 @@ import { LogoPreviewProvider } from "@/components/providers/logo-preview-provide
 import { HeroVariantProvider } from "@/components/marketing/hero-variant-provider";
 import { CookieConsentBanner } from "@/components/privacy/cookie-consent";
 import { DevPreviewOverlays } from "@/components/layout/dev-preview-overlays";
+import { AppChromeExtras } from "@/components/layout/app-chrome-extras";
 import {
   DEFAULT_BRAND_THEME,
   DEFAULT_LAYOUT_STYLE,
@@ -125,6 +126,7 @@ export default function RootLayout({
                   <Footer />
                   <CookieConsentBanner />
                   <DevPreviewOverlays />
+                  <AppChromeExtras />
                 </AuthProvider>
               </LanguageProvider>
             </HeroVariantProvider>

@@ -3,24 +3,37 @@ import { createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server
 import { isProductionReady } from "@/lib/config/env-security";
 import { getCleanupStats } from "@/lib/services/cleanup.service";
 import { isHealthDetailAuthorized } from "@/lib/ops/health-auth";
+import {
+  isLibreOfficeAvailable,
+  LIBREOFFICE_TOOLS,
+  resolveLibreOfficeBinary,
+} from "@/lib/services/libreoffice-core.service";
+import { isUpstashConfigured } from "@/lib/server/upstash-kv";
 
 export const dynamic = "force-dynamic";
 
-function isUpstashConfigured(): boolean {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL?.trim() &&
-      process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
-  );
+function publicStatus(): { status: string; httpStatus: number } {
+  if (process.env.NODE_ENV !== "production") {
+    return { status: "ok", httpStatus: 200 };
+  }
+  if (!isSupabaseConfigured() || !isProductionReady() || !isUpstashConfigured()) {
+    return { status: "degraded", httpStatus: 503 };
+  }
+  return { status: "ok", httpStatus: 200 };
 }
 
 export async function GET(request: NextRequest) {
   const detailed = isHealthDetailAuthorized(request);
+  const pub = publicStatus();
 
   if (!detailed) {
-    return NextResponse.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        status: pub.status,
+        timestamp: new Date().toISOString(),
+      },
+      { status: pub.httpStatus }
+    );
   }
 
   const checks: Record<string, { ok: boolean; detail?: string }> = {
@@ -29,6 +42,12 @@ export async function GET(request: NextRequest) {
     upstash: {
       ok: isUpstashConfigured(),
       detail: "Required for distributed rate limits in production",
+    },
+    libreoffice: {
+      ok: isLibreOfficeAvailable(),
+      detail: isLibreOfficeAvailable()
+        ? `${resolveLibreOfficeBinary()} — powers ${LIBREOFFICE_TOOLS.join(", ")}`
+        : "Install LibreOffice or set LIBREOFFICE_PATH for high-accuracy Office↔PDF",
     },
   };
 

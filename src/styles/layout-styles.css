@@ -177,6 +177,16 @@ html[data-layout-style="B"] .pd-brand-logo--header.pd-logo-icon-box img {
   max-width: var(--pd-header-logo-max-w, 52px);
 }
 
+/* Footer logo — blend PNG white matte into gray-50 footer */
+.pd-footer-logo-link {
+  background-color: rgb(249 250 251); /* tailwind gray-50 — matches footer gradient start */
+}
+
+.pd-brand-logo--footer.pd-logo-icon-box img,
+.pd-site-footer .pd-split-logo .pd-logo-icon-box img {
+  mix-blend-mode: multiply;
+}
+
 .pd-logo-text {
   line-height: 1.2;
   overflow: visible;
@@ -393,4 +403,13 @@ html[data-layout-style="D"] .pd-site-footer .grid {
   html[data-design-preview="true"] body {
     padding-right: 0;
   }
+}
+
+/* Tool card header: fill line 1 naturally; description stays on its own line below */
+h1.pd-tool-card-header-title {
+  text-wrap: wrap;
+}
+
+p.pd-tool-card-header-desc {
+  text-wrap: pretty;
 }

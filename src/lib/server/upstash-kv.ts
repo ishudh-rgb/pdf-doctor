@@ -1,0 +1,57 @@
+/** Shared Upstash Redis REST client for distributed job state and rate limits. */
+
+let cachedRedis: import("@upstash/redis").Redis | null | undefined;
+
+export function isUpstashConfigured(): boolean {
+  return Boolean(
+    process.env.UPSTASH_REDIS_REST_URL?.trim() &&
+      process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+  );
+}
+
+export async function getUpstashRedis(): Promise<import("@upstash/redis").Redis | null> {
+  if (cachedRedis !== undefined) return cachedRedis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+  if (!url || !token) {
+    cachedRedis = null;
+    return null;
+  }
+
+  const { Redis } = await import("@upstash/redis");
+  cachedRedis = new Redis({ url, token });
+  return cachedRedis;
+}
+
+export async function upstashGetJson<T>(key: string): Promise<T | null> {
+  const redis = await getUpstashRedis();
+  if (!redis) return null;
+  const raw = await redis.get<string>(key);
+  if (!raw) return null;
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
+  return raw as T;
+}
+
+export async function upstashSetJson(
+  key: string,
+  value: unknown,
+  ttlSec: number
+): Promise<boolean> {
+  const redis = await getUpstashRedis();
+  if (!redis) return false;
+  await redis.set(key, JSON.stringify(value), { ex: ttlSec });
+  return true;
+}
+
+export async function upstashDel(key: string): Promise<void> {
+  const redis = await getUpstashRedis();
+  if (!redis) return;
+  await redis.del(key);
+}

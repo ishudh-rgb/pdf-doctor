@@ -193,15 +193,13 @@ export function ConvertToolPage({
               handleFiles(e.dataTransfer.files);
             }}
             onChooseFiles={() => fileInputRef.current?.click()}
-            onCloudFiles={(incoming) => handleFiles(incoming)}
-            onCloudError={setError}
             fileInputRef={fileInputRef}
             fileInputAccept={accept}
             onFileInputChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
 
           {file && (
-            <div className="mt-4 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">
+            <div className="mt-2 flex items-center gap-3 rounded-lg bg-pd-brand-muted p-3">
               <FileText className="h-4 w-4 shrink-0 text-pd-brand" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-pd-foreground">{file.name}</p>
@@ -210,7 +208,7 @@ export function ConvertToolPage({
             </div>
           )}
 
-          {extraFields && <div className="mt-4">{extraFields}</div>}
+          {extraFields && <div className="mt-2">{extraFields}</div>}
           {error && <ToolErrorBanner message={error} />}
 
           <ToolPrimaryButton

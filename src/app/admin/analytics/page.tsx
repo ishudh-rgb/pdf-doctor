@@ -77,11 +77,9 @@ export default function AdminAnalyticsPage() {
         const res = await fetch(`/api/admin/analytics?from=${dateFrom}&to=${dateTo}`);
         if (res.ok) {
           setData(await res.json());
-        } else {
-          setData(mockAnalytics);
         }
       } catch {
-        setData(mockAnalytics);
+        setData(null);
       } finally {
         setLoading(false);
       }

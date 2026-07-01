@@ -1,8 +1,8 @@
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
 import { addSignatureToPDF, applySignAnnotations, type SignAnnotationInput } from "@/lib/services/pdf-sign.service";
-import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, logError } from "@/lib/db/queries";
+import { checkFileSizeLimit, requireProPlan } from "@/lib/services/usage-limit.service";
+import { logToolUsage } from "@/lib/db/queries";
 import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
@@ -11,8 +11,8 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
-  const rateLimited = await guardToolRateLimit(request, "sign-pdf");
-  if (rateLimited) return rateLimited;
+  const early = await beginToolRoute(request, "sign-pdf");
+  if (early) return early;
 
   const startTime = Date.now();
   let userId: string | null = null;
@@ -20,15 +20,18 @@ export async function POST(request: NextRequest) {
   try {
     userId = await getToolRequestUserId();
 
+    const proResult = await requireProPlan(userId);
+    if (!proResult.allowed) {
+      return NextResponse.json(
+        { error: proResult.message ?? "Pro subscription required.", code: "PRO_REQUIRED" },
+        { status: 403 }
+      );
+    }
+
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
       : { maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
     const maxSizeMB = sizeResult.maxSizeMB;
-
-    const usageResult = await checkUsageLimit(userId, request, "sign-pdf");
-    if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
-    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -144,20 +147,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to sign PDF";
-
-    await logError({
-      user_id: userId,
-      tool_name: "sign-pdf",
-      error_type: "SIGN_ERROR",
-      error_message: message,
-      stack_trace: error instanceof Error ? error.stack : undefined,
-    }).catch(() => {});
-
-    if (message.includes("usage limit") || message.includes("limit reached")) {
-      return NextResponse.json({ error: message }, { status: 429 });
-    }
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleToolRouteFailure(error, {
+      toolSlug: "sign-pdf",
+      userId,
+      errorType: "SIGN_ERROR",
+      fallbackMessage: "Failed to sign PDF",
+    });
   }
 }

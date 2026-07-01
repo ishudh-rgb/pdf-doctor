@@ -9,7 +9,7 @@ export async function sendPasswordResetCode(
   code: string
 ): Promise<SendCodeResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.EMAIL_FROM || "Only4PDF <onboarding@resend.dev>";
+  const fromEmail = process.env.EMAIL_FROM || "OnlyMyPDF <onboarding@resend.dev>";
 
   if (apiKey) {
     const response = await fetch("https://api.resend.com/emails", {
@@ -21,7 +21,7 @@ export async function sendPasswordResetCode(
       body: JSON.stringify({
         from: fromEmail,
         to: [email],
-        subject: "Your Only4PDF password reset code",
+        subject: "Your OnlyMyPDF password reset code",
         html: `
           <p>Your password reset verification code is:</p>
           <p style="font-size:28px;font-weight:700;letter-spacing:4px;">${code}</p>

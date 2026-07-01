@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { formatFileSize } from "@/lib/utils/file";
+import { ToolResultSizeBadge } from "@/components/tools/tool-ui";
 
 interface PdfResultPreviewProps {
   blobUrl: string;
@@ -75,13 +75,17 @@ export function PdfResultPreview({
           {/* File info */}
           <div className="mt-3 border-t border-slate-100 pt-3">
             <p className="truncate text-sm font-medium text-pd-foreground">{filename}</p>
-            <p className="mt-0.5 text-xs text-pd-muted">
-              {fileSize ? formatFileSize(fileSize) : ""}
-              {pageCount && pageCount > 0 ? ` · ${pageCount} page${pageCount > 1 ? "s" : ""}` : ""}
-            </p>
+            {pageCount && pageCount > 0 ? (
+              <p className="mt-0.5 text-xs text-pd-muted">
+                {pageCount} page{pageCount > 1 ? "s" : ""}
+              </p>
+            ) : null}
           </div>
 
-          {/* Download */}
+          {fileSize && fileSize > 0 ? (
+            <ToolResultSizeBadge sizeBytes={fileSize} className="mt-4" />
+          ) : null}
+
           <a href={blobUrl} download={filename} className="mt-4 block">
             <Button className="w-full gap-2">
               <Download className="h-4 w-4" />

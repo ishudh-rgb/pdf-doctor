@@ -5,11 +5,14 @@ import { tryExportSlidesWithPowerPoint } from "@/lib/services/powerpoint-slide-e
 import {
   isLikelyNumericCell,
   parsePresentation,
+  readPresentationSlideSizeInches,
   type ParsedSlide,
   type ParsedStyledTable,
   type ParsedTableCell,
   type ParsedTextBlock,
+  type PageSizeInches,
 } from "@/lib/services/pptx-parse.service";
+import { cssPageSize } from "@/lib/utils/page-orientation";
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -122,8 +125,13 @@ function renderSlide(slide: ParsedSlide): string {
   `;
 }
 
-function buildPresentationHtml(slides: ParsedSlide[]): string {
+function buildPresentationHtml(slides: ParsedSlide[], slideSize: PageSizeInches): string {
   const body = slides.map(renderSlide).join("");
+  const marginIn = Math.max(0.35, Math.min(0.55, slideSize.widthIn * 0.055));
+  const tableTopIn = slideSize.heightIn * 0.16;
+  const contentTopIn = slideSize.heightIn * 0.14;
+  const contentHeightIn = slideSize.heightIn * 0.72;
+  const innerWidthIn = Math.max(1, slideSize.widthIn - marginIn * 2);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -131,7 +139,7 @@ function buildPresentationHtml(slides: ParsedSlide[]): string {
   <meta charset="utf-8" />
   <title>Presentation</title>
   <style>
-    @page { size: A4 landscape; margin: 0.55in; }
+    @page { size: ${cssPageSize(slideSize)}; margin: ${marginIn}in; }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -141,8 +149,8 @@ function buildPresentationHtml(slides: ParsedSlide[]): string {
       color: #000000;
     }
     .slide {
-      width: 10in;
-      height: 7.15in;
+      width: ${slideSize.widthIn}in;
+      height: ${slideSize.heightIn}in;
       page-break-after: always;
       position: relative;
       overflow: hidden;
@@ -161,9 +169,9 @@ function buildPresentationHtml(slides: ParsedSlide[]): string {
     }
     .slide-table-wrap {
       position: absolute;
-      left: 0.55in;
-      top: 1.35in;
-      width: 9.5in;
+      left: ${marginIn}in;
+      top: ${tableTopIn}in;
+      width: ${innerWidthIn}in;
     }
     .slide-table {
       width: 100%;
@@ -193,10 +201,10 @@ function buildPresentationHtml(slides: ParsedSlide[]): string {
       background: #ffffff;
     }
     .slide-content .slide-image {
-      left: 0.55in;
-      top: 1.2in;
-      width: 9.5in;
-      height: 5.8in;
+      left: ${marginIn}in;
+      top: ${contentTopIn}in;
+      width: ${innerWidthIn}in;
+      height: ${contentHeightIn}in;
     }
     .slide-table td.num { text-align: right; white-space: nowrap; }
   </style>
@@ -205,7 +213,7 @@ function buildPresentationHtml(slides: ParsedSlide[]): string {
 </html>`;
 }
 
-export async function pptToPdf(fileBuffer: Buffer): Promise<Buffer> {
+export async function pptToPdf(fileBuffer: Buffer, fileName?: string): Promise<Buffer> {
   try {
     if (process.platform === "win32") {
       const slideImages = await tryExportSlidesWithPowerPoint(fileBuffer);
@@ -214,7 +222,7 @@ export async function pptToPdf(fileBuffer: Buffer): Promise<Buffer> {
       }
     }
 
-    const libreOfficePdf = await tryConvertWithLibreOffice(fileBuffer);
+    const libreOfficePdf = await tryConvertWithLibreOffice(fileBuffer, fileName);
     if (libreOfficePdf) {
       return libreOfficePdf;
     }
@@ -224,8 +232,9 @@ export async function pptToPdf(fileBuffer: Buffer): Promise<Buffer> {
       throw new Error("No readable slide content found in the PowerPoint file.");
     }
 
-    const html = buildPresentationHtml(slides);
-    return await renderPresentationToPdf(html);
+    const slideSize = await readPresentationSlideSizeInches(fileBuffer);
+    const html = buildPresentationHtml(slides, slideSize);
+    return await renderPresentationToPdf(html, { pageSize: slideSize });
   } catch (err) {
     await logError({
       tool_name: "ppt-to-pdf",

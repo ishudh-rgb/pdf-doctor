@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Crown, Sparkles } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { HeroVisual } from "@/components/marketing/hero-visual";
@@ -45,8 +45,9 @@ export function HomeLayoutC() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/ai-pdf-summarizer">
+            <Link href="/pricing">
               <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                <Crown className="h-4 w-4" />
                 {t("landing.heroCtaSecondary")}
               </Button>
             </Link>

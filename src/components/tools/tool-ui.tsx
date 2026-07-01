@@ -1,20 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { forwardRef, useId, type ChangeEvent, type InputHTMLAttributes, type RefObject } from "react";
 import { Loader2, Download, AlertCircle, Upload, FileUp, Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/ui/circular-progress";
-
-const CloudSourceButtons = dynamic(
-  () =>
-    import("@/components/upload/cloud-source-buttons").then((m) => ({
-      default: m.CloudSourceButtons,
-    })),
-  { ssr: false }
-);
+import { useTranslation } from "@/i18n";
 
 export function ToolResultSizeBadge({
   sizeBytes,
@@ -23,13 +15,17 @@ export function ToolResultSizeBadge({
   sizeBytes: number;
   className?: string;
 }) {
+  const { t } = useTranslation();
+
   return (
-    <p className={cn("mt-2 text-xs text-pd-muted", className)}>
-      Output size{" "}
-      <span className="font-semibold tabular-nums text-pd-foreground">
-        {formatFileSize(sizeBytes)}
+    <div className={cn("flex w-full justify-center", className)}>
+      <span className="inline-flex items-center gap-2 rounded-full border border-pd-border/80 bg-pd-background px-4 py-1.5 text-xs font-medium text-slate-600 shadow-sm">
+        {t("toolPage.outputSize")}
+        <span className="font-bold tabular-nums text-slate-900">
+          {formatFileSize(sizeBytes)}
+        </span>
       </span>
-    </p>
+    </div>
   );
 }
 interface ToolDropzoneProps {
@@ -42,11 +38,6 @@ interface ToolDropzoneProps {
   onChooseFiles: () => void;
   chooseLabel?: string;
   className?: string;
-  onCloudFiles?: (files: FileList | File[]) => void;
-  onCloudError?: (message: string) => void;
-  cloudAcceptExtensions?: string[];
-  cloudMimeTypes?: string;
-  cloudMultiple?: boolean;
   fileInputRef?: RefObject<HTMLInputElement | null>;
   fileInputAccept?: string;
   fileInputMultiple?: boolean;
@@ -63,11 +54,6 @@ export function ToolDropzone({
   onChooseFiles,
   chooseLabel = "Select file",
   className,
-  onCloudFiles,
-  onCloudError,
-  cloudAcceptExtensions,
-  cloudMimeTypes,
-  cloudMultiple,
   fileInputRef,
   fileInputAccept,
   fileInputMultiple,
@@ -86,7 +72,7 @@ export function ToolDropzone({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={cn(
-          "rounded-xl border-2 border-dashed px-4 py-5 text-center transition-all duration-200",
+          "rounded-xl border-2 border-dashed px-4 py-3 text-center transition-all duration-200",
           dragOver
             ? "border-pd-brand bg-pd-brand-muted/80"
             : "border-pd-border bg-pd-background hover:border-pd-brand/40 hover:bg-pd-brand-muted/30"
@@ -94,7 +80,7 @@ export function ToolDropzone({
       >
         <div
           className={cn(
-            "mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+            "mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
             dragOver ? "bg-pd-brand text-white" : "bg-pd-brand-muted text-pd-brand"
           )}
         >
@@ -106,10 +92,10 @@ export function ToolDropzone({
           {resolvedChooseLabel}
         </Button>
 
-        <p id={zoneId} className="mt-2 text-sm text-pd-muted">
+        <p id={zoneId} className="mt-1.5 text-sm text-pd-muted">
           {resolvedHint}
         </p>
-        {subHint && <p className="mt-1 text-xs text-pd-muted/90">{subHint}</p>}
+        {subHint && <p className="mt-0.5 text-xs text-pd-muted/90">{subHint}</p>}
       </div>
       {fileInputRef ? (
         <ToolHiddenFileInput
@@ -121,16 +107,6 @@ export function ToolDropzone({
           ariaLabel="Choose file to upload"
         />
       ) : null}
-      {onCloudFiles && (
-        <CloudSourceButtons
-          className="mt-3"
-          onFilesSelected={(files) => onCloudFiles(files)}
-          onError={onCloudError}
-          acceptExtensions={cloudAcceptExtensions}
-          mimeTypes={cloudMimeTypes}
-          multiple={cloudMultiple}
-        />
-      )}
     </div>
   );
 }
@@ -246,21 +222,36 @@ export function ToolSuccessPanel({
   onReset,
   resetLabel,
   children,
-}: ToolSuccessPanelProps) {
-  const resolvedResetLabel = resetLabel ?? "Process another file";
+  iconVariant = "download",
+}: ToolSuccessPanelProps & { iconVariant?: "download" | "success" }) {
+  const { t } = useTranslation();
+  const resolvedResetLabel = resetLabel ?? t("toolPage.processAnother");
   const showComparison =
     originalSizeBytes !== undefined &&
     originalSizeBytes > 0 &&
     resultSizeBytes !== undefined &&
     resultSizeBytes > 0;
+  const showSizeBadge =
+    !showComparison && resultSizeBytes !== undefined && resultSizeBytes > 0;
 
   return (
-    <div className="mx-auto w-full max-w-lg text-center">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
-        <Download className="h-7 w-7 text-pd-brand" />
+    <div className="flex w-full flex-col items-center text-center">
+      <div
+        className={cn(
+          "mb-4 flex h-14 w-14 items-center justify-center rounded-full",
+          iconVariant === "success" ? "bg-emerald-100" : "bg-pd-brand-muted"
+        )}
+      >
+        {iconVariant === "success" ? (
+          <Check className="h-7 w-7 text-emerald-600" aria-hidden />
+        ) : (
+          <Download className="h-7 w-7 text-pd-brand" aria-hidden />
+        )}
       </div>
-      <h2 className="text-lg font-bold text-pd-foreground">{title}</h2>
-      {description && <p className="mt-2 text-sm text-pd-muted">{description}</p>}
+      <h2 className="w-full text-lg font-bold text-pd-foreground">{title}</h2>
+      {description ? (
+        <p className="mt-2 w-full text-sm leading-relaxed text-pd-muted">{description}</p>
+      ) : null}
 
       {showComparison ? (
         <FileSizeComparison
@@ -268,13 +259,12 @@ export function ToolSuccessPanel({
           resultSizeBytes={resultSizeBytes}
           savedPercent={savedPercent}
         />
-      ) : resultSizeBytes !== undefined && resultSizeBytes > 0 ? (
-        <ToolResultSizeBadge sizeBytes={resultSizeBytes} className="mt-3" />
       ) : null}
 
       {children ? <div className="mt-4 w-full text-left">{children}</div> : null}
 
-      <div className="mt-6 flex w-full flex-col items-stretch gap-3">
+      <div className="mt-6 flex w-full flex-col items-center gap-3">
+        {showSizeBadge ? <ToolResultSizeBadge sizeBytes={resultSizeBytes} /> : null}
         <a href={downloadUrl} download={downloadFilename} className="w-full">
           <Button size="lg" className="h-11 w-full gap-2 font-semibold">
             <Download className="h-4 w-4" />
@@ -314,30 +304,20 @@ export function ToolWorkspaceReadyPanel({
   resetLabel,
   onReset,
 }: ToolWorkspaceReadyPanelProps) {
-  const resolvedTitle = title ?? "PDF ready";
-  const resolvedDownloadLabel = downloadLabel ?? "Download";
+  const { t } = useTranslation();
 
   return (
-    <div className="rounded-xl border border-pd-border bg-pd-surface p-8 text-center shadow-sm">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-pd-brand-muted">
-        <Check className="h-7 w-7 text-pd-brand" />
-      </div>
-      <h2 className="text-lg font-bold text-pd-foreground">{resolvedTitle}</h2>
-      <p className="mt-2 text-sm text-pd-muted">{description}</p>
-      {resultSizeBytes !== undefined && resultSizeBytes > 0 && (
-        <ToolResultSizeBadge sizeBytes={resultSizeBytes} />
-      )}
-      <a href={downloadUrl} download={downloadFilename} className="mt-5 inline-block">
-        <Button size="md">{resolvedDownloadLabel}</Button>
-      </a>
-      <button
-        type="button"
-        onClick={onReset}
-        className="mx-auto mt-3 block text-sm text-pd-muted transition hover:text-pd-foreground"
-      >
-        {resetLabel}
-      </button>
-    </div>
+    <ToolSuccessPanel
+      title={title ?? t("toolPage.pdfReady")}
+      description={description}
+      downloadUrl={downloadUrl}
+      downloadFilename={downloadFilename}
+      downloadLabel={downloadLabel ?? t("toolPage.download")}
+      resultSizeBytes={resultSizeBytes}
+      resetLabel={resetLabel}
+      onReset={onReset}
+      iconVariant="success"
+    />
   );
 }
 
@@ -365,7 +345,7 @@ export function ToolPrimaryButton({
       onClick={onClick}
       disabled={disabled || loading}
       size="md"
-      className={cn("mt-4 h-10 w-full font-semibold", className)}
+      className={cn("mt-2 h-10 w-full font-semibold", className)}
     >
       {loading ? (
         <span className="inline-flex items-center gap-2.5">

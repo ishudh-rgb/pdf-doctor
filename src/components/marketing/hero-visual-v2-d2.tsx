@@ -317,7 +317,7 @@ export function HeroVisualV2D2() {
               <FileText className="h-4 w-4 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-white">Only4PDF</p>
+              <p className="truncate text-xs font-bold text-white">OnlyMyPDF</p>
               <p className="truncate text-[9px] text-white/75">Free · Browser · No install</p>
             </div>
           </div>

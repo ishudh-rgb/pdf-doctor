@@ -32,6 +32,12 @@ jobs:
             echo "base=" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Require PRODUCTION_URL after CI
+        if: github.event_name == 'workflow_run' && steps.url.outputs.base == ''
+        run: |
+          echo "Repository secret PRODUCTION_URL is required for post-CI deploy smoke."
+          exit 1
+
       - name: Health check
         if: steps.url.outputs.base != ''
         run: |
@@ -41,6 +47,7 @@ jobs:
           node -e "
             const h = require('./health.json');
             if (!h.status) throw new Error('Missing health status');
+            if (h.status === 'degraded') throw new Error('Health is degraded');
             console.log('Health status:', h.status);
           "
           curl -fsS -o /dev/null -w "%{http_code}" "$BASE/" | grep -E '^200$'
@@ -53,7 +60,7 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
-            echo "Skipping detailed health (CRON_SECRET secret not configured)."
+            echo "CRON_SECRET secret not configured — skipping detailed health."
             exit 0
           fi
           BASE="${{ steps.url.outputs.base }}"
@@ -61,10 +68,12 @@ jobs:
           node -e "
             const h = require('./health-detail.json');
             if (!h.checks) throw new Error('Missing detailed health checks');
+            if (h.status === 'degraded') throw new Error('Detailed health is degraded');
             console.log('Detailed health:', h.status, Object.keys(h.checks));
           "
 
-      - name: Skip (no PRODUCTION_URL secret)
-        if: steps.url.outputs.base == ''
+      - name: Skip (manual run without URL)
+        if: github.event_name == 'workflow_dispatch' && steps.url.outputs.base == ''
         run: |
-          echo "Set repository secret PRODUCTION_URL or run workflow_dispatch with target_url."
+          echo "Provide target_url input or set PRODUCTION_URL secret."
+          exit 1

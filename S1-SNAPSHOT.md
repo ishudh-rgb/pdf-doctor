@@ -4,7 +4,7 @@
 |-------|-------|
 | **Tag** | `S1` |
 | **Branch backup** | `s1-backup` |
-| **Saved** | 2026-06-05 — OnlyMyPDF (Logo D lock), dashboard + pricing redesign, PDF Scanner workspace, user files API, AI Summarizer polish |
+| **Saved** | 2026-06-05 (S1 refresh) — Auth, pricing, tool UI polish, Pro 200 MB sync, enterprise ops |
 
 ---
 
@@ -123,6 +123,27 @@ Path pattern: `src/app/api/tools/<slug>/route.ts`
 ---
 
 ## Current stage — what changed at this S1 save
+
+### Session refresh (2026-06-05) — UI, auth, pricing, limits
+
+| Change | Path |
+|--------|------|
+| Tool success file size — centered pill badge, all convert/workspace tools | `src/components/tools/tool-ui.tsx`, `pdf-result-preview.tsx`, `extract-result-view.tsx`, `html-to-pdf`, `txt-to-pdf` |
+| Cloud import removed (Google Drive / Dropbox) | `src/components/tools/tool-ui.tsx`, `convert-tool-page.tsx` |
+| Tool card header — title wrap + description on new line | `src/components/layout/tool-page-shell.tsx`, `src/styles/layout-styles.css` |
+| Compact dropzone spacing | `src/components/tools/tool-ui.tsx` |
+| Pro file size **200 MB** — env + pricing/i18n sync | `src/config/constants.ts`, `next.config.ts`, `.env.example`, `pricing-page-content.tsx`, `dashboard-pricing.tsx`, `upgrade-modal.tsx`, `en.json`, `hi.json`, `tools.ts`, `marketing-aeo.ts`, `home-sections.tsx` |
+| Auth logout + header session fix | `src/components/providers/auth-provider.tsx`, `src/app/api/auth/logout/route.ts`, `header.tsx` |
+| Login vs homepage content split | `auth-shell.tsx`, `home-sections.tsx`, `login/page.tsx`, i18n |
+| Footer logo blend fix | `footer.tsx`, `layout-styles.css` |
+| Pricing page compact cards + Pro copy | `pricing-page-content.tsx`, i18n |
+| Dashboard activity / files API fixes | `src/app/api/user/files/route.ts`, `dashboard/page.tsx` |
+| Admin audit log + GDPR re-auth | `supabase/migrations/010_*`, admin audit UI/API |
+| Hindi legal + hreflang | `src/i18n/legal/`, `language-alternates.ts` |
+| E2E checkout + pricing smoke tests | `e2e/checkout.spec.ts`, `e2e/pricing.spec.ts` |
+| Docker / ops metadata | `Dockerfile`, `docker-compose.yml`, `docs/OPERATIONS.md` |
+
+**File limits (`.env.local` backup in `.snapshots/s1/`):** Free 25 MB · Pro 200 MB · body 220 MB
 
 ### OnlyMyPDF brand & UI
 

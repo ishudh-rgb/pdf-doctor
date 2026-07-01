@@ -16,10 +16,7 @@ export const MARKETING_ROUTES = [
 
 export const TOOL_SLUGS = TOOLS.map((tool) => tool.slug);
 
-/** edit-pdf exists as a route but is not listed in TOOLS. */
-export const EXTRA_TOOL_SLUGS = ["edit-pdf"] as const;
-
-export const ALL_PUBLIC_TOOL_SLUGS = [...TOOL_SLUGS, ...EXTRA_TOOL_SLUGS];
+export const ALL_PUBLIC_TOOL_SLUGS = [...TOOL_SLUGS];
 
 export const NOINDEX_ROUTE_PREFIXES = [
   "/dashboard",

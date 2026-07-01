@@ -6,6 +6,7 @@ import {
   FileUp,
   FileDown,
   Image as ImageIcon,
+  PenLine,
   PenTool,
   Sparkles,
   ScanLine,
@@ -21,6 +22,7 @@ import {
   Type,
   type LucideIcon,
 } from "lucide-react";
+import { FILE_SIZE_MARKETING } from "@/config/constants";
 
 export const ICON_MAP: Record<string, LucideIcon> = {
   Layers,
@@ -30,6 +32,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   FileUp,
   FileDown,
   Image: ImageIcon,
+  PenLine,
   PenTool,
   Sparkles,
   ScanLine,
@@ -61,6 +64,7 @@ export const TOOL_KEYS = [
   { slug: "jpg-to-pdf", icon: "Image", nameKey: "tools.jpgToPdf.name", descKey: "tools.jpgToPdf.description", category: "convert-to" },
   { slug: "html-to-pdf", icon: "Code2", nameKey: "tools.htmlToPdf.name", descKey: "tools.htmlToPdf.description", category: "convert-to" },
   { slug: "txt-to-pdf", icon: "Type", nameKey: "tools.txtToPdf.name", descKey: "tools.txtToPdf.description", category: "convert-to" },
+  { slug: "edit-pdf", icon: "PenLine", nameKey: "tools.editPdf.name", descKey: "tools.editPdf.description", category: "edit" },
   { slug: "sign-pdf", icon: "PenTool", nameKey: "tools.signPdf.name", descKey: "tools.signPdf.description", category: "edit", isPro: true },
   { slug: "add-watermark", icon: "Stamp", nameKey: "tools.addWatermark.name", descKey: "tools.addWatermark.description", category: "edit" },
   { slug: "ai-pdf-summarizer", icon: "Sparkles", nameKey: "tools.aiPdfSummarizer.name", descKey: "tools.aiPdfSummarizer.description", category: "ai", isPro: true },
@@ -73,7 +77,7 @@ export const FAQ_KEYS = ["faq1", "faq2", "faq3", "faq4", "faq5", "faq6", "faq7"]
 
 export const FREE_FEATURES = [
   "5 tool uses per day",
-  "No file size limit",
+  FILE_SIZE_MARKETING.freeLabel,
   "Basic PDF tools",
   "Standard processing speed",
   "Files deleted after 2 hours",
@@ -81,7 +85,7 @@ export const FREE_FEATURES = [
 
 export const PRO_FEATURES = [
   "100 tool uses per day",
-  "No file size limit",
+  FILE_SIZE_MARKETING.proLabel,
   "All PDF tools including Sign & AI",
   "AI PDF Summarizer",
   "Priority processing",

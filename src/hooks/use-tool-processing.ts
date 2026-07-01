@@ -56,6 +56,16 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
           const errorData = await response.json().catch(() => null);
           const message =
             errorData?.error || `Processing failed (${response.status})`;
+
+          if (
+            response.status === 429 ||
+            response.status === 403 ||
+            /limit reached|requires a Pro|upgrade to Pro/i.test(message)
+          ) {
+            const { useAppStore } = await import("@/stores/app-store");
+            useAppStore.getState().setShowUpgradeModal(true);
+          }
+
           throw new Error(message);
         }
 
@@ -117,9 +127,19 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
-          throw new Error(
-            errorData?.error || `Processing failed (${response.status})`
-          );
+          const message =
+            errorData?.error || `Processing failed (${response.status})`;
+
+          if (
+            response.status === 429 ||
+            response.status === 403 ||
+            /limit reached|requires a Pro|upgrade to Pro/i.test(message)
+          ) {
+            const { useAppStore } = await import("@/stores/app-store");
+            useAppStore.getState().setShowUpgradeModal(true);
+          }
+
+          throw new Error(message);
         }
 
         const blob = await response.blob();

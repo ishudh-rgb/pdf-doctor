@@ -2,8 +2,51 @@ import JSZip from "jszip";
 import { convertEmfToPngDataUrl } from "@/lib/services/emf-to-png.service";
 import { parseLegacyPptRich } from "@/lib/services/legacy-ppt-parse.service";
 import { tryConvertLegacyPptToPptx } from "@/lib/services/powerpoint-pptx-convert.service";
+import {
+  pageSizeFromDimensions,
+  type PageSizeInches,
+} from "@/lib/utils/page-orientation";
 
 const EMU_PER_INCH = 914400;
+
+export type { PageSizeInches };
+
+const DEFAULT_SLIDE_LANDSCAPE = pageSizeFromDimensions(10, 5.625);
+const DEFAULT_SLIDE_PORTRAIT = pageSizeFromDimensions(7.5, 10);
+
+/** Read native slide size from pptx (inches). Falls back to widescreen landscape. */
+export async function readPresentationSlideSizeInches(
+  fileBuffer: Buffer
+): Promise<PageSizeInches> {
+  if (!isPptxBuffer(fileBuffer)) {
+    return DEFAULT_SLIDE_LANDSCAPE;
+  }
+
+  try {
+    const zip = await JSZip.loadAsync(fileBuffer);
+    const pres = zip.file("ppt/presentation.xml");
+    if (!pres) return DEFAULT_SLIDE_LANDSCAPE;
+
+    const xml = await pres.async("string");
+    const match =
+      xml.match(/<p:sldSz\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/) ??
+      xml.match(/<p:sldSz\b[^>]*\bcy="(\d+)"[^>]*\bcx="(\d+)"/);
+
+    if (!match) return DEFAULT_SLIDE_LANDSCAPE;
+
+    const widthIn = Number(match[1]) / EMU_PER_INCH;
+    const heightIn = Number(match[2]) / EMU_PER_INCH;
+    if (!Number.isFinite(widthIn) || !Number.isFinite(heightIn) || widthIn <= 0 || heightIn <= 0) {
+      return DEFAULT_SLIDE_LANDSCAPE;
+    }
+
+    return pageSizeFromDimensions(widthIn, heightIn);
+  } catch {
+    return DEFAULT_SLIDE_LANDSCAPE;
+  }
+}
+
+export { DEFAULT_SLIDE_LANDSCAPE, DEFAULT_SLIDE_PORTRAIT };
 
 export interface ParsedTextBlock {
   text: string;

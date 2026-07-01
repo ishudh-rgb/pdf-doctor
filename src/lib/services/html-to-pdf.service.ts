@@ -1,7 +1,14 @@
 import { getPuppeteerBrowser } from "@/lib/services/puppeteer-browser.server";
+import {
+  cssPageSize,
+  pdfPageSizeFromImagePixels,
+  type PageSizeInches,
+} from "@/lib/utils/page-orientation";
 
 export interface HtmlPdfOptions {
   landscape?: boolean;
+  /** Custom @page size (overrides A4 + landscape when set). */
+  pageSize?: PageSizeInches;
   /** Tighter font/padding for wide spreadsheets (many columns). */
   compact?: boolean;
   bodyClass?: string;
@@ -16,8 +23,18 @@ export function buildHtmlDocument(
   title = "Document",
   options: HtmlPdfOptions = {}
 ): string {
-  const pageSize = options.landscape ? "A4 landscape" : "A4";
-  const pageMargin = options.landscape ? "5mm 6mm" : "16mm 14mm";
+  const pageSize =
+    options.pageSize != null
+      ? cssPageSize(options.pageSize)
+      : options.landscape
+        ? "A4 landscape"
+        : "A4";
+  const pageMargin =
+    options.pageSize != null
+      ? "0"
+      : options.landscape
+        ? "5mm 6mm"
+        : "16mm 14mm";
   const baseFont = options.compact ? "7.5pt" : "10pt";
   const cellPad = options.compact ? "2px 4px" : "6px 8px";
   const bodyClass = options.bodyClass ?? "";
@@ -131,9 +148,12 @@ export async function renderHtmlToPdf(
   options: HtmlPdfOptions = {}
 ): Promise<Buffer> {
   const browser = await getPuppeteerBrowser();
-  const margin = options.landscape
-    ? { top: "5mm", right: "5mm", bottom: "5mm", left: "5mm" }
-    : { top: "16mm", right: "14mm", bottom: "16mm", left: "14mm" };
+  const margin =
+    options.pageSize != null
+      ? { top: "0", right: "0", bottom: "0", left: "0" }
+      : options.landscape
+        ? { top: "5mm", right: "5mm", bottom: "5mm", left: "5mm" }
+        : { top: "16mm", right: "14mm", bottom: "16mm", left: "14mm" };
 
   const page = await browser.newPage();
   const printTimeout = options.printTimeoutMs ?? 90_000;
@@ -141,8 +161,8 @@ export async function renderHtmlToPdf(
     await page.emulateMediaType("print");
     await page.setContent(html, { waitUntil: "domcontentloaded", timeout: printTimeout });
     const pdfBytes = await page.pdf({
-      format: "A4",
-      landscape: Boolean(options.landscape),
+      format: options.pageSize ? undefined : "A4",
+      landscape: options.pageSize ? undefined : Boolean(options.landscape),
       printBackground: true,
       preferCSSPageSize: true,
       margin,
@@ -160,39 +180,24 @@ export async function renderSlideImagesToPdf(slideImages: Buffer[]): Promise<Buf
   const sharp = (await import("sharp")).default;
   const pdfDoc = await PDFDocument.create();
 
-  const A4_LANDSCAPE_W = 841.89;
-  const A4_LANDSCAPE_H = 595.28;
-
   for (const imgBuffer of slideImages) {
+    const meta = await sharp(imgBuffer).metadata();
     const jpegBuffer = await sharp(imgBuffer)
-      .jpeg({ quality: 85, mozjpeg: true })
+      .jpeg({ quality: 90, mozjpeg: true })
       .toBuffer();
 
     const jpegImage = await pdfDoc.embedJpg(jpegBuffer);
+    const [pageW, pageH] = pdfPageSizeFromImagePixels(
+      meta.width ?? jpegImage.width,
+      meta.height ?? jpegImage.height
+    );
 
-    const imgAspect = jpegImage.width / jpegImage.height;
-    const pageAspect = A4_LANDSCAPE_W / A4_LANDSCAPE_H;
-
-    let drawW: number, drawH: number, drawX: number, drawY: number;
-
-    if (imgAspect > pageAspect) {
-      drawW = A4_LANDSCAPE_W;
-      drawH = A4_LANDSCAPE_W / imgAspect;
-      drawX = 0;
-      drawY = (A4_LANDSCAPE_H - drawH) / 2;
-    } else {
-      drawH = A4_LANDSCAPE_H;
-      drawW = A4_LANDSCAPE_H * imgAspect;
-      drawX = (A4_LANDSCAPE_W - drawW) / 2;
-      drawY = 0;
-    }
-
-    const page = pdfDoc.addPage([A4_LANDSCAPE_W, A4_LANDSCAPE_H]);
+    const page = pdfDoc.addPage([pageW, pageH]);
     page.drawImage(jpegImage, {
-      x: drawX,
-      y: drawY,
-      width: drawW,
-      height: drawH,
+      x: 0,
+      y: 0,
+      width: pageW,
+      height: pageH,
     });
   }
 
@@ -200,19 +205,25 @@ export async function renderSlideImagesToPdf(slideImages: Buffer[]): Promise<Buf
   return Buffer.from(pdfBytes);
 }
 
-export async function renderPresentationToPdf(html: string): Promise<Buffer> {
+export async function renderPresentationToPdf(
+  html: string,
+  options: { pageSize?: PageSizeInches } = {}
+): Promise<Buffer> {
   const browser = await getPuppeteerBrowser();
   const page = await browser.newPage();
+  const landscape = options.pageSize?.landscape ?? true;
 
   try {
     await page.emulateMediaType("print");
     await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 90_000 });
     const pdfBytes = await page.pdf({
-      format: "A4",
-      landscape: true,
+      format: options.pageSize ? undefined : "A4",
+      landscape: options.pageSize ? undefined : landscape,
       printBackground: true,
       preferCSSPageSize: true,
-      margin: { top: "0.55in", right: "0.55in", bottom: "0.55in", left: "0.55in" },
+      margin: options.pageSize
+        ? { top: "0", right: "0", bottom: "0", left: "0" }
+        : { top: "0.55in", right: "0.55in", bottom: "0.55in", left: "0.55in" },
       scale: 1,
       timeout: 90_000,
     });

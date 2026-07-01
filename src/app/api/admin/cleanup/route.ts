@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyAdmin } from "@/lib/auth/verify-admin";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 import { cleanupExpiredFiles, getCleanupStats } from "@/lib/services/cleanup.service";
+import { logAdminAction } from "@/lib/admin/audit-log";
+import { getGuestUsageKey } from "@/lib/server/client-ip";
+import { toSafeApiError } from "@/lib/server/safe-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,6 +45,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const originBlocked = guardMutationOrigin(request);
+    if (originBlocked) return originBlocked;
+
     const admin = await verifyAdmin(request);
     if (admin instanceof Response) return admin;
     if (!admin) {
@@ -48,6 +55,15 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await cleanupExpiredFiles();
+
+    await logAdminAction({
+      adminId: admin.id,
+      adminEmail: admin.email ?? "admin",
+      action: "cleanup.run",
+      targetType: "storage",
+      payload: result,
+      ipHash: getGuestUsageKey(request),
+    });
 
     return NextResponse.json({
       cleaned: result.deleted,
@@ -57,7 +73,7 @@ export async function POST(request: NextRequest) {
       cleaned_at: new Date().toISOString(),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Cleanup failed";
+    const message = toSafeApiError(err, "Cleanup failed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -6,6 +6,8 @@ import { getToolSEO } from "@/config/tools";
 import { getToolAeo } from "@/config/tool-aeo";
 import { ToolAeoBlock } from "@/components/seo/tool-aeo-block";
 import { ToolLayoutClient } from "./tool-layout-client";
+import { isMaintenanceModeEnabled } from "@/lib/server/maintenance-mode";
+import { redirect } from "next/navigation";
 
 type Props = {
   children: React.ReactNode;
@@ -24,6 +26,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ToolsLayout({ children }: Props) {
+  if (await isMaintenanceModeEnabled()) {
+    redirect("/maintenance");
+  }
+
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") ?? "";
   const slug = slugFromPathname(pathname);

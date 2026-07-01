@@ -1,6 +1,7 @@
 import { getUserProfile } from "@/lib/db/queries";
 import { getCachedAdminSettings } from "@/lib/db/admin-settings-cache";
 import { FILE_LIMITS } from "@/config/constants";
+import { isActivePro } from "@/lib/auth/plan-access";
 
 export type ToolUserContext = {
   settings: Record<string, unknown>;
@@ -24,7 +25,7 @@ export async function resolveToolUserContext(
   }
 
   const profile = await getUserProfile(userId);
-  const isPro = profile.plan === "pro";
+  const isPro = isActivePro(profile);
 
   return {
     settings,

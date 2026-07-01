@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Shield,
   Minimize2,
@@ -9,6 +10,7 @@ import {
   FileDown,
   FileUp,
   ImageIcon,
+  PenLine,
   PenTool,
   Mail,
   MapPin,
@@ -18,7 +20,11 @@ import {
 } from "lucide-react";
 import { FooterLogo } from "@/components/common/logo";
 import { APP_NAME, SUPPORT_EMAIL } from "@/config/constants";
+import { TOOL_KEYS } from "@/components/marketing/home/home-shared";
 import { useTranslation } from "@/i18n";
+import { withLocalePrefix } from "@/lib/i18n/locale-path";
+
+const toolCount = TOOL_KEYS.length;
 
 const toolLinks = [
   { name: "Compress PDF", href: "/compress-pdf", icon: Minimize2, color: "text-orange-500" },
@@ -27,6 +33,7 @@ const toolLinks = [
   { name: "PDF to Word", href: "/pdf-to-word", icon: FileDown, color: "text-emerald-500" },
   { name: "Word to PDF", href: "/word-to-pdf", icon: FileUp, color: "text-cyan-500" },
   { name: "JPG to PDF", href: "/jpg-to-pdf", icon: ImageIcon, color: "text-pink-500" },
+  { name: "Edit PDF", href: "/edit-pdf", icon: PenLine, color: "text-cyan-500" },
   { name: "Sign PDF", href: "/sign-pdf", icon: PenTool, color: "text-rose-500" },
 ];
 
@@ -38,13 +45,17 @@ const companyLinks = [
   { nameKey: "footer.terms", href: "/terms" },
   { nameKey: "footer.faq", href: "/faq" },
   { nameKey: "nav.pricing", href: "/pricing" },
+  { nameKey: "footer.allToolsLink", href: "/all-tools" },
 ];
 
 export function Footer() {
   const { t } = useTranslation();
+  const pathname = usePathname();
+  const enHref = withLocalePrefix(pathname, "en");
+  const hiHref = withLocalePrefix(pathname, "hi");
 
   return (
-    <footer className="relative overflow-hidden border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
+    <footer className="pd-site-footer relative overflow-hidden border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
       {/* Decorative blobs */}
       <div className="absolute -left-20 top-10 h-60 w-60 rounded-full bg-blue-400/5 blur-3xl" />
       <div className="absolute -right-20 bottom-10 h-60 w-60 rounded-full bg-violet-400/5 blur-3xl" />
@@ -54,7 +65,10 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-12 lg:gap-6">
           {/* Brand column */}
           <div className="lg:col-span-4">
-            <Link href="/" className="group inline-flex items-center gap-2.5">
+            <Link
+              href="/"
+              className="pd-footer-logo-link group inline-flex items-center rounded-lg"
+            >
               <FooterLogo />
             </Link>
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-gray-500">
@@ -129,18 +143,18 @@ export function Footer() {
           <div className="lg:col-span-3">
             <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-rose-500 to-pink-500" />
-              Language
+              {t("footer.language")}
             </h3>
             <div className="mt-4 flex gap-2">
               <Link
-                href="?lang=en"
+                href={enHref}
                 className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[13px] font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
               >
                 <Globe className="h-3.5 w-3.5 text-blue-500" />
                 English
               </Link>
               <Link
-                href="?lang=hi"
+                href={hiHref}
                 className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[13px] font-medium text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
               >
                 <Globe className="h-3.5 w-3.5 text-orange-500" />
@@ -150,23 +164,23 @@ export function Footer() {
 
             {/* Quick stats */}
             <div className="mt-6 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Why OnlyMyPDF?</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{t("footer.whyTitle")}</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-lg font-extrabold text-blue-600">12+</p>
-                  <p className="text-[10px] text-gray-400">PDF Tools</p>
+                  <p className="text-lg font-extrabold text-blue-600">{toolCount}+</p>
+                  <p className="text-[10px] text-gray-400">{t("footer.toolsCount")}</p>
                 </div>
                 <div>
                   <p className="text-lg font-extrabold text-emerald-600">100%</p>
-                  <p className="text-[10px] text-gray-400">Free to Use</p>
+                  <p className="text-[10px] text-gray-400">{t("footer.freeToUse")}</p>
                 </div>
                 <div>
-                  <p className="text-lg font-extrabold text-violet-600">10K+</p>
-                  <p className="text-[10px] text-gray-400">Happy Users</p>
+                  <p className="text-lg font-extrabold text-violet-600">{toolCount}</p>
+                  <p className="text-[10px] text-gray-400">{t("footer.toolsCount")}</p>
                 </div>
                 <div>
                   <p className="text-lg font-extrabold text-rose-600">50+</p>
-                  <p className="text-[10px] text-gray-400">Countries</p>
+                  <p className="text-[10px] text-gray-400">{t("footer.countries")}</p>
                 </div>
               </div>
             </div>

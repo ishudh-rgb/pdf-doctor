@@ -1,8 +1,8 @@
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
 import { protectPDF } from "@/lib/services/pdf-security.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, logError } from "@/lib/db/queries";
+import { logToolUsage } from "@/lib/db/queries";
 import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
@@ -11,8 +11,8 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
-  const rateLimited = await guardToolRateLimit(request, "protect-pdf");
-  if (rateLimited) return rateLimited;
+  const early = await beginToolRoute(request, "protect-pdf");
+  if (early) return early;
 
   const startTime = Date.now();
   let userId: string | null = null;
@@ -90,20 +90,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to protect PDF";
-
-    void logError({
-      user_id: userId,
-      tool_name: "protect-pdf",
-      error_type: "PROTECT_ERROR",
-      error_message: message,
-      stack_trace: error instanceof Error ? error.stack : undefined,
+    return handleToolRouteFailure(error, {
+      toolSlug: "protect-pdf",
+      userId,
+      errorType: "PROTECT_ERROR",
+      fallbackMessage: "Failed to protect PDF",
     });
-
-    if (message.includes("usage limit") || message.includes("limit reached")) {
-      return NextResponse.json({ error: message }, { status: 429 });
-    }
-
-    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

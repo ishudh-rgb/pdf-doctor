@@ -12,6 +12,7 @@ import {
 } from "@/components/tools/tool-ui";
 import { mapRelatedTools } from "@/components/tools/tool-helpers";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
+import { notifyActivityUpdated } from "@/lib/client/activity-events";
 
 interface RelatedTool {
   name: string;
@@ -143,7 +144,23 @@ export function PdfToWordToolPage({
         );
 
         if (!statusRes.ok) {
-          throw new Error("Lost conversion progress. Please try again.");
+          const err = (await statusRes.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          if (statusRes.status === 403) {
+            throw new Error(
+              err.error ||
+                "Session mismatch — refresh the page and try again."
+            );
+          }
+          if (statusRes.status === 404) {
+            throw new Error(
+              err.error || "Conversion session expired. Please try again."
+            );
+          }
+          throw new Error(
+            err.error || "Lost conversion progress. Please try again."
+          );
         }
 
         const status = (await statusRes.json()) as {
@@ -201,6 +218,7 @@ export function PdfToWordToolPage({
       setResultFilename(filename);
       setResultSize(blob.size);
       setCompleted(true);
+      notifyActivityUpdated();
     } catch (err) {
       const message =
         err instanceof DOMException && err.name === "AbortError"
@@ -242,20 +260,12 @@ export function PdfToWordToolPage({
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || "converted.docx"}
           downloadLabel="Download DOCX"
+          resultSizeBytes={resultSize ?? undefined}
           onReset={() => {
             resetResult();
             setFile(null);
           }}
-        >
-          {resultSize !== null ? (
-            <p className="mt-2 text-xs text-pd-muted">
-              File size:{" "}
-              <span className="font-semibold text-pd-foreground">
-                {formatFileSize(resultSize)}
-              </span>
-            </p>
-          ) : null}
-        </ToolSuccessPanel>
+        />
       ) : (
         <>
           <ToolDropzone

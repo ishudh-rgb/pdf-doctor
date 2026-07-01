@@ -9,17 +9,16 @@ import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { FILE_LIMITS } from "@/config/constants";
 import { createClient } from "@/lib/supabase/server";
 import { ownerHashFromRequest } from "@/lib/server/request-security";
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
-import { toSafeApiError } from "@/lib/server/safe-error";
+import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
-  try {
-    const toolRate = await guardToolRateLimit(request, "compose-pdf");
-    if (toolRate) return toolRate;
+  const early = await beginToolRoute(request, "compose-pdf");
+  if (early) return early;
 
+  try {
     const supabase = await createClient();
     const {
       data: { user },
@@ -119,10 +118,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[compose-pdf]", error);
-    return NextResponse.json(
-      { error: toSafeApiError(error, "Failed to compose PDF") },
-      { status: 500 }
-    );
+    return handleToolRouteFailure(error, {
+      toolSlug: "compose-pdf",
+      errorType: "COMPOSE_ERROR",
+      fallbackMessage: "Failed to compose PDF",
+    });
   }
 }

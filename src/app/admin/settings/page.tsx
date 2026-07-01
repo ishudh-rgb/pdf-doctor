@@ -13,7 +13,7 @@ interface Setting {
 
 const settingsConfig: Omit<Setting, "value">[] = [
   {
-    key: "free_daily_file_limit",
+    key: "free_daily_limit",
     label: "Free Daily File Limit",
     description: "Maximum number of files a free user can process per day",
     type: "number",
@@ -57,9 +57,9 @@ const settingsConfig: Omit<Setting, "value">[] = [
 ];
 
 const defaultValues: Record<string, string> = {
-  free_daily_file_limit: "5",
-  free_max_file_size_mb: "0",
-  pro_max_file_size_mb: "0",
+  free_daily_limit: "5",
+  free_max_file_size_mb: "25",
+  pro_max_file_size_mb: "100",
   free_daily_ai_limit: "1",
   ads_enabled: "true",
   maintenance_mode: "false",

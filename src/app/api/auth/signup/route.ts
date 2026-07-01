@@ -6,6 +6,7 @@ import {
   localDevSignUp,
 } from "@/lib/auth/local-dev-auth";
 import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
 import { TERMS_CONSENT_VERSION } from "@/lib/privacy/consent";
 import { logConsentRecord } from "@/lib/db/queries";
@@ -13,6 +14,9 @@ import { getGuestUsageKey } from "@/lib/server/client-ip";
 
 export async function POST(request: NextRequest) {
   try {
+    const originBlocked = guardMutationOrigin(request);
+    if (originBlocked) return originBlocked;
+
     const rate = await checkAuthRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 
@@ -104,8 +108,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     captureApiError(err, { route: "auth/signup" });
-    const message = err instanceof Error ? err.message : "Internal server error";
+    const message = toSafeApiError(err, "Signup failed. Please try again.");
     console.error("Signup error:", err);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

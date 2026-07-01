@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
+import { ToolResultSizeBadge } from "@/components/tools/tool-ui";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CircularProgress } from "@/components/ui/circular-progress";
@@ -194,14 +195,13 @@ export default function HtmlToPdfPage() {
                   <p className="mt-0.5 truncate text-sm font-medium text-gray-700" title={resultFileName}>
                     {resultFileName}
                   </p>
-                  <p className="mt-0.5 text-sm text-gray-400">
-                    {resultSize > 0 && formatFileSize(resultSize)}
-                    {file && ` · from ${formatFileSize(file.size)} HTML`}
-                  </p>
                 </div>
               </div>
 
-              {/* Download */}
+              {resultSize > 0 ? (
+                <ToolResultSizeBadge sizeBytes={resultSize} className="mb-4" />
+              ) : null}
+
               <a href={resultUrl} download={resultFileName} className="block">
                 <Button className="w-full gap-2 rounded-xl py-3 text-base font-semibold">
                   <Download className="h-5 w-5" />

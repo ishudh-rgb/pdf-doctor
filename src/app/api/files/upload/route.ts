@@ -2,26 +2,35 @@ import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import { uploadFile, validateFile } from "@/lib/services/upload.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
-import { createUploadedFileRecord, logError } from "@/lib/db/queries";
-import { createClient } from "@/lib/supabase/server";
+import { createUploadedFileRecord } from "@/lib/db/queries";
+import { getApiUser } from "@/lib/auth/get-api-user";
 import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { generateSecureFilename } from "@/lib/utils/file";
 import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { FILE_LIMITS } from "@/config/constants";
+import { guardMaintenanceMode } from "@/lib/server/tool-request-guards";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
+import { userBlockedResponse } from "@/lib/server/user-blocked-http";
+import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
 
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
+  const originBlocked = guardMutationOrigin(request);
+  if (originBlocked) return originBlocked;
+
+  const maintenance = await guardMaintenanceMode();
+  if (maintenance) return maintenance;
+
   const rateLimited = await guardToolRateLimit(request, "file-upload");
   if (rateLimited) return rateLimited;
 
   let userId: string | null = null;
 
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    userId = user?.id ?? null;
+    const apiUser = await getApiUser();
+    userId = apiUser?.id ?? null;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -86,18 +95,14 @@ export async function POST(request: NextRequest) {
       mimeType: file.type,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to upload file";
+    const blocked = userBlockedResponse(error);
+    if (blocked) return blocked;
 
-    await logError({
-      user_id: userId,
-      tool_name: "file-upload",
-      error_type: "UPLOAD_ERROR",
-      error_message: message,
-      stack_trace: error instanceof Error ? error.stack : undefined,
-    }).catch(() => {});
+    const message = toSafeApiError(error, "Failed to upload file");
+    captureApiError(error, { route: "files/upload", user_id: userId });
 
-    if (message.includes("usage limit") || message.includes("limit reached")) {
-      return NextResponse.json({ error: message }, { status: 429 });
+    if (error instanceof Error && (error.message.includes("usage limit") || error.message.includes("limit reached"))) {
+      return NextResponse.json({ error: error.message }, { status: 429 });
     }
 
     return NextResponse.json({ error: message }, { status: 500 });

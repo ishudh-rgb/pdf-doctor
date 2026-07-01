@@ -8,6 +8,7 @@ import { resolveToolUserContext } from "@/lib/services/user-tool-context.service
 import { logError } from "@/lib/db/queries";
 import { isLocalDevAuthEnabled } from "@/lib/auth/auth-config";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isActivePro } from "@/lib/auth/plan-access";
 import {
   FILE_LIMITS,
   isUnlimitedFileSizeMB,
@@ -32,6 +33,12 @@ export interface UsageLimitResult {
   message?: string;
 }
 
+function resolveFreeDailyLimit(settings: Record<string, unknown>): number {
+  const raw = settings.free_daily_limit ?? settings.free_daily_file_limit;
+  if (typeof raw === "number") return raw;
+  return Number(raw) || 5;
+}
+
 export async function checkUsageLimit(
   userId: string | null,
   guestIpHash: string | null | NextRequest,
@@ -54,16 +61,24 @@ export async function checkUsageLimit(
 
     if (userId) {
       const profile = await getUserProfile(userId);
-      const isPro = profile.plan === "pro";
+      const isPro = isActivePro(profile);
 
       if (isPro) {
-        return { allowed: true, remaining: -1, limit: -1 };
+        const dailyLimit = FILE_LIMITS.maxProUsesPerDay;
+        const used = await getUserDailyUsage(userId);
+
+        return {
+          allowed: used < dailyLimit,
+          remaining: Math.max(0, dailyLimit - used),
+          limit: dailyLimit,
+          message:
+            used >= dailyLimit
+              ? `Daily Pro limit of ${dailyLimit} tool uses reached. Resets tomorrow.`
+              : undefined,
+        };
       }
 
-      const dailyLimit =
-        typeof settings.free_daily_limit === "number"
-          ? settings.free_daily_limit
-          : Number(settings.free_daily_limit) || 5;
+      const dailyLimit = resolveFreeDailyLimit(settings);
       const used = await getUserDailyUsage(userId);
 
       return {
@@ -72,16 +87,13 @@ export async function checkUsageLimit(
         limit: dailyLimit,
         message:
           used >= dailyLimit
-            ? `Daily limit of ${dailyLimit} files reached. Upgrade to Pro for unlimited access.`
+            ? `Daily limit of ${dailyLimit} files reached. Upgrade to Pro for ${FILE_LIMITS.maxProUsesPerDay} uses per day.`
             : undefined,
       };
     }
 
     const guestKey = resolveGuestKey(guestIpHash);
-    const dailyLimit =
-      typeof settings.free_daily_limit === "number"
-        ? settings.free_daily_limit
-        : Number(settings.free_daily_limit) || 5;
+    const dailyLimit = resolveFreeDailyLimit(settings);
     const used = await getGuestDailyUsage(guestKey);
 
     return {
@@ -104,6 +116,37 @@ export async function checkUsageLimit(
   }
 }
 
+export async function requireProPlan(userId: string | null): Promise<UsageLimitResult> {
+  if (!userId) {
+    return {
+      allowed: false,
+      remaining: 0,
+      limit: 0,
+      message: "Please log in and upgrade to Pro to use this tool.",
+    };
+  }
+
+  try {
+    const profile = await getUserProfile(userId);
+    if (!isActivePro(profile)) {
+      return {
+        allowed: false,
+        remaining: 0,
+        limit: 0,
+        message: "This tool requires a Pro subscription. Upgrade to continue.",
+      };
+    }
+    return checkUsageLimit(userId, null, "pro-tool");
+  } catch {
+    return {
+      allowed: false,
+      remaining: 0,
+      limit: 0,
+      message: "Service temporarily unavailable. Please try again shortly.",
+    };
+  }
+}
+
 export async function checkAIUsageLimit(
   userId: string,
   plan: "free" | "pro" = "free"
@@ -119,7 +162,7 @@ export async function checkAIUsageLimit(
 
     const settings = await getCachedAdminSettings();
     const profile = await getUserProfile(userId);
-    const isPro = profile.plan === "pro";
+    const isPro = isActivePro(profile);
 
     if (isPro) {
       return { allowed: true, remaining: -1, limit: -1 };
@@ -162,7 +205,7 @@ export async function checkFileSizeLimit(
 
     if (userId) {
       const profile = context?.profile ?? (await getUserProfile(userId));
-      if (profile.plan === "pro") {
+      if (isActivePro(profile)) {
         maxSizeMB = FILE_LIMITS.maxProFileSizeMB;
       }
     } else if (context) {
@@ -188,6 +231,6 @@ export async function checkFileSizeLimit(
       error_type: "FILE_SIZE_CHECK_FAILED",
       error_message: err instanceof Error ? err.message : String(err),
     });
-    return { allowed: true, maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
+    return { allowed: false, maxSizeMB: FILE_LIMITS.maxFreeFileSizeMB };
   }
 }

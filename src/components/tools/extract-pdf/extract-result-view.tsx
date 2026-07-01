@@ -14,7 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatFileSize } from "@/lib/utils/file";
+import { ToolResultSizeBadge } from "@/components/tools/tool-ui";
 import Link from "next/link";
 
 interface ExtractResultViewProps {
@@ -172,13 +172,17 @@ export function ExtractResultView({
                 {resultFileName}
               </p>
               <p className="mt-0.5 text-sm text-gray-400">
-                {resultSize > 0 ? formatFileSize(resultSize) : ""}{" "}
-                {resultPages > 0 ? `· ${resultPages} page${resultPages !== 1 ? "s" : ""}` : `${extractedCount} page${extractedCount !== 1 ? "s" : ""} extracted`}
+                {resultPages > 0
+                  ? `${resultPages} page${resultPages !== 1 ? "s" : ""}`
+                  : `${extractedCount} page${extractedCount !== 1 ? "s" : ""} extracted`}
               </p>
             </div>
           </div>
 
-          {/* Download button */}
+          {resultSize > 0 ? (
+            <ToolResultSizeBadge sizeBytes={resultSize} className="mb-4" />
+          ) : null}
+
           <a
             href={resultUrl}
             download={resultFileName}

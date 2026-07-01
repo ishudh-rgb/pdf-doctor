@@ -747,7 +747,7 @@ export async function pdfToExcel(fileBuffer: Buffer): Promise<Buffer> {
       extracted
     );
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = "Only4PDF";
+    workbook.creator = "OnlyMyPDF";
     workbook.created = new Date();
 
     const useSmallpdfStyle = pageTables.some(looksLikeFinancialProjection);

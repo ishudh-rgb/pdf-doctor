@@ -98,8 +98,8 @@ async function compressStructurally(
   pdfDoc.setAuthor("");
   pdfDoc.setSubject("");
   pdfDoc.setKeywords([]);
-  pdfDoc.setProducer("Only4PDF");
-  pdfDoc.setCreator("Only4PDF");
+  pdfDoc.setProducer("OnlyMyPDF");
+  pdfDoc.setCreator("OnlyMyPDF");
 
   const compressedBytes = await pdfDoc.save({
     useObjectStreams: true,

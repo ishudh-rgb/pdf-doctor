@@ -51,6 +51,8 @@ Dependabot (`.github/dependabot.yml`) opens weekly npm/GitHub Actions update PRs
 |-----|-------|------|
 | File cleanup + consent purge (3yr) + usage logs (90d) + AI usage logs (90d) + error logs (90d) | `GET /api/cron/cleanup` | `Authorization: Bearer $CRON_SECRET` or Vercel `x-vercel-cron` (on Vercel only) |
 
+Also deletes orphaned preview PDFs under `temp-sessions/pdf/` in Supabase storage when older than the 30-minute session TTL.
+
 Configure in Vercel Cron or external scheduler with Bearer auth. Never expose `CRON_SECRET` in client code or query strings.
 
 ## Database migrations
@@ -65,8 +67,14 @@ Run in order in Supabase SQL Editor (or `supabase db push`):
 | `004_security_rls_admin_tables.sql` | Admin RLS |
 | `005_scalability_privacy.sql` | Indexes, `consent_records`, retention helpers |
 | `006_payment_retention_on_delete.sql` | Billing records retained on account delete |
+| `007_payment_processing_status.sql` | Atomic payment fulfillment (`processing` status) |
+| `008_user_blocked_storage.sql` | `is_blocked` on profiles + storage policy notes |
+| `009_profile_block_coupon_atomic.sql` | Block self-unblock via RLS; atomic coupon increment RPC |
+| `010_admin_audit_log.sql` | Admin audit trail table (service-role writes) |
 
 After each migration, verify in Table Editor and run a smoke test (upload → convert → download).
+
+**Production gate:** Do not deploy until authenticated `/api/health` returns `healthy` (not `degraded`) with Upstash, Supabase, and required secrets configured.
 
 ## Environment variables
 
@@ -95,7 +103,13 @@ SENTRY_ORG=
 SENTRY_PROJECT=
 RESEND_API_KEY=
 CONTACT_INBOX_EMAIL=
+MAX_CONCURRENT_HEAVY_JOBS=2
 ```
+
+When **Upstash** and **Supabase storage** are both configured:
+
+- **Heavy conversions** share a distributed semaphore (Redis key `pdf-doctor:heavy-jobs:leases`). Without Upstash in production, heavy routes fail closed (503-style busy message).
+- **PDF preview sessions** (edit-pdf, thumbnails, html-to-pdf preview) persist metadata in Redis and PDF bytes in bucket `pdf-files` under `temp-sessions/pdf/{sessionId}.pdf` (30 min TTL). Same-instance temp files remain as a hot cache.
 
 Optional: `GEMINI_API_KEY` (AI summarizer), `RESEND_API_KEY` (contact + password reset), `SENTRY_DSN` (error monitoring), LibreOffice/Puppeteer service URLs per deployment guide.
 
@@ -103,6 +117,8 @@ Optional: `GEMINI_API_KEY` (AI summarizer), `RESEND_API_KEY` (contact + password
 
 - Guest uploads: auto-delete after **2 hours**
 - Pro uploads: auto-delete after **24 hours**
+- Usage logs: **90 days** (purged by cleanup cron)
+- Admin audit logs: **90 days** (`purgeOldAdminAuditLogs` in `/api/cron/cleanup`; see `ADMIN_AUDIT_RETENTION_DAYS` in `src/lib/admin/audit-retention.ts`)
 - Cookie consent stored in `consent_records` (migration 005)
 - Account erasure: `DELETE /api/user/account` (authenticated)
 
@@ -115,12 +131,14 @@ docker run -p 3000:3000 --env-file .env.production onlymypdf
 
 Uses Next.js `output: "standalone"` from `next.config.ts`. Node **20+** (see `.nvmrc`).
 
+**Docker limitations:** The default image runs the Next.js app only. LibreOffice, Python (pdf2docx page render), and Puppeteer are **not** included — PDF→Word quality on Docker requires `CONVERTAPI_SECRET` or mounting a sidecar with those binaries. Rate limits and PDF→Word async jobs require `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`. See `.dockerignore` for build context exclusions.
+
 ## Backup & disaster recovery
 
 1. **Supabase**: enable daily backups (Pro plan); export schema periodically.
 2. **Storage**: `pdf-files` bucket is ephemeral by design; no long-term backup required for user files.
 3. **Secrets**: store in Vercel/host secret manager; rotate `CRON_SECRET` and `IP_HASH_SALT` on compromise.
-4. **Recovery**: redeploy from `master`, re-run migrations 001–005 on fresh DB if needed, restore env vars, verify `/api/health` and one tool conversion.
+4. **Recovery**: redeploy from `master`, re-run migrations 001–007 on fresh DB if needed, restore env vars, verify `/api/health` and one tool conversion.
 
 ## Incident checklist
 

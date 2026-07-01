@@ -1,9 +1,9 @@
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
 import { wordToPdf } from "@/lib/services/word-to-pdf.service";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, logError } from "@/lib/db/queries";
+import { logToolUsage } from "@/lib/db/queries";
 import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
@@ -12,8 +12,8 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
-  const rateLimited = await guardToolRateLimit(request, "word-to-pdf");
-  if (rateLimited) return rateLimited;
+  const early = await beginToolRoute(request, "word-to-pdf");
+  if (early) return early;
 
   const startTime = Date.now();
   let userId: string | null = null;
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const pdfBuffer = await Promise.race([
-      withHeavyJobGuard(() => wordToPdf(buffer)),
+      withHeavyJobGuard(() => wordToPdf(buffer, file.name)),
       new Promise<never>((_, reject) => {
         setTimeout(
           () =>
@@ -98,20 +98,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to convert Word to PDF";
-
-    await logError({
-      user_id: userId,
-      tool_name: "word-to-pdf",
-      error_type: "CONVERT_ERROR",
-      error_message: message,
-      stack_trace: error instanceof Error ? error.stack : undefined,
-    }).catch(() => {});
-
-    if (message.includes("usage limit") || message.includes("limit reached")) {
-      return NextResponse.json({ error: message }, { status: 429 });
-    }
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleToolRouteFailure(error, {
+      toolSlug: "word-to-pdf",
+      userId,
+      errorType: "CONVERT_ERROR",
+      fallbackMessage: "Failed to convert Word to PDF",
+    });
   }
 }

@@ -321,6 +321,30 @@ function maxColumnCount(workbook: XLSX.WorkBook): number {
   return max;
 }
 
+function maxRowCount(workbook: XLSX.WorkBook): number {
+  let max = 0;
+  for (const name of workbook.SheetNames) {
+    const sheet = workbook.Sheets[name];
+    if (!sheet) continue;
+    const bounds = trimSheetBounds(sheet);
+    if (bounds) {
+      max = Math.max(max, bounds.endRow - bounds.startRow + 1);
+    }
+  }
+  return max;
+}
+
+/** Wide sheets → landscape; tall narrow sheets → portrait (fallback path only). */
+function detectExcelPdfLandscape(workbook: XLSX.WorkBook): boolean {
+  const maxColumns = maxColumnCount(workbook);
+  const maxRows = maxRowCount(workbook);
+  if (maxColumns === 0 && maxRows === 0) return true;
+  if (maxColumns >= 8) return true;
+  if (maxColumns > maxRows * 1.2) return true;
+  if (maxRows > maxColumns * 2 && maxColumns <= 6) return false;
+  return maxColumns >= maxRows;
+}
+
 function readWorkbookWithSheetJs(fileBuffer: Buffer): XLSX.WorkBook {
   return XLSX.read(fileBuffer, {
     type: "buffer",
@@ -371,11 +395,12 @@ async function convertSheetJsWorkbook(workbook: XLSX.WorkBook): Promise<Buffer> 
   }
 
   const maxColumns = maxColumnCount(workbook);
+  const landscape = detectExcelPdfLandscape(workbook);
   const pdfOptions: HtmlPdfOptions = {
-    landscape: true,
-    compact: true,
-    scale: computeLandscapeScale(maxColumns),
-    bodyClass: "excel-export excel-landscape-fit",
+    landscape,
+    compact: landscape,
+    scale: landscape ? computeLandscapeScale(maxColumns) : 1,
+    bodyClass: landscape ? "excel-export excel-landscape-fit" : "excel-export",
     printTimeoutMs: 240_000,
   };
 
@@ -406,7 +431,7 @@ export function excelWorkbookToHtml(fileBuffer: Buffer): string {
   return sections.join("\n");
 }
 
-export async function excelToPdf(fileBuffer: Buffer): Promise<Buffer> {
+export async function excelToPdf(fileBuffer: Buffer, fileName?: string): Promise<Buffer> {
   try {
     if (process.platform === "win32") {
       const excelPdf = await tryExportWithExcel(fileBuffer);
@@ -415,7 +440,7 @@ export async function excelToPdf(fileBuffer: Buffer): Promise<Buffer> {
       }
     }
 
-    const librePdf = await tryConvertWithLibreOffice(fileBuffer);
+    const librePdf = await tryConvertWithLibreOffice(fileBuffer, fileName);
     if (librePdf && librePdf.length > 0) {
       return setPdfDefaultZoom100(librePdf);
     }

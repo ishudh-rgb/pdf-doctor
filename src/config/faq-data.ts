@@ -1,3 +1,5 @@
+import { FILE_SIZE_MARKETING } from "@/config/constants";
+
 export interface FaqItem {
   question: string;
   answer: string;
@@ -20,7 +22,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       {
         question: "Is OnlyMyPDF free to use?",
         answer:
-          "Yes! OnlyMyPDF offers a generous free tier with 5 tool uses per day and no file size limit. For power users who need more, our Pro plan offers 100 daily uses, AI tools, priority processing, and more.",
+          `Yes! OnlyMyPDF offers a generous free tier with 5 tool uses per day and ${FILE_SIZE_MARKETING.freeLabel.toLowerCase()}. For power users who need more, our Pro plan offers 100 daily uses, AI tools, priority processing, and more.`,
       },
       {
         question: "Do I need to create an account?",
@@ -45,7 +47,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       {
         question: "What is the maximum file size I can upload?",
         answer:
-          "There is no file size limit — upload PDFs and documents of any size on every tool.",
+          `Free uploads: ${FILE_SIZE_MARKETING.freeLabel.toLowerCase()}. Pro uploads: ${FILE_SIZE_MARKETING.proLabel.toLowerCase()}.`,
       },
       {
         question: "How accurate is PDF to Word conversion?",
@@ -95,7 +97,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       {
         question: "What is included in the Pro plan?",
         answer:
-          "The Pro plan includes 100 tool uses per day, no file size limit, all tools including Sign PDF and AI Summarizer, priority processing, no ads, and priority email support.",
+          `The Pro plan includes 100 tool uses per day, ${FILE_SIZE_MARKETING.proLabel.toLowerCase()}, all tools including Sign PDF and AI Summarizer, priority processing, no ads, and priority email support.`,
       },
       {
         question: "How do I upgrade to Pro?",

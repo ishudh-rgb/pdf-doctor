@@ -3,17 +3,23 @@ import { createClient } from "@/lib/supabase/server";
 import { createOrder } from "@/lib/services/payment.service";
 import { createPayment, getCouponCode } from "@/lib/db/queries";
 import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 import { toSafeApiError } from "@/lib/server/safe-error";
+
+import { PRO_PRICING } from "@/config/constants";
 
 const PLAN_PRICES = {
   pro: {
-    monthly: 29900,
-    yearly: 249900,
+    monthly: PRO_PRICING.monthlyPaise,
+    yearly: PRO_PRICING.yearlyPaise,
   },
 } as const;
 
 export async function POST(request: NextRequest) {
   try {
+    const originBlocked = guardMutationOrigin(request);
+    if (originBlocked) return originBlocked;
+
     const rate = await checkAuthRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 
@@ -53,6 +59,14 @@ export async function POST(request: NextRequest) {
       normalizedCoupon = coupon.code;
       discountApplied = Math.round(amount * (coupon.discount_percent / 100));
       amount = amount - discountApplied;
+    }
+
+    const MIN_ORDER_PAISE = 100;
+    if (amount < MIN_ORDER_PAISE) {
+      return NextResponse.json(
+        { error: "Order amount is below the minimum chargeable amount." },
+        { status: 400 }
+      );
     }
 
     const receipt = `order_${user.id}_${Date.now()}`;

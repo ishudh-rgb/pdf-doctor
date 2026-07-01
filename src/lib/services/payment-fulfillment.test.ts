@@ -9,6 +9,12 @@ vi.mock("@/lib/db/queries", () => ({
   updatePayment: vi.fn(),
   updateUserProfile: vi.fn(),
   incrementCouponUsage: vi.fn(),
+  claimPaymentForFulfillment: vi.fn(),
+  finalizeClaimedPayment: vi.fn(),
+  releasePaymentClaim: vi.fn(),
+  getUserProfile: vi.fn(),
+  getUserSubscription: vi.fn(),
+  updateSubscription: vi.fn(),
 }));
 
 vi.mock("@/lib/services/payment.service", () => ({
@@ -20,8 +26,11 @@ import {
   getPaymentByRazorpayOrderId,
   getPlanUuidByName,
   createSubscription,
-  updatePayment,
   updateUserProfile,
+  claimPaymentForFulfillment,
+  finalizeClaimedPayment,
+  getUserProfile,
+  getUserSubscription,
 } from "@/lib/db/queries";
 
 describe("fulfillPendingPayment", () => {
@@ -39,8 +48,19 @@ describe("fulfillPendingPayment", () => {
     } as never);
     vi.mocked(getPlanUuidByName).mockResolvedValue("plan-uuid");
     vi.mocked(createSubscription).mockResolvedValue({ id: "sub-1" } as never);
-    vi.mocked(updatePayment).mockResolvedValue({ id: "pay-1" } as never);
+    vi.mocked(claimPaymentForFulfillment).mockResolvedValue({
+      id: "pay-1",
+      user_id: "user-1",
+      status: "processing",
+      amount: 29900,
+      plan_name: "pro",
+      plan_duration: "monthly",
+      coupon_code: null,
+    } as never);
+    vi.mocked(finalizeClaimedPayment).mockResolvedValue({ id: "pay-1" } as never);
     vi.mocked(updateUserProfile).mockResolvedValue(undefined as never);
+    vi.mocked(getUserProfile).mockResolvedValue({ plan: "free" } as never);
+    vi.mocked(getUserSubscription).mockResolvedValue(null);
   });
 
   it("rejects amount mismatch from webhook", async () => {
@@ -68,5 +88,40 @@ describe("fulfillPendingPayment", () => {
 
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.already_verified).toBe(false);
+    expect(claimPaymentForFulfillment).toHaveBeenCalledWith("pay-1");
+    expect(finalizeClaimedPayment).toHaveBeenCalled();
+  });
+
+  it("resumes processing payment when claim loses race", async () => {
+    vi.mocked(claimPaymentForFulfillment).mockResolvedValue(null);
+    vi.mocked(getPaymentByRazorpayOrderId)
+      .mockResolvedValueOnce({
+        id: "pay-1",
+        user_id: "user-1",
+        status: "pending",
+        amount: 29900,
+        plan_name: "pro",
+        plan_duration: "monthly",
+        coupon_code: null,
+      } as never)
+      .mockResolvedValueOnce({
+        id: "pay-1",
+        user_id: "user-1",
+        status: "processing",
+        amount: 29900,
+        plan_name: "pro",
+        plan_duration: "monthly",
+        coupon_code: null,
+      } as never);
+
+    const result = await fulfillPendingPayment({
+      razorpay_order_id: "order_1",
+      razorpay_payment_id: "pay_1",
+      amount: 29900,
+      requireSignature: false,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(createSubscription).toHaveBeenCalled();
   });
 });

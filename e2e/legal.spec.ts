@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Legal & branding", () => {
+  test("homepage uses OnlyMyPDF branding", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText("OnlyMyPDF").first()).toBeVisible();
+    await expect(page.getByText("Only4PDF")).toHaveCount(0);
+  });
+
   test("terms page uses OnlyMyPDF not Only4PDF", async ({ page }) => {
     await page.goto("/terms");
     await expect(page.getByText("OnlyMyPDF").first()).toBeVisible();

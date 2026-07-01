@@ -13,7 +13,8 @@ export async function initSentry() {
 }
 
 export async function captureException(error: unknown, context?: Record<string, unknown>) {
-  if (!process.env.SENTRY_DSN) return;
+  const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) return;
   try {
     const Sentry = await import("@sentry/nextjs");
     if (context) {

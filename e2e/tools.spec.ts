@@ -26,6 +26,19 @@ test.describe("Tool pages", () => {
     await expect(page.getByRole("button", { name: /Convert to PDF/i })).toBeVisible();
   });
 
+  test("compress pdf shows upload UI", async ({ page }) => {
+    await page.goto("/compress-pdf");
+    await dismissCookieBanner(page);
+    await expect(page.getByRole("button", { name: /Select file/i })).toBeVisible();
+  });
+
+  test("health API returns ok", async ({ request }) => {
+    const res = await request.get("/api/health");
+    expect(res.ok()).toBeTruthy();
+    const json = await res.json();
+    expect(json.status).toBe("ok");
+  });
+
   test("tool workspace appears before AEO block", async ({ page }) => {
     await page.goto("/word-to-pdf");
     await dismissCookieBanner(page);

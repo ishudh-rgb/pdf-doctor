@@ -1,4 +1,4 @@
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
 import { createPdfSession } from "@/lib/pdf/pdf-session-store";
 import { ownerHashFromRequest } from "@/lib/server/request-security";
@@ -14,8 +14,8 @@ export const maxDuration = 60;
 const WRONG_PASSWORD_MSG = "Incorrect password. Please try again.";
 
 export async function POST(request: NextRequest) {
-  const rateLimited = await guardToolRateLimit(request, "pdf-session");
-  if (rateLimited) return rateLimited;
+  const early = await beginToolRoute(request, "pdf-session");
+  if (early) return early;
 
   try {
     const supabase = await createClient();
@@ -102,8 +102,10 @@ export async function POST(request: NextRequest) {
       truncated: totalPages > 500,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to open PDF";
-    console.error("[pdf-session]", message, error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleToolRouteFailure(error, {
+      toolSlug: "pdf-session",
+      errorType: "SESSION_ERROR",
+      fallbackMessage: "Failed to open PDF",
+    });
   }
 }

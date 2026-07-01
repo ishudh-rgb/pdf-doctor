@@ -47,12 +47,16 @@ export default function AdminUsersPage() {
       const res = await fetch(`/api/admin/users?plan=${filter}&search=${searchQuery}`);
       if (res.ok) {
         const json = await res.json();
-        setUsers(json.users);
-      } else {
-        setUsers(mockUsers);
+        setUsers(
+          (json.users ?? []).map((u: Record<string, unknown>) => ({
+            ...u,
+            status: u.is_blocked ? "blocked" : "active",
+            files_processed: u.total_files_processed ?? 0,
+          }))
+        );
       }
     } catch {
-      setUsers(mockUsers);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -70,12 +74,14 @@ export default function AdminUsersPage() {
   async function handleChangePlan(userId: string, newPlan: "free" | "pro") {
     setActionLoading(userId);
     try {
-      await fetch(`/api/admin/users/${userId}/plan`, {
+      const res = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: newPlan }),
+        body: JSON.stringify({ userId, plan: newPlan }),
       });
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, plan: newPlan } : u)));
+      if (res.ok) {
+        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, plan: newPlan } : u)));
+      }
     } catch {
       // Silently handle
     } finally {
@@ -87,12 +93,16 @@ export default function AdminUsersPage() {
     setActionLoading(userId);
     const newStatus = currentStatus === "active" ? "blocked" : "active";
     try {
-      await fetch(`/api/admin/users/${userId}/status`, {
+      const res = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ userId, status: newStatus }),
       });
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, status: newStatus as "active" | "blocked" } : u)));
+      if (res.ok) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, status: newStatus as "active" | "blocked" } : u))
+        );
+      }
     } catch {
       // Silently handle
     } finally {

@@ -23,6 +23,7 @@ import {
   Users,
   Infinity,
 } from "lucide-react";
+import { FILE_LIMITS } from "@/config/constants";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -751,7 +752,12 @@ export function FAQSection() {
                           )}
                         >
                           <p className="text-sm leading-relaxed text-gray-600">
-                            {t(`landing.${key}a`)}
+                            {key === "faq2"
+                              ? t("landing.faq2a", {
+                                  freeSize: FILE_LIMITS.maxFreeFileSizeMB,
+                                  proSize: FILE_LIMITS.maxProFileSizeMB,
+                                })
+                              : t(`landing.${key}a`)}
                           </p>
                         </div>
                       </div>
@@ -842,9 +848,9 @@ export function HeroCopy({ align = "center" }: { align?: "center" | "left" }) {
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
-        <Link href="/ai-pdf-summarizer">
+        <Link href="/pricing">
           <Button variant="outline" size="lg">
-            <Sparkles className="h-4 w-4" />
+            <Crown className="h-4 w-4" />
             {t("landing.heroCtaSecondary")}
           </Button>
         </Link>

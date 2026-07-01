@@ -34,13 +34,15 @@ def main():
         mat = fitz.Matrix(scale, scale)
         pix = pg.get_pixmap(matrix=mat, alpha=False)
 
-        out_path = os.path.join(output_dir, f"slide{i + 1}.jpg")
-        pix.pil_save(out_path, optimize=True, quality=85)
+        out_path = os.path.join(output_dir, f"slide{i + 1}.png")
+        pix.pil_save(out_path, format="PNG", optimize=True)
 
         pages.append({
             "page": i + 1,
             "width": pix.width,
             "height": pix.height,
+            "widthPt": round(pg.rect.width, 4),
+            "heightPt": round(pg.rect.height, 4),
             "path": out_path,
         })
 

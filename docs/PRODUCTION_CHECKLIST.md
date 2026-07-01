@@ -21,7 +21,7 @@ Copy this checklist when deploying to Vercel, Docker, or any host. **Conversion 
 
 | Variable | Purpose |
 |----------|---------|
-| `UPSTASH_REDIS_REST_URL` | Distributed rate limiting across instances |
+| `UPSTASH_REDIS_REST_URL` | Distributed rate limiting, heavy-job semaphore, PDF session metadata, PDF→Word job state (required in production) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash auth token |
 | `RESEND_API_KEY` | Contact form + password reset emails |
 | `EMAIL_FROM` | From address (e.g. `OnlyMyPDF <noreply@onlymypdf.com>`) |
@@ -36,8 +36,9 @@ Copy this checklist when deploying to Vercel, Docker, or any host. **Conversion 
 | `OPENAI_API_KEY` | Alternate AI provider if configured |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Drive picker on tool pages |
 | `NEXT_PUBLIC_DROPBOX_APP_KEY` | Dropbox picker |
-| `CONVERTAPI_SECRET` | External PDF→Word API |
-| `PDF2DOCX_PYTHON` | Path to Python for pdf2docx |
+| `CONVERTAPI_SECRET` | Best PDF→Word quality (Smallpdf-class cloud API) |
+| `PDF2DOCX_PYTHON` | Path to Python for pdf2docx fallback |
+| `LIBREOFFICE_PATH` | Path to `soffice.exe` — powers PDF→Word, Word→PDF, Excel→PDF, PPT→PDF |
 
 ## GitHub Actions secrets
 
@@ -56,6 +57,10 @@ Execute in order in Supabase SQL Editor:
 4. `supabase/migrations/004_security_rls_admin_tables.sql`
 5. `supabase/migrations/005_scalability_privacy.sql`
 6. `supabase/migrations/006_payment_retention_on_delete.sql`
+7. `supabase/migrations/007_payment_processing_status.sql`
+8. `supabase/migrations/008_user_blocked_storage.sql`
+9. `supabase/migrations/009_profile_block_coupon_atomic.sql`
+10. `supabase/migrations/010_admin_audit_log.sql`
 
 Configure **Storage** bucket `pdf-files` as **private** (see `DEPLOYMENT_GUIDE.md`).
 

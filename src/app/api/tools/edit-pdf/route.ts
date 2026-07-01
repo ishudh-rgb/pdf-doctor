@@ -1,8 +1,8 @@
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
 import { applyEditPdfOperations, type EditPdfOperations } from "@/lib/services/pdf-edit.service";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, logError, getUserProfile } from "@/lib/db/queries";
+import { logToolUsage, getUserProfile } from "@/lib/db/queries";
 import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
@@ -11,8 +11,8 @@ import { clientIpForLogs } from "@/lib/server/request-security";
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
-  const rateLimited = await guardToolRateLimit(request, "edit-pdf");
-  if (rateLimited) return rateLimited;
+  const early = await beginToolRoute(request, "edit-pdf");
+  if (early) return early;
 
   const startTime = Date.now();
   let userId: string | null = null;
@@ -94,20 +94,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to edit PDF";
-
-    await logError({
-      user_id: userId,
-      tool_name: "edit-pdf",
-      error_type: "EDIT_ERROR",
-      error_message: message,
-      stack_trace: error instanceof Error ? error.stack : undefined,
-    }).catch(() => {});
-
-    if (message.includes("usage limit") || message.includes("limit reached")) {
-      return NextResponse.json({ error: message }, { status: 429 });
-    }
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleToolRouteFailure(error, {
+      toolSlug: "edit-pdf",
+      userId,
+      errorType: "EDIT_ERROR",
+      fallbackMessage: "Failed to edit PDF",
+    });
   }
 }

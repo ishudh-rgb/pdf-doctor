@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Crown,
@@ -112,6 +113,9 @@ function StatCard({
 export default function DashboardPage() {
   const { t } = useTranslation();
   const { user, profile, isPro, refreshProfile } = useAuthContext();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [usageStats, setUsageStats] = useState<UsageStats>({
     filesUsed: 0,
@@ -126,6 +130,14 @@ export default function DashboardPage() {
     profile?.full_name?.trim() ||
     user?.email?.split("@")[0] ||
     "there";
+
+  useEffect(() => {
+    if (searchParams.get("upgraded") === "1") {
+      setShowUpgradeSuccess(true);
+      void refreshProfile();
+      router.replace("/dashboard", { scroll: false });
+    }
+  }, [searchParams, refreshProfile, router]);
 
   useEffect(() => {
     async function loadJobs() {
@@ -226,6 +238,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <DashboardMobileNav />
+
+      {showUpgradeSuccess ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <strong>Pro activated!</strong> Your subscription is now active. Enjoy premium tools and higher limits.
+        </div>
+      ) : null}
 
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pd-brand via-indigo-600 to-violet-700 p-6 text-white shadow-lg shadow-indigo-500/20 sm:p-8">

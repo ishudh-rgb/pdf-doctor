@@ -1,9 +1,12 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { PDF_SESSION_TTL_MS } from "@/lib/pdf/pdf-session-store";
 import { getExpiredFiles, markFileDeleted, logError, purgeOldConsentRecords, purgeOldUsageLogs as purgeOldUsageLogsFromDb, purgeOldAiUsageLogs as purgeOldAiUsageLogsFromDb, purgeOldErrorLogs as purgeOldErrorLogsFromDb } from "@/lib/db/queries";
 
 const STORAGE_BUCKET = "pdf-files";
 const BATCH_SIZE = 200;
 const STORAGE_DELETE_CHUNK = 20;
+const TEMP_SESSION_PREFIX = "temp-sessions/pdf";
+const TEMP_SESSION_LIST_LIMIT = 100;
 
 export async function cleanupExpiredFiles(): Promise<{
   deleted: number;
@@ -59,6 +62,93 @@ export async function cleanupExpiredFiles(): Promise<{
   }
 
   return { deleted, failed, batches };
+}
+
+function storageObjectAgeMs(entry: { created_at?: string | null; updated_at?: string | null }): number {
+  const stamp = entry.created_at ?? entry.updated_at;
+  if (!stamp) return 0;
+  const ms = new Date(stamp).getTime();
+  return Number.isFinite(ms) ? ms : 0;
+}
+
+/** Remove preview PDFs under temp-sessions/pdf/ older than the session TTL. */
+export async function cleanupExpiredTempSessions(): Promise<{
+  deleted: number;
+  failed: number;
+  scanned: number;
+}> {
+  let deleted = 0;
+  let failed = 0;
+  let scanned = 0;
+
+  try {
+    const supabase = await createServiceClient();
+    const cutoff = Date.now() - PDF_SESSION_TTL_MS;
+    let offset = 0;
+
+    while (true) {
+      const { data: entries, error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .list(TEMP_SESSION_PREFIX, {
+          limit: TEMP_SESSION_LIST_LIMIT,
+          offset,
+          sortBy: { column: "created_at", order: "asc" },
+        });
+
+      if (error) {
+        await logError({
+          tool_name: "cleanup",
+          error_type: "TEMP_SESSION_LIST_FAILED",
+          error_message: error.message,
+        });
+        break;
+      }
+
+      if (!entries?.length) break;
+
+      const stalePaths: string[] = [];
+      for (const entry of entries) {
+        if (!entry.name || entry.id === null) continue;
+        scanned += 1;
+        const ageMs = storageObjectAgeMs(entry);
+        if (ageMs > 0 && ageMs < cutoff) {
+          stalePaths.push(`${TEMP_SESSION_PREFIX}/${entry.name}`);
+        }
+      }
+
+      for (let i = 0; i < stalePaths.length; i += STORAGE_DELETE_CHUNK) {
+        const chunk = stalePaths.slice(i, i + STORAGE_DELETE_CHUNK);
+        try {
+          const { error: removeError } = await supabase.storage.from(STORAGE_BUCKET).remove(chunk);
+          if (removeError) {
+            failed += chunk.length;
+            continue;
+          }
+          deleted += chunk.length;
+        } catch (err) {
+          failed += chunk.length;
+          await logError({
+            tool_name: "cleanup",
+            error_type: "TEMP_SESSION_DELETE_FAILED",
+            error_message: err instanceof Error ? err.message : String(err),
+            metadata: { paths: chunk },
+          });
+        }
+      }
+
+      if (entries.length < TEMP_SESSION_LIST_LIMIT) break;
+      offset += entries.length;
+    }
+  } catch (err) {
+    await logError({
+      tool_name: "cleanup",
+      error_type: "TEMP_SESSION_CLEANUP_FAILED",
+      error_message: err instanceof Error ? err.message : String(err),
+      stack_trace: err instanceof Error ? err.stack : undefined,
+    });
+  }
+
+  return { deleted, failed, scanned };
 }
 
 export async function purgeExpiredConsentRecords(): Promise<number> {

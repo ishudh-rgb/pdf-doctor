@@ -1,4 +1,5 @@
 import mammoth from "mammoth";
+import JSZip from "jszip";
 import { logError } from "@/lib/db/queries";
 import { tryExportWithWord } from "@/lib/services/word-com-export.service";
 import { tryConvertWithLibreOffice } from "@/lib/services/libreoffice-convert.service";
@@ -15,14 +16,15 @@ const STYLE_MAP = [
   "r[style-name='Emphasis'] => em",
 ];
 
-function buildHtmlDocument(body: string): string {
+function buildHtmlDocument(body: string, landscape = false): string {
+  const pageSize = landscape ? "A4 landscape" : "A4";
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <style>
     @page {
-      size: A4;
+      size: ${pageSize};
       margin: 20mm 18mm;
     }
 
@@ -139,7 +141,29 @@ async function convertDocxToHtml(fileBuffer: Buffer): Promise<string> {
   return result.value;
 }
 
-async function renderHtmlToPdf(html: string): Promise<Buffer> {
+async function detectDocxPageLandscape(fileBuffer: Buffer): Promise<boolean> {
+  try {
+    const zip = await JSZip.loadAsync(fileBuffer);
+    const doc = zip.file("word/document.xml");
+    if (!doc) return false;
+
+    const xml = await doc.async("string");
+    if (/w:orient\s*=\s*["']landscape["']/i.test(xml)) return true;
+
+    const pg =
+      xml.match(/<w:pgSz[^>]*w:w="(\d+)"[^>]*w:h="(\d+)"/) ??
+      xml.match(/<w:pgSz[^>]*w:h="(\d+)"[^>]*w:w="(\d+)"/);
+
+    if (!pg) return false;
+    const w = Number(pg[1]);
+    const h = Number(pg[2]);
+    return Number.isFinite(w) && Number.isFinite(h) && w > h;
+  } catch {
+    return false;
+  }
+}
+
+async function renderHtmlToPdf(html: string, landscape = false): Promise<Buffer> {
   const browser = await getPuppeteerBrowser();
   const page = await browser.newPage();
 
@@ -147,6 +171,7 @@ async function renderHtmlToPdf(html: string): Promise<Buffer> {
     await page.setContent(html, { waitUntil: "load" });
     const pdfBytes = await page.pdf({
       format: "A4",
+      landscape,
       printBackground: true,
       preferCSSPageSize: true,
       margin: {
@@ -162,7 +187,7 @@ async function renderHtmlToPdf(html: string): Promise<Buffer> {
   }
 }
 
-export async function wordToPdf(fileBuffer: Buffer): Promise<Buffer> {
+export async function wordToPdf(fileBuffer: Buffer, fileName?: string): Promise<Buffer> {
   try {
     if (process.platform === "win32") {
       console.info("[word-to-pdf] Trying Word COM…");
@@ -176,7 +201,7 @@ export async function wordToPdf(fileBuffer: Buffer): Promise<Buffer> {
 
     console.info("[word-to-pdf] Trying LibreOffice…");
     const t1 = Date.now();
-    const librePdf = await tryConvertWithLibreOffice(fileBuffer);
+    const librePdf = await tryConvertWithLibreOffice(fileBuffer, fileName);
     console.info(`[word-to-pdf] LibreOffice took ${Date.now() - t1}ms, result: ${librePdf ? librePdf.length + " bytes" : "null"}`);
     if (librePdf && librePdf.length > 0) {
       return librePdf;
@@ -184,9 +209,10 @@ export async function wordToPdf(fileBuffer: Buffer): Promise<Buffer> {
 
     console.info("[word-to-pdf] Falling back to Mammoth + Puppeteer…");
     const t2 = Date.now();
+    const landscape = await detectDocxPageLandscape(fileBuffer);
     const htmlBody = await convertDocxToHtml(fileBuffer);
-    const html = buildHtmlDocument(htmlBody);
-    const result = await renderHtmlToPdf(html);
+    const html = buildHtmlDocument(htmlBody, landscape);
+    const result = await renderHtmlToPdf(html, landscape);
     console.info(`[word-to-pdf] Mammoth+Puppeteer took ${Date.now() - t2}ms`);
     return result;
   } catch (err) {

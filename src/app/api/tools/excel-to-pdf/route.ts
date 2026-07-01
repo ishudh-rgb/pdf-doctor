@@ -9,5 +9,5 @@ export const POST = createToolRoute({
   contentType: "application/pdf",
   outputExtension: "pdf",
   heavy: true,
-  convert: (buffer) => excelToPdf(buffer),
+  convert: (buffer, file) => excelToPdf(buffer, file.name),
 });

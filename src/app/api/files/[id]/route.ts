@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sanitizeFilename } from "@/lib/utils/file";
 import { toSafeApiError } from "@/lib/server/safe-error";
 import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 
 export async function GET(
   request: NextRequest,
@@ -85,6 +86,9 @@ export async function DELETE(
 ) {
   const rateLimited = await guardGeneralApiRateLimit(request);
   if (rateLimited) return rateLimited;
+
+  const originBlocked = guardMutationOrigin(request);
+  if (originBlocked) return originBlocked;
 
   try {
     const { id } = await params;

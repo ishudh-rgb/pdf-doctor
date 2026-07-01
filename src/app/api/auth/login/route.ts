@@ -6,10 +6,14 @@ import {
   localDevSignIn,
 } from "@/lib/auth/local-dev-auth";
 import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 import { toSafeApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   try {
+    const originBlocked = guardMutationOrigin(request);
+    if (originBlocked) return originBlocked;
+
     const rate = await checkAuthRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 

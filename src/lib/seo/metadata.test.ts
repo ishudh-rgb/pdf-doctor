@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildPageMetadata, buildToolMetadata } from "@/lib/seo/metadata";
 
 describe("buildPageMetadata", () => {
-  it("includes hreflang alternates for English", () => {
+  it("includes hreflang alternates for English and Hindi", () => {
     const meta = buildPageMetadata({
       title: "About",
       path: "/about",
@@ -12,7 +12,7 @@ describe("buildPageMetadata", () => {
     expect(languages).toBeDefined();
     expect(languages?.en).toContain("/about");
     expect(languages?.["x-default"]).toContain("/about");
-    expect(languages).not.toHaveProperty("hi");
+    expect(languages?.hi).toContain("/hi/about");
   });
 
   it("sets canonical via alternates", () => {

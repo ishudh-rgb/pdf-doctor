@@ -106,8 +106,16 @@ export async function checkRateLimit(
       }
       return { allowed: true, remaining: 0, retryAfterSec: 0 };
     }
-  } catch {
-    // Fall back to in-memory limiter when Upstash is unavailable.
+
+    if (process.env.NODE_ENV === "production") {
+      console.error("[rate-limit] Upstash unavailable in production — denying request");
+      return { allowed: false, remaining: 0, retryAfterSec: 60 };
+    }
+  } catch (err) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[rate-limit] Upstash error in production:", err);
+      return { allowed: false, remaining: 0, retryAfterSec: 60 };
+    }
   }
 
   return memoryRateLimit(request, options);

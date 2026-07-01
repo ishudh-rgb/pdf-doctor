@@ -1,14 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CONSENT_VERSION } from "@/lib/privacy/consent";
 import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
-import { logConsentRecord } from "@/lib/db/queries";
+import { getUserConsentRecords, logConsentRecord } from "@/lib/db/queries";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 import { getApiUser } from "@/lib/auth/get-api-user";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
+
+export async function GET(request: NextRequest) {
+  const rateLimited = await guardGeneralApiRateLimit(request);
+  if (rateLimited) return rateLimited;
+
+  try {
+    const user = await getApiUser();
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const records = await getUserConsentRecords(user.id);
+    const latest = records[0] ?? null;
+
+    return NextResponse.json({
+      consent: latest
+        ? {
+            consent_version: latest.consent_version,
+            essential: latest.essential,
+            analytics: latest.analytics,
+            marketing: latest.marketing,
+            created_at: latest.created_at,
+          }
+        : null,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load consent";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
 
 export async function POST(request: NextRequest) {
   const rateLimited = await guardGeneralApiRateLimit(request);
   if (rateLimited) return rateLimited;
+
+  const originBlocked = guardMutationOrigin(request);
+  if (originBlocked) return originBlocked;
 
   try {
     const body = (await request.json()) as {

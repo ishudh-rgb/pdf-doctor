@@ -1,4 +1,4 @@
-import { APP_DESCRIPTION, APP_NAME, APP_URL } from "@/config/constants";
+import { APP_DESCRIPTION, APP_NAME, APP_URL, FILE_SIZE_MARKETING } from "@/config/constants";
 import { TOOLS } from "@/config/constants";
 import { getAllFaqItems } from "@/config/faq-data";
 import { getAllToolAeoEntries } from "@/config/tool-aeo";
@@ -11,7 +11,7 @@ export const SITE_AEO = {
   definition:
     "OnlyMyPDF (onlymypdf) is a web-based PDF application that runs tools server-side with encrypted uploads and automatic file deletion — no desktop install required.",
   keyFacts: [
-    "Free tier: 5 tool uses per day, no file size limit on uploads",
+    `Free tier: 5 tool uses per day; Free uploads ${FILE_SIZE_MARKETING.freeLabel.toLowerCase()}, Pro ${FILE_SIZE_MARKETING.proLabel.toLowerCase()}`,
     "Pro tier: 100 uses/day, AI summarizer, sign PDF, priority processing",
     "Supported formats: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, JPG, PNG, HTML, TXT",
     "Files deleted after 2 hours (free) or 24 hours (Pro)",
@@ -94,7 +94,7 @@ export function generateLlmsTxt(): string {
 }
 
 export function toolListForSchema(): { name: string; url: string; description: string }[] {
-  const fromTools = TOOLS.map((tool) => {
+  return TOOLS.map((tool) => {
     const seo = getToolSEO(tool.slug);
     return {
       name: tool.name,
@@ -102,15 +102,6 @@ export function toolListForSchema(): { name: string; url: string; description: s
       description: seo?.metaDescription ?? tool.description,
     };
   });
-  const editSeo = getToolSEO("edit-pdf");
-  return [
-    ...fromTools,
-    {
-      name: "Edit PDF",
-      url: `${APP_URL}/edit-pdf`,
-      description: editSeo?.metaDescription ?? "Edit PDF online — add text and images.",
-    },
-  ];
 }
 
 export function allToolsItemListJsonLd() {

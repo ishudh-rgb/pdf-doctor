@@ -1,4 +1,4 @@
-import { guardPdfHelperRateLimit } from "@/lib/server/rate-limiter";
+import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
 import { getPdfPageCountFromBuffer } from "@/lib/pdf/pdf-read.server";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
@@ -8,8 +8,8 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
-  const rateLimited = await guardPdfHelperRateLimit(request);
-  if (rateLimited) return rateLimited;
+  const early = await beginToolRoute(request, "pdf-meta");
+  if (early) return early;
 
   try {
     const formData = await request.formData();
@@ -33,8 +33,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ totalPages });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to read PDF";
-    console.error("[pdf-meta]", message, error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleToolRouteFailure(error, {
+      toolSlug: "pdf-meta",
+      errorType: "META_ERROR",
+      fallbackMessage: "Failed to read PDF",
+    });
   }
 }

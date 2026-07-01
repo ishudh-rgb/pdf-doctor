@@ -4,6 +4,7 @@ import {
   isLocalDevAuthEnabled,
 } from "@/lib/auth/local-dev-auth";
 import { getUserProfile } from "@/lib/db/queries";
+import { isActivePro, isBlockedProfile, UserBlockedError } from "@/lib/auth/plan-access";
 
 export interface ApiUser {
   id: string;
@@ -32,9 +33,13 @@ export async function getApiUser(): Promise<ApiUser | null> {
 
   const profile = await getUserProfile(user.id);
 
+  if (isBlockedProfile(profile)) {
+    throw new UserBlockedError();
+  }
+
   return {
     id: user.id,
     email: user.email ?? "",
-    plan: profile.plan === "pro" ? "pro" : "free",
+    plan: isActivePro(profile) ? "pro" : "free",
   };
 }

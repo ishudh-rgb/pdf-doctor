@@ -355,11 +355,58 @@ export async function updateAdminSetting(key: string, value: unknown) {
   const supabase = await createServiceClient();
   const { error } = await supabase
     .from("admin_settings")
-    .update({ value, updated_at: new Date().toISOString() })
-    .eq("key", key);
+    .upsert(
+      { key, value, updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
 
   if (error) throw error;
   invalidateAdminSettingsCache();
+}
+
+export async function listRecentErrorLogs(limit = 50) {
+  const supabase = await createServiceClient();
+  const capped = Math.min(Math.max(limit, 1), 200);
+  const { data, error } = await supabase
+    .from("error_logs")
+    .select("id, error_type, error_message, tool_name, user_id, stack_trace, created_at")
+    .order("created_at", { ascending: false })
+    .limit(capped);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function downgradeExpiredProProfiles(): Promise<number> {
+  if (!isSupabaseConfigured()) return 0;
+
+  const supabase = await createServiceClient();
+  const now = new Date().toISOString();
+
+  const { data: expiredProfiles, error } = await supabase
+    .from("user_profiles")
+    .select("id")
+    .eq("plan", "pro")
+    .not("plan_expires_at", "is", null)
+    .lt("plan_expires_at", now);
+
+  if (error) throw error;
+  if (!expiredProfiles?.length) return 0;
+
+  const ids = expiredProfiles.map((p) => p.id);
+
+  await supabase
+    .from("user_profiles")
+    .update({ plan: "free", updated_at: now })
+    .in("id", ids);
+
+  await supabase
+    .from("subscriptions")
+    .update({ status: "expired", updated_at: now })
+    .in("user_id", ids)
+    .eq("status", "active");
+
+  return ids.length;
 }
 
 export async function getAdminDashboardStats() {
@@ -484,20 +531,49 @@ export async function getPlanUuidByName(planName: string) {
   return data.id as string;
 }
 
-export async function incrementCouponUsage(code: string) {
+export async function incrementCouponUsage(code: string): Promise<boolean> {
   const supabase = await createServiceClient();
-  const { data: coupon } = await supabase
-    .from("coupon_codes")
-    .select("times_used")
-    .eq("code", code.toUpperCase())
-    .single();
+  const { data, error } = await supabase.rpc("increment_coupon_usage", {
+    p_code: code,
+  });
 
-  if (!coupon) return;
+  if (error) {
+    const { data: coupon } = await supabase
+      .from("coupon_codes")
+      .select("times_used, max_uses")
+      .eq("code", code.toUpperCase())
+      .single();
 
-  await supabase
-    .from("coupon_codes")
-    .update({ times_used: (coupon.times_used ?? 0) + 1 })
-    .eq("code", code.toUpperCase());
+    if (!coupon) return false;
+    if (coupon.max_uses !== -1 && (coupon.times_used ?? 0) >= coupon.max_uses) {
+      return false;
+    }
+
+    const { error: updateError } = await supabase
+      .from("coupon_codes")
+      .update({ times_used: (coupon.times_used ?? 0) + 1 })
+      .eq("code", code.toUpperCase())
+      .lt("times_used", coupon.max_uses === -1 ? 1_000_000_000 : coupon.max_uses);
+
+    return !updateError;
+  }
+
+  return Boolean(data);
+}
+
+/** Reset payments stuck in processing (e.g. after a crash mid-fulfillment). */
+export async function releaseStaleProcessingPayments(maxAgeMinutes = 15): Promise<number> {
+  const supabase = await createServiceClient();
+  const cutoff = new Date(Date.now() - maxAgeMinutes * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("payments")
+    .update({ status: "pending", updated_at: new Date().toISOString() })
+    .eq("status", "processing")
+    .lt("updated_at", cutoff)
+    .select("id");
+
+  if (error) throw error;
+  return data?.length ?? 0;
 }
 
 export async function updatePayment(
@@ -514,6 +590,47 @@ export async function updatePayment(
 
   if (error) throw error;
   return updated;
+}
+
+/** Atomically claim a pending payment for fulfillment (prevents duplicate subscriptions). */
+export async function claimPaymentForFulfillment(paymentId: string) {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("payments")
+    .update({ status: "processing" })
+    .eq("id", paymentId)
+    .eq("status", "pending")
+    .select()
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function finalizeClaimedPayment(
+  paymentId: string,
+  data: Record<string, unknown>
+) {
+  const supabase = await createServiceClient();
+  const { data: updated, error } = await supabase
+    .from("payments")
+    .update({ ...data, status: "completed" })
+    .eq("id", paymentId)
+    .eq("status", "processing")
+    .select()
+    .maybeSingle();
+
+  if (error) throw error;
+  return updated;
+}
+
+export async function releasePaymentClaim(paymentId: string) {
+  const supabase = await createServiceClient();
+  await supabase
+    .from("payments")
+    .update({ status: "pending" })
+    .eq("id", paymentId)
+    .eq("status", "processing");
 }
 
 // ---------------------------------------------------------------------------

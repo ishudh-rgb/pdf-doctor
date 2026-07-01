@@ -44,10 +44,10 @@ export async function GET(request: NextRequest) {
     }
 
     const cacheKey = thumbCacheKey(page, desiredWidth);
-    let dataUrl = getCachedThumb(sessionId, cacheKey, ownerHash);
+    let dataUrl = await getCachedThumb(sessionId, cacheKey, ownerHash);
     if (!dataUrl) {
       dataUrl = await renderPageThumb(buffer, page, desiredWidth);
-      if (dataUrl) cacheThumb(sessionId, cacheKey, dataUrl);
+      if (dataUrl) await cacheThumb(sessionId, cacheKey, dataUrl);
     }
 
     if (!dataUrl) {

@@ -83,7 +83,7 @@ function hashPassword(password: string, salt: string): string {
 }
 
 function toPublicUser(user: LocalUserRecord): LocalDevUser {
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@only4pdf.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@onlymypdf.in";
   return {
     id: user.id,
     email: user.email,
@@ -249,7 +249,13 @@ export function attachLocalDevSessionCookie(
 }
 
 export function clearLocalDevSessionCookie(response: NextResponse): NextResponse {
-  response.cookies.delete(LOCAL_DEV_SESSION_COOKIE);
+  response.cookies.set(LOCAL_DEV_SESSION_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
   return response;
 }
 

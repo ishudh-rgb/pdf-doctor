@@ -8,6 +8,12 @@ import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
+import { heavyJobCapacityResponse } from "@/lib/server/heavy-job-http";
+import { userBlockedResponse } from "@/lib/server/user-blocked-http";
+import {
+  isMaintenanceModeEnabled,
+  MAINTENANCE_MESSAGE,
+} from "@/lib/server/maintenance-mode";
 import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -28,6 +34,10 @@ export function createToolRoute(options: ToolRouteOptions) {
     let userId: string | null = null;
 
     try {
+      if (await isMaintenanceModeEnabled()) {
+        return NextResponse.json({ error: MAINTENANCE_MESSAGE }, { status: 503 });
+      }
+
       const toolRate = await guardToolRateLimit(request, options.toolSlug);
       if (toolRate) return toolRate;
 
@@ -109,6 +119,12 @@ export function createToolRoute(options: ToolRouteOptions) {
         },
       });
     } catch (error) {
+      const blocked = userBlockedResponse(error);
+      if (blocked) return blocked;
+
+      const capacity = heavyJobCapacityResponse(error);
+      if (capacity) return capacity;
+
       const message = toSafeApiError(error, "Processing failed");
 
       await logError({
