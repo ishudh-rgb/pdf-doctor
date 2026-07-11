@@ -123,10 +123,10 @@ Revert: scripts/revert-to-s1a.ps1
   Write-Host "  No new changes to commit (already clean)." -ForegroundColor Yellow
 }
 
-$null = git tag -d $TagName 2>&1
+git tag -d $TagName 2>$null | Out-Null
 git tag -a $TagName -m "S1-a OnlyMyPDF - security + audit fixes + E2E + images (Jul 2026)"
 
-$null = git branch -D $BranchName 2>&1
+$null = git branch -D $BranchName 2>$null
 git branch $BranchName
 
 $hash = git rev-parse HEAD
