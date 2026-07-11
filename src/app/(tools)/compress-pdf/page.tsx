@@ -1,9 +1,12 @@
 'use client';
 
+import { planFileSizeFaqLine } from '@/lib/billing/billing-copy';
 import { useState, useRef, useCallback } from 'react';
 import { Minimize2, Zap, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { formatFileSize } from '@/lib/utils/file';
+import { formatFileSize, validateFileSize } from '@/lib/utils/file';
+import { getMaxFileSizeMB } from '@/config/constants';
+import { useAuth } from '@/hooks/use-auth';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
 import { CompressionLevelPreview } from '@/components/tools/previews/compression-preview';
@@ -11,9 +14,12 @@ import { PdfPasswordModal } from '@/components/tools/pdf-password-modal';
 import {
   ToolDropzone,
   ToolErrorBanner,
+  ToolHiddenFileInput,
   ToolPrimaryButton,
   ToolSuccessPanel,
 } from '@/components/tools/tool-ui';
+import { postToolFormDataWithProgress } from '@/lib/client/tool-form-upload';
+import { useToolWorkspaceMessages } from '@/hooks/use-tool-workspace-messages';
 
 const RELATED_TOOLS = [
   { name: 'Merge PDF', href: '/merge-pdf' },
@@ -25,15 +31,19 @@ const RELATED_TOOLS = [
 const FAQS = [
   { q: 'How much can a PDF be compressed?', a: 'Compression results vary depending on the content. Files with images typically see 40-80% reduction, while text-heavy PDFs may see 10-30% reduction.' },
   { q: 'Will compression reduce the quality of my PDF?', a: 'Basic compression preserves quality while reducing size. Strong compression may slightly reduce image quality but keeps text crisp.' },
-  { q: 'Is there a file size limit?', a: 'No — compress PDF files of any size.' },
+  { q: 'Is there a file size limit?', a: planFileSizeFaqLine() },
   { q: 'Can I compress multiple files at once?', a: 'Currently, compression works on one file at a time. Use our Merge tool to combine files after compressing them individually.' },
 ];
 
 type CompressionLevel = 'basic' | 'strong';
 
 export default function CompressPdfPage() {
+  const ws = useToolWorkspaceMessages();
+  const { isPro } = useAuth();
+  const maxSizeMB = getMaxFileSizeMB(isPro);
   const [files, setFiles] = useState<File[]>([]);
   const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
@@ -53,15 +63,18 @@ export default function CompressPdfPage() {
   const handleFiles = useCallback((newFiles: FileList | File[]) => {
     const pdfFiles = Array.from(newFiles).filter(f => f.type === 'application/pdf');
     if (pdfFiles.length > 0) {
-      setFiles([pdfFiles[0]]);
-      setOriginalSize(pdfFiles[0].size);
-      setError(null);
+      const file = pdfFiles[0];
+      setFiles([file]);
+      setOriginalSize(file.size);
       setCompleted(false);
       setResultUrl(null);
       setPdfPassword(null);
       setPasswordPrompt(null);
+
+      const sizeCheck = validateFileSize(file, maxSizeMB);
+      setError(sizeCheck.valid ? null : sizeCheck.message);
     }
-  }, []);
+  }, [maxSizeMB]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -71,7 +84,15 @@ export default function CompressPdfPage() {
 
   const runCompress = useCallback(async (password?: string | null) => {
     if (files.length === 0) return;
+
+    const sizeCheck = validateFileSize(files[0], maxSizeMB);
+    if (!sizeCheck.valid) {
+      setError(sizeCheck.message);
+      return;
+    }
+
     setProcessing(true);
+    setProgress(0);
     setError(null);
 
     try {
@@ -81,26 +102,16 @@ export default function CompressPdfPage() {
       const pw = password ?? pdfPassword;
       if (pw) formData.append('password', pw);
 
-      const res = await fetch('/api/tools/compress-pdf', { method: 'POST', body: formData });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({})) as { error?: string };
-        const msg = data.error ?? 'Failed to compress PDF. Please try again.';
-        if (msg.toLowerCase().includes('password')) {
-          setPasswordPrompt({
-            fileName: files[0].name,
-            errorMsg: msg.toLowerCase().includes('incorrect') ? msg : undefined,
-            loading: false,
-          });
-          return;
-        }
-        throw new Error(msg);
-      }
+      const { blob, getHeader } = await postToolFormDataWithProgress(
+        '/api/tools/compress-pdf',
+        formData,
+        setProgress
+      );
 
-      const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
       setResultFilename('compressed.pdf');
-      const headerOriginal = res.headers.get('X-Original-Size');
-      const headerCompressed = res.headers.get('X-Compressed-Size');
+      const headerOriginal = getHeader('X-Original-Size');
+      const headerCompressed = getHeader('X-Compressed-Size');
       setCompressedSize(headerCompressed ? parseInt(headerCompressed, 10) : blob.size);
       if (headerOriginal) setOriginalSize(parseInt(headerOriginal, 10));
       if (pw) setPdfPassword(pw);
@@ -109,11 +120,21 @@ export default function CompressPdfPage() {
       const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
       notifyActivityUpdated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      const msg = err instanceof Error ? err.message : ws.unexpectedError;
+      if (msg.toLowerCase().includes('password')) {
+        setPasswordPrompt({
+          fileName: files[0].name,
+          errorMsg: msg.toLowerCase().includes('incorrect') ? msg : undefined,
+          loading: false,
+        });
+        return;
+      }
+      setError(msg);
     } finally {
       setProcessing(false);
+      setProgress(0);
     }
-  }, [files, compressionLevel, pdfPassword]);
+  }, [files, compressionLevel, pdfPassword, maxSizeMB, ws.unexpectedError]);
 
   const handleProcess = () => runCompress();
 
@@ -135,14 +156,14 @@ export default function CompressPdfPage() {
     >
       {completed && resultUrl ? (
         <ToolSuccessPanel
-          title="PDF Compressed Successfully!"
+          title={ws.compressSuccess}
           downloadUrl={resultUrl}
           downloadFilename={resultFilename || 'compressed.pdf'}
-          downloadLabel="Download Compressed PDF"
+          downloadLabel={ws.downloadCompressedPdf}
           originalSizeBytes={originalSize}
           resultSizeBytes={compressedSize}
           savedPercent={compressionPercentage > 0 ? compressionPercentage : undefined}
-          resetLabel="Compress another file"
+          resetLabel={ws.compressAnother}
           onReset={() => {
             setCompleted(false);
             setFiles([]);
@@ -152,7 +173,7 @@ export default function CompressPdfPage() {
         >
           {compressionPercentage === 0 ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-              This PDF is already well optimized. No further size reduction was possible without lowering quality.
+              {ws.alreadyOptimized}
             </p>
           ) : null}
         </ToolSuccessPanel>
@@ -179,9 +200,9 @@ export default function CompressPdfPage() {
 
           {files.length === 0 ? (
             <ToolDropzone
-              chooseLabel="Select PDF"
-              hint="or drag and drop your PDF here"
-              subHint="Any file size · PDF only"
+              chooseLabel={ws.selectPdf}
+              hint={ws.dragDropPdf}
+              formatNote={ws.pdfOnlyShort}
               dragOver={dragOver}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
@@ -193,6 +214,16 @@ export default function CompressPdfPage() {
             />
           ) : (
             <>
+              <ToolHiddenFileInput
+                ref={fileInputRef}
+                accept=".pdf,application/pdf"
+                ariaLabel={ws.chooseDifferentPdf}
+                onChange={(e) => {
+                  if (e.target.files?.length) handleFiles(e.target.files);
+                  e.target.value = '';
+                }}
+              />
+
               <div className="flex items-center gap-2 rounded-lg border border-pd-border bg-pd-brand-muted px-3 py-2">
                 <Minimize2 className="h-4 w-4 shrink-0 text-pd-brand" />
                 <div className="min-w-0 flex-1">
@@ -204,12 +235,12 @@ export default function CompressPdfPage() {
                   onClick={() => fileInputRef.current?.click()}
                   className="shrink-0 text-xs font-medium text-pd-brand hover:underline"
                 >
-                  Change
+                  {ws.change}
                 </button>
               </div>
 
               <div className="mt-3">
-                <p id="compression-level-label" className="mb-1.5 text-xs font-semibold text-pd-foreground">Compression level</p>
+                <p id="compression-level-label" className="mb-1.5 text-xs font-semibold text-pd-foreground">{ws.compressionLevel}</p>
                 <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="compression-level-label">
                   <button
                     type="button"
@@ -223,7 +254,7 @@ export default function CompressPdfPage() {
                     )}
                   >
                     <Shield className="h-3.5 w-3.5 text-pd-brand" />
-                    Basic
+                    {ws.compressionBasic}
                   </button>
                   <button
                     type="button"
@@ -237,7 +268,7 @@ export default function CompressPdfPage() {
                     )}
                   >
                     <Zap className="h-3.5 w-3.5 text-pd-brand" />
-                    Strong
+                    {ws.compressionStrong}
                   </button>
                 </div>
               </div>
@@ -248,11 +279,12 @@ export default function CompressPdfPage() {
 
           <ToolPrimaryButton
             onClick={handleProcess}
-            disabled={files.length === 0}
+            disabled={files.length === 0 || Boolean(error)}
             loading={processing}
-            loadingLabel="Compressing your PDF..."
+            loadingLabel={ws.compressingPdf}
+            loadingProgress={processing ? progress : undefined}
           >
-            Compress PDF
+            {ws.compressPdf}
           </ToolPrimaryButton>
         </>
       )}

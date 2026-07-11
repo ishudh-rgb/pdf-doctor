@@ -14,6 +14,8 @@ import {
 } from "@/lib/db/queries";
 import { isActivePro } from "@/lib/auth/plan-access";
 import { verifyPayment } from "@/lib/services/payment.service";
+import { issueGstInvoiceForPayment } from "@/lib/billing/invoice.service";
+import { paiseToInr, storedPaymentAmountToPaise } from "@/lib/payment/payment-amount";
 
 export type FulfillPaymentInput = {
   razorpay_order_id: string;
@@ -76,7 +78,7 @@ async function fulfillClaimedOrder(
     razorpay_payment_id: input.razorpay_payment_id,
     razorpay_signature: input.razorpay_signature ?? null,
     subscription_id: subscription.id,
-    ...(input.amount != null ? { amount: input.amount } : {}),
+    ...(input.amount != null ? { amount: paiseToInr(Number(input.amount)) } : {}),
     ...(input.payment_method ? { payment_method: input.payment_method } : {}),
   });
 
@@ -96,6 +98,19 @@ async function fulfillClaimedOrder(
   if (claimed.coupon_code) {
     await incrementCouponUsage(claimed.coupon_code);
   }
+
+  const amountPaise =
+    input.amount != null
+      ? Math.round(Number(input.amount))
+      : storedPaymentAmountToPaise(Number(claimed.amount));
+
+  await issueGstInvoiceForPayment({
+    userId: claimed.user_id,
+    paymentId: payment.id,
+    amountPaise,
+    razorpayPaymentId: input.razorpay_payment_id,
+    planLabel: `Pro ${duration}`,
+  }).catch(() => {});
 
   return {
     ok: true,
@@ -121,7 +136,7 @@ async function resumeProcessingPayment(
     await finalizeClaimedPayment(order.id, {
       razorpay_payment_id: input.razorpay_payment_id,
       razorpay_signature: input.razorpay_signature ?? null,
-      ...(input.amount != null ? { amount: input.amount } : {}),
+      ...(input.amount != null ? { amount: paiseToInr(Number(input.amount)) } : {}),
       ...(input.payment_method ? { payment_method: input.payment_method } : {}),
     });
     return { ok: true, already_verified: true, payment_id: order.id };
@@ -172,7 +187,7 @@ export async function fulfillPendingPayment(
   }
 
   if (amount != null && pendingOrder.amount != null) {
-    const expectedPaise = Math.round(Number(pendingOrder.amount));
+    const expectedPaise = storedPaymentAmountToPaise(Number(pendingOrder.amount));
     const capturedPaise = Math.round(Number(amount));
     if (expectedPaise !== capturedPaise) {
       return { ok: false, status: 400, error: "Payment amount mismatch" };

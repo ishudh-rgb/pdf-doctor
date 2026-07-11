@@ -13,13 +13,17 @@ describe("buildGdprExportPayload", () => {
       usageLogs: [{ id: "l1" }],
       aiUsageLogs: [{ id: "a1" }],
       uploadedFiles: [{ id: "f1" }],
+      organizations: [{ id: "org-1", name: "Acme" }],
+      organizationMemberships: [{ role: "owner", organization: { id: "org-1" } }],
+      apiKeys: [{ id: "key-1", name: "Prod", key_prefix: "omp_abc" }],
+      billingInvoices: [{ id: "inv-1", invoice_number: "OMP-2026-00001" }],
     });
 
-    expect(payload.format).toBe("onlymypdf-gdpr-export-v2");
+    expect(payload.format).toBe("onlymypdf-gdpr-export-v3");
     expect(payload.sections_included).toEqual(GDPR_EXPORT_SECTIONS);
     expect(payload.consent_records).toHaveLength(1);
-    expect(payload.usage_logs).toHaveLength(1);
-    expect(payload.ai_usage_logs).toHaveLength(1);
-    expect(payload.uploaded_files).toHaveLength(1);
+    expect(payload.organizations).toHaveLength(1);
+    expect(payload.api_keys).toHaveLength(1);
+    expect(payload.billing_invoices).toHaveLength(1);
   });
 });

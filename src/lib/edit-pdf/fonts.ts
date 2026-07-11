@@ -1,4 +1,4 @@
-/** Display fonts (Smallpdf-style list) mapped to pdf-lib StandardFonts keys. */
+/** Display font list mapped to pdf-lib StandardFonts keys. */
 export type PdfFontKey =
   | "Helvetica"
   | "Helvetica-Bold"
@@ -168,7 +168,7 @@ export function fontCssFamily(fontId: string): string {
   return EDIT_PDF_FONTS.find((f) => f.id === fontId)?.cssFamily ?? EDIT_PDF_FONTS[0].cssFamily;
 }
 
-/** Map PDF embedded font name → UI font id (Smallpdf-style labels). */
+/** Map PDF embedded font name → UI font id labels. */
 export function fontIdFromPdfName(fontName: string): string {
   const n = fontName.toLowerCase();
   if (n.includes("calibri")) return "calibri";

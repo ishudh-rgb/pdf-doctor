@@ -32,7 +32,8 @@
     "sign": "साइन",
     "aiPdf": "AI PDF",
     "allTools": "सभी टूल्स",
-    "getPro": "Pro लें"
+    "getPro": "Pro लें",
+    "trust": "ट्रस्ट सेंटर"
   },
 
   "hero": {
@@ -164,7 +165,9 @@
     "uploadSubtitle": "फ़ाइलें यहाँ ड्रैग और ड्रॉप करें या ब्राउज़ करें",
     "selectFiles": "फ़ाइलें चुनें",
     "orDragDrop": "या ड्रैग और ड्रॉप करें",
-    "maxFileSize": "कोई भी फ़ाइल साइज़ स्वीकार",
+    "maxFileSize": "Free: 25 MB तक · Pro: 200 MB तक",
+    "uploadSizeFree": "Free: {free} MB तक प्रति फ़ाइल · Pro: {pro} MB तक",
+    "uploadSizePro": "Pro पर {pro} MB तक प्रति फ़ाइल",
     "supportedFormats": "सपोर्टेड फ़ॉर्मेट: {formats}",
     "processing": "आपकी फ़ाइल प्रोसेस हो रही है...",
     "processingSubtitle": "इसमें कुछ सेकंड लग सकते हैं",
@@ -196,7 +199,134 @@
     "confirmPassword": "पासवर्ड कन्फ़र्म करें",
     "passwordHint": "इस PDF का पासवर्ड डालें",
     "newPassword": "नया पासवर्ड",
-    "setPassword": "पासवर्ड सेट करें"
+    "setPassword": "पासवर्ड सेट करें",
+    "relatedTools": "संबंधित टूल्स",
+    "faqHeading": "अक्सर पूछे जाने वाले प्रश्न",
+    "previewPlaceholder": "लाइव प्रीव्यू के लिए फ़ाइल अपलोड करें",
+    "livePreview": "लाइव प्रीव्यू",
+    "selectFile": "फ़ाइल चुनें",
+    "orDragDropFile": "या अपनी फ़ाइल यहाँ ड्रैग और ड्रॉप करें",
+    "sizeOriginal": "ओरिजिनल",
+    "sizeOutput": "आउटपुट",
+    "sizeSaved": "बचत",
+    "processingLabel": "प्रोसेस हो रहा है…"
+  },
+
+  "toolWorkspace": {
+    "incorrectPassword": "गलत पासवर्ड।",
+    "couldNotReadPdf": "यह PDF नहीं पढ़ा जा सका। कोई दूसरी फ़ाइल आज़माएँ।",
+    "couldNotReadPdfShort": "यह PDF नहीं पढ़ा जा सका।",
+    "couldNotAddDocument": "दस्तावेज़ नहीं जोड़ा जा सका।",
+    "unexpectedError": "अप्रत्याशित त्रुटि हुई।",
+    "exportFailed": "एक्सपोर्ट विफल रहा।",
+    "failedExportPdf": "PDF एक्सपोर्ट विफल रहा।",
+    "failedExtractPages": "पेज निकालने में विफल।",
+    "failedDeletePages": "पेज हटाने में विफल।",
+    "failedRotatePdf": "PDF घुमाने में विफल। कृपया फिर से कोशिश करें।",
+    "documentReadyDownload": "आपका दस्तावेज़ डाउनलोड के लिए तैयार है।",
+    "editedDocumentReady": "आपका संपादित दस्तावेज़ तैयार है।",
+    "downloadPdf": "PDF डाउनलोड करें",
+    "editAnotherFile": "दूसरी फ़ाइल संपादित करें",
+    "deletePagesAnother": "दूसरी फ़ाइल से पेज हटाएँ",
+    "mergeAnother": "दूसरे फ़ाइल सेट मर्ज करें",
+    "mergedPdfReady": "आपका मर्ज PDF तैयार है।",
+    "insertPdfDocuments": "PDF दस्तावेज़ जोड़ें",
+    "previousPage": "पिछला पेज",
+    "nextPage": "अगला पेज",
+    "zoomOut": "ज़ूम आउट",
+    "zoomIn": "ज़ूम इन",
+    "couldNotLoadPreview": "PDF प्रीव्यू लोड नहीं हो सका।",
+    "processingFailed": "प्रोसेसिंग विफल",
+    "loadingPages": "पेज लोड हो रहे हैं…",
+    "detectingText": "संपादन योग्य टेक्स्ट पहचाना जा रहा है…",
+    "rotateRight": "दाएँ घुमाएँ",
+    "rotateLeft": "बाएँ घुमाएँ",
+    "removeSelected": "चयनित हटाएँ",
+    "deleteSelectedPages": "चयनित पेज हटाएँ",
+    "chooseImageForPdf": "PDF में जोड़ने के लिए छवि चुनें",
+    "chooseImagesScan": "PDF स्कैन के लिए छवियाँ चुनें",
+    "scrollUp": "ऊपर स्क्रॉल करें",
+    "scrollDown": "नीचे स्क्रॉल करें",
+    "pdfsMerged": "PDF मर्ज हो गए",
+    "mergedDocumentReady": "आपका मर्ज दस्तावेज़ डाउनलोड के लिए तैयार है।",
+    "downloadMergedPdf": "मर्ज PDF डाउनलोड करें",
+    "mergeMoreFiles": "और फ़ाइलें मर्ज करें",
+    "pagesRemovedReady": "{count} पेज हटाए गए। आपका दस्तावेज़ डाउनलोड के लिए तैयार है।",
+    "rotatedDocumentReady": "आपका घुमाया दस्तावेज़ डाउनलोड के लिए तैयार है।",
+    "rotateAnotherFile": "दूसरी फ़ाइल घुमाएँ",
+    "splitAnotherFile": "दूसरी फ़ाइल स्प्लिट करें",
+    "zipPartsReady": "हर भाग एक ZIP फ़ाइल में है।",
+    "pdfExported": "PDF एक्सपोर्ट हो गया",
+    "failedMergePdf": "PDF मर्ज विफल। कृपया फिर से कोशिश करें।",
+    "failedSplitPdf": "PDF स्प्लिट विफल। कृपया फिर से कोशिश करें।",
+    "failedExtractPdf": "PDF निकालना विफल। कृपया फिर से कोशिश करें।",
+    "noPagesLeftExport": "एक्सपोर्ट के लिए कोई पेज नहीं बचा।",
+    "pdfOnly": "कृपया केवल PDF फ़ाइलें चुनें।",
+    "enterPasswordBeforeExport": "एक्सपोर्ट से पहले सभी PDF फ़ाइलों का पासवर्ड डालें।",
+    "waitForFilesLoading": "कृपया सभी फ़ाइलों के लोड होने का इंतज़ार करें।",
+    "addPageToMerge": "मर्ज के लिए कम से कम एक PDF पेज जोड़ें।",
+    "blankPage": "खाली पेज",
+    "changeFile": "फ़ाइल बदलें",
+    "decrease": "घटाएँ",
+    "increase": "बढ़ाएँ",
+    "finish": "समाप्त करें",
+    "splitPdf": "PDF स्प्लिट करें",
+    "compressSuccess": "PDF सफलतापूर्वक कम्प्रेस हो गया!",
+    "downloadCompressedPdf": "कम्प्रेस PDF डाउनलोड करें",
+    "compressAnother": "दूसरी फ़ाइल कम्प्रेस करें",
+    "compressingPdf": "आपका PDF कम्प्रेस हो रहा है…",
+    "compressPdf": "PDF कम्प्रेस करें",
+    "selectPdf": "PDF चुनें",
+    "dragDropPdf": "या अपना PDF यहाँ ड्रैग और ड्रॉप करें",
+    "pdfOnlyShort": "केवल PDF",
+    "chooseDifferentPdf": "दूसरी PDF फ़ाइल चुनें",
+    "change": "बदलें",
+    "compressionBasic": "बेसिक",
+    "compressionStrong": "स्ट्रॉन्ग",
+    "alreadyOptimized": "यह PDF पहले से अच्छी तरह ऑप्टिमाइज़ है। क्वालिटी घटाए बिना और साइज़ कम नहीं हो सका।",
+    "cannotDeleteOnlyPage": "अंतिम बचा पेज नहीं हटाया जा सकता।",
+    "failedPreparePages": "PDF पेज तैयार करने में विफल।",
+    "failedExportSignedPdf": "साइन PDF एक्सपोर्ट विफल।",
+    "enterTextPrompt": "टेक्स्ट डालें",
+    "defaultSignText": "टेक्स्ट",
+    "exportPdf": "एक्सपोर्ट",
+    "clickToPlaceDate": "पेज पर {date} रखने के लिए क्लिक करें",
+    "toolSelect": "चुनें",
+    "toolDate": "तारीख",
+    "toolText": "टेक्स्ट",
+    "toolCheckmark": "चेकमार्क",
+    "toolUndo": "पूर्ववत",
+    "toolRedo": "फिर से",
+    "toolDelete": "हटाएँ",
+    "signingWorkspace": "PDF साइनिंग वर्कस्पेस",
+    "scanningFailed": "स्कैनिंग विफल",
+    "cameraAccessDenied": "कैमरा एक्सेस अस्वीकृत। छवियाँ अपलोड करें।",
+    "scanAgain": "फिर से स्कैन करें",
+    "scanner": "स्कैनर",
+    "camera": "कैमरा",
+    "upload": "अपलोड",
+    "addPage": "पेज जोड़ें",
+    "clear": "साफ़ करें",
+    "autoDelete2h": "2 घंटे में ऑटो-डिलीट",
+    "openCameraToScan": "स्कैन के लिए कैमरा खोलें",
+    "cameraScanHint": "फ़ोन पर बेहतर · दस्तावेज़ फ़्रेम में रखें",
+    "dropImagesBrowse": "छवियाँ ड्रॉप करें या ब्राउज़ करें",
+    "capture": "कैप्चर",
+    "close": "बंद करें",
+    "capturePage": "पेज कैप्चर करें",
+    "done": "हो गया",
+    "previewPages": "प्रीव्यू · {current}/{total}",
+    "filterLabel": "फ़िल्टर:",
+    "filterOriginal": "ओरिजिनल",
+    "filterBw": "श्याम-श्वेत",
+    "filterEnhanced": "एन्हांस्ड",
+    "createPdfCount": "PDF बनाएँ ({count})",
+    "browse": "ब्राउज़ करें",
+    "pagesScanned": "{count} पेज स्कैन हुए",
+    "pageAlt": "पेज {num}",
+    "clickToPlaceSignature": "पेज पर क्लिक करके अपना हस्ताक्षर रखें",
+    "clickToPlaceInitials": "पेज पर क्लिक करके अपने आद्याक्षर रखें",
+    "signWorkspaceHint": "हस्ताक्षर — बनाएँ या चुनें, फिर पेज पर क्लिक करें · तारीख / टेक्स्ट / चेक — टूल चुनें, पेज पर क्लिक करें · खींचकर स्थान बदलें · पूरा होने पर निर्यात करें"
   },
 
   "pricing": {
@@ -236,32 +366,53 @@
       "gstNote": "कीमतें INR में · GST जहाँ लागू हो वहाँ शामिल",
       "proExtra1": "फ़ाइलें 24 घंटे तक रखी जाती हैं",
       "proExtra2": "प्राथमिकता ईमेल सपोर्ट",
+      "businessName": "Business",
+      "businessTagline": "टीमों और संगठनों के लिए",
+      "businessPrice": "कस्टम",
+      "businessPriceDesc": "कस्टम ऑफ़र के लिए हमारी टीम से बात करें।",
+      "businessCta": "सेल्स से संपर्क करें",
+      "businessIncludes": "Pro for Teams की सभी सुविधाएँ, और:",
+      "businessFeature1": "कस्टम प्राइसिंग और वॉल्यूम छूट",
+      "businessFeature2": "लचीले भुगतान विकल्प (invoice / PO)",
+      "businessFeature3": "समर्पित कस्टमर सपोर्ट",
+      "businessHighlightBadge": "पूर्ण एक्सेस",
+      "businessHighlightDesc": "संगठन खाते, टीम सीटें, और हर सदस्य के लिए API keys।",
       "compareTitle": "प्लान की पूरी तुलना",
       "compareDesc": "फैसला करने से पहले देखें कि हर प्लान में क्या मिलता है।",
       "compare": {
         "dailyUses": "रोज़ाना टूल उपयोग",
         "dailyUsesFree": "5 प्रति दिन",
         "dailyUsesPro": "100 प्रति दिन",
+        "dailyUsesBusiness": "कस्टम लिमिट",
         "fileSize": "फ़ाइल साइज़ लिमिट",
+        "fileSizeFree": "25 MB तक",
+        "fileSizePro": "200 MB तक",
+        "fileSizeBusiness": "कस्टम लिमिट",
         "unlimited": "असीमित",
         "basicTools": "मर्ज, स्प्लिट, कम्प्रेस और रोटेट",
         "convertTools": "Word, Excel, JPG और अन्य कन्वर्ट",
         "signPdf": "Sign PDF",
         "aiSummarizer": "AI PDF Summarizer",
         "batchProcessing": "बैच प्रोसेसिंग",
+        "teamSeats": "टीम सीटें और संगठन",
+        "teamSeatsBusiness": "20+ सीटें",
+        "apiAccess": "API keys और इंटीग्रेशन",
         "processingSpeed": "प्रोसेसिंग स्पीड",
         "speedStandard": "स्टैंडर्ड",
         "speedPriority": "प्राथमिकता",
+        "speedDedicated": "समर्पित",
         "fileRetention": "डाउनलोड विंडो",
         "retention2h": "2 घंटे",
         "retention24h": "24 घंटे",
+        "retentionBusiness": "कस्टम रिटेंशन",
         "dashboardHistory": "डैशबोर्ड और फ़ाइल इतिहास",
         "ads": "विज्ञापन",
         "adsYes": "हाँ",
         "adsNo": "नहीं",
         "support": "कस्टमर सपोर्ट",
         "supportCommunity": "कम्युनिटी",
-        "supportPriority": "प्राथमिकता ईमेल"
+        "supportPriority": "प्राथमिकता ईमेल",
+        "supportDedicated": "समर्पित अकाउंट मैनेजर"
       },
       "whyTitle": "Pro में अपग्रेड क्यों करें?",
       "benefit1Title": "AI-संचालित टूल्स",
@@ -278,21 +429,21 @@
       "faqDesc": "प्लान, बिलिंग और सुरक्षा — सब कुछ जो आपको जानना चाहिए।",
       "faq": {
         "q1": "फ्री प्लान में क्या शामिल है?",
-        "a1": "फ्री प्लान में मर्ज, स्प्लिट, कम्प्रेस, कन्वर्ट और अन्य बेसिक PDF टूल — रोज़ 5 बार, बिना फ़ाइल साइज़ लिमिट। ज़्यादातर टूल्स के लिए कार्ड या साइनअप ज़रूरी नहीं।",
+        "a1": "फ्री प्लान में मर्ज, स्प्लिट, कम्प्रेस, कन्वर्ट और अन्य बेसिक PDF टूल — रोज़ 5 बार, प्रति फ़ाइल {freeSize} MB तक। ज़्यादातर टूल्स के लिए कार्ड ज़रूरी नहीं।",
         "q2": "दैनिक लिमिट पूरी होने पर क्या होगा?",
         "a2": "5 टूल उपयोग के बाद अगले दिन तक इंतज़ार करें या Pro में 100 दैनिक उपयोग के लिए अपग्रेड करें। आपका अकाउंट और इतिहास सुरक्षित रहेगा।",
         "q3": "क्या मासिक से वार्षिक बिलिंग बदल सकते हैं?",
-        "a3": "हाँ! डैशबोर्ड से कभी भी बदलें। वार्षिक पर जाने पर बचे दिनों का क्रेडिट मिलेगा।",
+        "a3": "चेकआउट पर मासिक या वार्षिक चुनें। बाद में बदलने के लिए auto-renew रद्द करके नया प्लान खरीदें या सपोर्ट से संपर्क करें।",
         "q4": "आप कौन से पेमेंट मेथड स्वीकार करते हैं?",
         "a4": "Razorpay के ज़रिए UPI, कार्ड, नेट बैंकिंग और वॉलेट — सभी INR में सुरक्षित।",
         "q5": "क्या मेरा डेटा सुरक्षित है?",
         "a5": "बिल्कुल। फ़ाइलें ट्रांसफर में एन्क्रिप्टेड और प्रोसेसिंग के बाद ऑटो-डिलीट। हम कभी आपके दस्तावेज़ एक्सेस या शेयर नहीं करते।",
         "q6": "क्या रिफंड पॉलिसी है?",
-        "a6": "हाँ — Pro पर 7-दिन की मनी-बैक गारंटी। संतुष्ट नहीं तो support@onlymypdf.in पर संपर्क करें।",
+        "a6": "हाँ — अपने हाल के Pro भुगतान के 7 दिनों के भीतर support@onlymypdf.in पर संपर्क करें। Razorpay payment ID शामिल करें।",
         "q7": "क्या कभी भी सब्सक्रिप्शन कैंसल कर सकते हैं?",
         "a7": "बिल्कुल। डैशबोर्ड से कभी भी कैंसल करें। बिलिंग पीरियड खत्म होने तक Pro एक्सेस बनी रहेगी।",
         "q8": "क्या टीम या बिज़नेस प्लान है?",
-        "a8": "शेयर्ड उपयोग और एडमिन कंट्रोल वाले टीम प्लान जल्द आ रहे हैं। अर्ली एक्सेस के लिए संपर्क करें।"
+        "a8": "हाँ — Business प्लान में टीम सीटें, कस्टम लिमिट, API एक्सेस और समर्पित सपोर्ट शामिल है। प्राइसिंग पेज पर Contact Sales पर क्लिक करें या कस्टम कोट के लिए ईमेल करें।"
       },
       "ctaTitle": "PDF के साथ स्मार्ट काम करने के लिए तैयार?",
       "ctaDesc": "हज़ारों यूज़र्स OnlyMyPDF पर भरोसा करते हैं — तेज़, सुरक्षित प्रोसेसिंग।"
@@ -300,7 +451,7 @@
     "faq": {
       "title": "अक्सर पूछे जाने वाले सवाल",
       "q1": "क्या OnlyMyPDF फ्री में इस्तेमाल कर सकते हैं?",
-      "a1": "हाँ! हमारे बेसिक टूल्स रोज़ 5 बार तक फ्री हैं। कोई फ़ाइल साइज़ लिमिट नहीं — किसी भी साइज़ की PDF अपलोड करें। ज़्यादातर टूल्स के लिए साइनअप ज़रूरी नहीं।",
+      "a1": "हाँ! हमारे बेसिक टूल्स रोज़ 5 बार तक फ्री हैं, प्रति फ़ाइल सीमा आपके प्लान के अनुसार। ज़्यादातर टूल्स के लिए साइनअप ज़रूरी नहीं।",
       "q2": "आप कौन से पेमेंट मेथड स्वीकार करते हैं?",
       "a2": "हम Razorpay के ज़रिए सभी बड़े पेमेंट मेथड स्वीकार करते हैं — क्रेडिट कार्ड, डेबिट कार्ड, UPI, नेट बैंकिंग और वॉलेट।",
       "q3": "क्या मैं कभी भी सब्सक्रिप्शन कैंसल कर सकता हूँ?",
@@ -327,6 +478,19 @@
     "orContinueWith": "या इससे जारी रखें",
     "google": "Google से जारी रखें",
     "github": "GitHub से जारी रखें",
+    "microsoft": "Microsoft से जारी रखें",
+    "mfaTitle": "दो-चरणीय प्रमाणीकरण",
+    "mfaSubtitle": "अपने authenticator ऐप से 6-अंकीय कोड दर्ज करें।",
+    "mfaCodeLabel": "प्रमाणीकरण कोड",
+    "mfaVerifyButton": "सत्यापित करें और जारी रखें",
+    "mfaBackToLogin": "पासवर्ड लॉगिन पर वापस",
+    "mfaInvalidCode": "अमान्य कोड। फिर से प्रयास करें।",
+    "ssoTitle": "Enterprise SSO",
+    "ssoSubtitle": "अपनी कंपनी के identity provider (SAML / OIDC) से साइन इन करें।",
+    "ssoDomainPlaceholder": "company.com",
+    "ssoContinue": "जारी रखें",
+    "ssoInvalidDomain": "मान्य कंपनी डोमेन दर्ज करें (जैसे acme.com)।",
+    "ssoFailed": "इस डोमेन के लिए SSO उपलब्ध नहीं है।",
     "noAccount": "अकाउंट नहीं है?",
     "hasAccount": "पहले से अकाउंट है?",
     "signupLink": "साइन अप करें",
@@ -397,6 +561,9 @@
     "failed": "फेल",
     "freePlan": "फ्री",
     "myFiles": "मेरी फ़ाइलें",
+    "privacySettings": "प्राइवेसी और डेटा",
+    "security": "सुरक्षा",
+    "enterprise": "Enterprise",
     "browseTools": "टूल्स देखें",
     "helpSupport": "सहायता",
     "secureProcessing": "सुरक्षित प्रोसेसिंग",
@@ -431,7 +598,7 @@
       "saveYearly": "सालाना 33% बचत",
       "gst": "कीमतें INR में · GST शामिल",
       "featMergeSplit": "मर्ज, स्प्लिट, रोटेट और पेज डिलीट",
-      "featCompress": "PDF कम्प्रेस — कोई साइज़ लिमिट नहीं",
+      "featCompress": "PDF कम्प्रेस — Free 25 MB, Pro 200 MB तक",
       "featConvertBasic": "Word, Excel, JPG और अन्य कन्वर्ट",
       "featDaily5": "5 टूल उपयोग प्रति दिन",
       "featRetention2h": "2 घंटे तक डाउनलोड",
@@ -498,13 +665,13 @@
         "q1": "Free vs Pro में क्या अंतर है?",
         "a1": "Free में 5 दैनिक उपयोग, 2-घंटे डाउनलोड। Pro में Sign & AI, 100 उपयोग, 24-घंटे डाउनलोड, प्राथमिकता स्पीड, बिना विज्ञापन।",
         "q2": "मासिक और वार्षिक बदल सकते हैं?",
-        "a2": "हाँ — यहाँ से कभी भी बदलें। वार्षिक पर बचे दिनों का क्रेडिट मिलता है।",
+        "a2": "चेकआउट पर मासिक या वार्षिक चुनें। बाद में auto-renew रद्द करके नया प्लान खरीदें या सपोर्ट से संपर्क करें।",
         "q3": "कौन से पेमेंट मेथड?",
         "a3": "Razorpay — UPI, कार्ड, नेट बैंकिंग, वॉलेट। सभी कीमतें INR में।",
         "q4": "क्या डेटा सुरक्षित है?",
         "a4": "हाँ। ट्रांसफर में एन्क्रिप्शन, प्रोसेसिंग के बाद ऑटो-डिलीट। हम कभी दस्तावेज़ शेयर नहीं करते।",
         "q5": "रिफंड पॉलिसी?",
-        "a5": "Pro खरीद के 7 दिनों में पूरा रिफंड। support@onlymypdf.in पर संपर्क करें।",
+        "a5": "Pro भुगतान के 7 दिनों के भीतर support@onlymypdf.in पर संपर्क करें। Razorpay payment ID शामिल करें।",
         "q6": "कभी भी कैंसल?",
         "a6": "बिल्कुल। डैशबोर्ड से कैंसल करें। बिलिंग पीरियड खत्म होने तक Pro एक्सेस।"
       },
@@ -610,6 +777,23 @@
     "passwordProtected": "यह PDF पासवर्ड प्रोटेक्टेड है। पहले Unlock PDF टूल इस्तेमाल करें।"
   },
 
+  "notFound": {
+    "title": "पेज नहीं मिला",
+    "description": "माफ़ करें, हमें वह पेज नहीं मिला। शायद वह हटा दिया गया हो या मौजूद न हो।",
+    "goHome": "होम पर जाएँ",
+    "browseTools": "टूल्स देखें"
+  },
+
+  "thirdPartyNotice": {
+    "learnMore": "प्राइवेसी पॉलिसी",
+    "aiSummarizer": {
+      "body": "आपके PDF से निकाला गया टेक्स्ट सारांश बनाने के लिए थर्ड-पार्टी AI प्रोवाइडर (Google Gemini) को भेजा जाता है। संवेदनशील व्यक्तिगत डेटा वाले दस्तावेज़ तभी अपलोड करें जब आप इस प्रोसेसिंग से सहमत हों।"
+    },
+    "pdfToWord": {
+      "body": "आपका PDF हमारे सर्वर पर प्रोसेस हो सकता है या प्रोडक्शन में सक्षम होने पर थर्ड-पार्टी कन्वर्ज़न सेवा (ConvertAPI) को भेजा जा सकता है। संवेदनशील व्यक्तिगत डेटा वाले दस्तावेज़ तभी अपलोड करें जब आप इस प्रोसेसिंग से सहमत हों।"
+    }
+  },
+
   "privacy": {
     "badge": "आपकी प्राइवेसी मायने रखती है",
     "title": "100% सुरक्षित और प्राइवेट",
@@ -629,7 +813,7 @@
     "uploading": "अपलोड हो रहा है...",
     "uploaded": "सफलतापूर्वक अपलोड हो गया",
     "preparing": "फ़ाइलें तैयार हो रही हैं...",
-    "maxSize": "कोई भी फ़ाइल साइज़",
+    "maxSize": "Free 25 MB · Pro 200 MB",
     "supportedTypes": "सपोर्टेड: {types}",
     "removeAll": "सब हटाएँ"
   },
@@ -657,6 +841,9 @@
     "terms": "सेवा की शर्तें",
     "cookies": "कुकी पॉलिसी",
     "refund": "रिफंड पॉलिसी",
+    "trust": "ट्रस्ट सेंटर",
+    "sla": "सेवा स्तर",
+    "status": "सिस्टम स्थिति",
     "support": "सपोर्ट",
     "helpCenter": "हेल्प सेंटर",
     "faq": "FAQ",
@@ -676,7 +863,7 @@
     "homeTitle": "OnlyMyPDF — फ्री ऑनलाइन PDF टूल्स | मर्ज, स्प्लिट, कम्प्रेस, कन्वर्ट",
     "homeDescription": "PDF मर्ज, स्प्लिट, कम्प्रेस, कन्वर्ट, एडिट, साइन और प्रोटेक्ट करने के लिए फ्री ऑनलाइन टूल्स। साइनअप ज़रूरी नहीं। फास्ट, सिक्योर और आसान।",
     "pricingTitle": "प्राइसिंग — OnlyMyPDF | किफ़ायती PDF टूल प्लान",
-    "pricingDescription": "अपनी PDF ज़रूरतों के लिए सही प्लान चुनें। बेसिक टूल्स फ्री हैं या अनलिमिटेड एक्सेस, AI फ़ीचर्स और बहुत कुछ के लिए Pro में अपग्रेड करें।",
+    "pricingDescription": "अपनी PDF ज़रूरतों के लिए सही प्लान चुनें। बेसिक टूल्स फ्री हैं या उच्च सीमा, AI फ़ीचर्स और प्राथमिकता प्रोसेसिंग के लिए Pro में अपग्रेड करें।",
     "dashboardTitle": "डैशबोर्ड — OnlyMyPDF",
     "loginTitle": "लॉग इन — OnlyMyPDF",
     "signupTitle": "अकाउंट बनाएँ — OnlyMyPDF"
@@ -857,7 +1044,7 @@
     "faq3q": "क्या मेरी फ़ाइलें सुरक्षित हैं?",
     "faq3a": "बिल्कुल। एन्क्रिप्टेड कनेक्शन, अलग वातावरण में प्रोसेसिंग, और 2 घंटे (Pro: 24 घंटे) बाद ऑटो-डिलीट। हम डेटा कभी शेयर या बेचते नहीं।",
     "faq4q": "फ़ाइल साइज़ की लिमिट क्या है?",
-    "faq4a": "कोई फ़ाइल साइज़ लिमिट नहीं — हर टूल पर किसी भी साइज़ की PDF अपलोड करें।",
+    "faq4a": "Free: प्रति फ़ाइल {freeSize} MB तक; Pro: {proSize} MB तक — हर टूल पर लागू।",
     "faq5q": "AI PDF सारांश कैसे काम करता है?",
     "faq5a": "AI आपकी PDF पढ़कर संक्षिप्त सारांश, मुख्य बिंदु, एक्शन आइटम और महत्वपूर्ण तारीखें बनाता है। यह Pro यूज़र्स के लिए उपलब्ध है।",
     "faq6q": "कौन-से पेमेंट मेथड स्वीकार हैं?",
@@ -866,12 +1053,528 @@
     "faq7a": "हाँ, डैशबोर्ड से कभी भी रद्द करें। वर्तमान बिलिंग अवधि के अंत तक Pro एक्सेस रहेगा।"
   },
 
+  "enterprisePage": {
+    "title": "Enterprise और API",
+    "subtitle": "Organizations, team billing, members, और programmatic API access।",
+    "refresh": "रीफ़्रेश",
+    "loading": "लोड हो रहा है…",
+    "loadError": "Enterprise settings लोड नहीं हो सकीं।",
+    "orgProBadge": "Team Pro · {name}",
+    "organizations": "Organizations",
+    "noOrgs": "अभी कोई organization नहीं। अपनी team के लिए बनाएँ।",
+    "orgNamePlaceholder": "Team या company का नाम",
+    "createOrg": "बनाएँ",
+    "createOrgFailed": "Organization नहीं बन सका।",
+    "planStatus": "Team plan",
+    "expires": "एक्सपायर",
+    "seats": "Seats",
+    "teamUsage": "आज team usage: {used} / {limit}",
+    "activateMonthly": "Team सक्रिय करें (monthly · mock)",
+    "activateYearly": "Team सक्रिय करें (yearly · mock)",
+    "activateHint": "Mock billing में activation सभी members को org Pro देता है। Live checkout के लिए enterprise sales से संपर्क करें।",
+    "activateSuccess": "Team plan सक्रिय। Members को org Pro access मिल गया।",
+    "activateFailed": "Team plan सक्रिय नहीं हो सका।",
+    "requestTeamMonthly": "Team plan request (monthly)",
+    "requestTeamYearly": "Team plan request (yearly)",
+    "liveBillingHint": "Live team billing enterprise sales द्वारा activate होती है। Request submit करें, हमारी team आपसे संपर्क करेगी।",
+    "salesRequestSent": "Team billing request enterprise sales को भेज दी गई। हम जल्द संपर्क करेंगे।",
+    "salesRequestDev": "Team billing request log हो गई (dev mode)। Email के लिए RESEND_API_KEY configure करें।",
+    "salesRequestFailed": "Team billing request submit नहीं हो सकी।",
+    "salesContactAt": "Activation के लिए {email} पर संपर्क करें।",
+    "cancelAutoRenew": "Auto-renew रद्द करें",
+    "cancelRenewConfirm": "Team auto-renew रद्द करें? वर्तमान अवधि तक access जारी रहेगा।",
+    "cancelRenewSuccess": "इस organization के लिए auto-renew रद्द।",
+    "cancelRenewFailed": "Auto-renew रद्द नहीं हो सका।",
+    "members": "Members",
+    "inviteEmailPlaceholder": "colleague@company.com",
+    "invite": "Invite",
+    "inviteSent": "Invitation email भेज दिया गया।",
+    "inviteCreatedNoEmail": "Invite बना। यह link share करें: {url}",
+    "inviteFailed": "Invite नहीं भेजा जा सका।",
+    "pendingInvites": "Pending invites",
+    "revoke": "Revoke",
+    "removeMemberConfirm": "इस member को organization से हटाएँ?",
+    "removeMemberFailed": "Member हटाया नहीं जा सका।",
+    "acceptingInvite": "Invitation accept हो रहा है…",
+    "inviteAccepted": "आप {name} में शामिल हो गए।",
+    "inviteAcceptFailed": "Invitation accept नहीं हो सका।",
+    "apiKeys": "API keys",
+    "newKey": "नई key",
+    "proRequired": "Active Pro या team plan ज़रूरी।",
+    "noKeys": "अभी कोई API key नहीं।",
+    "keyCreated": "API key बनी — अभी copy करें (एक बार दिखेगी):",
+    "keyCreateFailed": "API key नहीं बन सकी।",
+    "salesNote": "SSO, volume pricing, या custom SLA चाहिए?",
+    "contactSales": "Enterprise sales से संपर्क करें"
+  },
+
+  "billingPanel": {
+    "title": "बिलिंग और इनवॉइस",
+    "subtitle": "ऑटो-रिन्यू प्रबंधित करें, GST इनवॉइस डाउनलोड करें, और प्लान स्थिति देखें।",
+    "loading": "बिलिंग विवरण लोड हो रहे हैं…",
+    "loadError": "बिलिंग जानकारी लोड नहीं हो सकी।",
+    "refresh": "रीफ़्रेश",
+    "mockNotice": "Mock बिलिंग मोड — कोई वास्तविक शुल्क नहीं। प्रोडक्शन के लिए BILLING_MODE=live और Razorpay keys सेट करें।",
+    "planLabel": "वर्तमान प्लान",
+    "renewsOn": "{date} को रिन्यू",
+    "accessUntil": "{date} तक एक्सेस",
+    "autoRenewLabel": "ऑटो-रिन्यू",
+    "autoRenewOn": "सक्षम",
+    "autoRenewOff": "रद्द — अवधि के अंत तक",
+    "oneTimePlan": "एक बार की खरीद",
+    "cancelSubscription": "ऑटो-रिन्यू रद्द करें",
+    "cancelConfirm": "ऑटो-रिन्यू रद्द करें? वर्तमान बिलिंग अवधि के अंत तक Pro रहेगा।",
+    "cancelSuccess": "ऑटो-रिन्यू रद्द। अवधि समाप्त होने तक Pro एक्सेस जारी।",
+    "cancelFailed": "सब्सक्रिप्शन रद्द नहीं हो सका। फिर कोशिश करें या सपोर्ट से संपर्क करें।",
+    "invoicesTitle": "GST इनवॉइस",
+    "noInvoices": "अभी कोई इनवॉइस नहीं। सफल Pro भुगतान के बाद इनवॉइस दिखेंगे।",
+    "gstIncluded": "GST सहित",
+    "downloadPdf": "PDF डाउनलोड"
+  },
+
+  "securityPage": {
+    "title": "सुरक्षा",
+    "subtitle": "दो-चरणीय प्रमाणीकरण और enterprise साइन-इन से अपना अकाउंट सुरक्षित रखें।",
+    "loading": "सुरक्षा सेटिंग्स लोड हो रही हैं…",
+    "mfaTitle": "Authenticator ऐप (TOTP)",
+    "mfaDescription": "Google Authenticator, Authy या किसी TOTP ऐप से लॉगिन पर दूसरा कदम जोड़ें।",
+    "mfaActive": "आपके अकाउंट पर दो-चरणीय प्रमाणीकरण सक्षम है।",
+    "enableMfa": "Authenticator सेट अप करें",
+    "confirmMfa": "पुष्टि करें और सक्षम करें",
+    "cancelEnroll": "रद्द करें",
+    "manualSecret": "मैनुअल एंट्री की",
+    "mfaEnabledSuccess": "दो-चरणीय प्रमाणीकरण अब सक्षम है।",
+    "ssoTitle": "Single sign-on (SSO)",
+    "ssoDescription": "Enterprise टीम Supabase SSO के ज़रिए SAML या OIDC उपयोग कर सकती है। Enterprise डैशबोर्ड में संगठन कॉन्फ़िगर करें।",
+    "ssoLink": "Enterprise सेटिंग्स प्रबंधित करें"
+  },
+
+  "toolFaqs": {
+    "merge-pdf": [
+      {
+        "question": "मैं एक बार में कितनी PDFs merge कर सकता हूँ?",
+        "answer": "आप एक बार में 20 PDF फ़ाइलें merge कर सकते हैं (Pro में 50)। फ़ाइल साइज़ लिमिट आपके प्लान के अनुसार लागू होती है।"
+      },
+      {
+        "question": "क्या merged PDF में original formatting बनी रहेगी?",
+        "answer": "हाँ, merge करने पर original documents की formatting, images, links और bookmarks सुरक्षित रहते हैं।"
+      },
+      {
+        "question": "क्या मैं merge करने से पहले files reorder कर सकता हूँ?",
+        "answer": "हाँ। Grid में files drag करें या + buttons से documents अपनी पसंद के order में जोड़ें।"
+      },
+      {
+        "question": "क्या मेरा data secure है?",
+        "answer": "Uploaded files secure तरीके से process होती हैं और processing के बाद servers से automatically delete हो जाती हैं।"
+      }
+    ],
+    "split-pdf": [
+      {
+        "question": "क्या मैं PDF से specific pages extract कर सकता हूँ?",
+        "answer": "हाँ। Extract mode में जाएँ, grid में pages select करें, फिर Finish पर click करें।"
+      },
+      {
+        "question": "Split all pages करने पर क्या होता है?",
+        "answer": "हर page एक अलग PDF बनता है और ZIP download में bundle होता है।"
+      },
+      {
+        "question": "क्या original PDF quality बनी रहती है?",
+        "answer": "हाँ। Split करने से pages की content या quality change नहीं होती।"
+      },
+      {
+        "question": "क्या मैं password-protected PDF split कर सकता हूँ?",
+        "answer": "पहले Unlock PDF से password protection हटाएँ, फिर यहाँ split करें।"
+      }
+    ],
+    "rotate-pdf": [
+      {
+        "question": "क्या मैं individual pages rotate कर सकता हूँ?",
+        "answer": "हाँ। किसी भी page पर hover करके rotate button click करें, या multiple pages select करके साथ में rotate करें।"
+      },
+      {
+        "question": "क्या मैं दूसरी PDF से pages जोड़ सकता हूँ?",
+        "answer": "हाँ। दो pages के बीच + button पर click करके documents या blank pages जोड़ सकते हैं।"
+      },
+      {
+        "question": "क्या original quality बनी रहती है?",
+        "answer": "हाँ। Rotation सिर्फ page orientation बदलता है; content और quality same रहती है।"
+      },
+      {
+        "question": "कौन से rotation angles supported हैं?",
+        "answer": "90° clockwise, 90° counter-clockwise और 180° flip supported हैं।"
+      }
+    ],
+    "delete-pdf": [
+      {
+        "question": "क्या मैं individual pages delete कर सकता हूँ?",
+        "answer": "हाँ। किसी page पर hover करके red trash icon click करें, या multiple pages select करके delete करें।"
+      },
+      {
+        "question": "क्या मैं दूसरी PDF से pages जोड़ सकता हूँ?",
+        "answer": "हाँ। दो pages के बीच + button पर click करके documents या blank pages जोड़ सकते हैं।"
+      },
+      {
+        "question": "क्या original quality बनी रहती है?",
+        "answer": "हाँ। सिर्फ selected pages remove होते हैं; बाकी content और quality same रहती है।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "extract-pdf": [
+      {
+        "question": "मैं specific pages कैसे extract करूँ?",
+        "answer": "PDF upload करें, जिन pages को extract करना है उन पर click करें, फिर Finish से सिर्फ selected pages वाली नई PDF download करें।"
+      },
+      {
+        "question": "क्या मैं non-consecutive pages extract कर सकता हूँ?",
+        "answer": "हाँ। Pages किसी भी combination में select कर सकते हैं; output में वे original order में रहेंगे।"
+      },
+      {
+        "question": "क्या मैं दूसरी PDF से pages जोड़ सकता हूँ?",
+        "answer": "हाँ। दो pages के बीच + button से documents या blank pages जोड़ सकते हैं।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "compress-pdf": [
+      {
+        "question": "PDF कितना compress हो सकता है?",
+        "answer": "Result content पर depend करता है। Image-heavy PDFs में अक्सर 40-80% reduction, text-heavy PDFs में 10-30% reduction मिलता है।"
+      },
+      {
+        "question": "क्या compression से quality कम होगी?",
+        "answer": "Basic compression quality preserve करता है। Strong compression image quality थोड़ी कम कर सकता है, लेकिन text crisp रहता है।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      },
+      {
+        "question": "क्या मैं multiple files साथ में compress कर सकता हूँ?",
+        "answer": "अभी compression एक समय में एक file पर काम करता है। अलग-अलग compress करने के बाद Merge tool से combine करें।"
+      }
+    ],
+    "word-to-pdf": [
+      {
+        "question": "कौन से Word formats supported हैं?",
+        "answer": ".doc और .docx दोनों supported हैं। Best result के लिए newer .docx format use करें।"
+      },
+      {
+        "question": "क्या formatting preserve होगी?",
+        "answer": "हाँ, fonts, images, tables और styles native rendering से preserve होते हैं।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      },
+      {
+        "question": "क्या मैं multiple files एक साथ convert कर सकता हूँ?",
+        "answer": "अभी conversion एक समय में एक file पर काम करता है। Result PDFs combine करने के लिए Merge tool use करें।"
+      }
+    ],
+    "sign-pdf": [
+      {
+        "question": "क्या मेरा signature secure है?",
+        "answer": "आपका signature browser और secure servers पर process होता है। Processing के बाद signature data store नहीं किया जाता।"
+      },
+      {
+        "question": "मैं कौन-कौन से signatures जोड़ सकता हूँ?",
+        "answer": "Draw signature, typed signature, uploaded image, initials, dates, text और checkmarks directly document पर place कर सकते हैं।"
+      },
+      {
+        "question": "क्या मैं multiple pages sign कर सकता हूँ?",
+        "answer": "हाँ। Page thumbnails से navigate करें और export से पहले किसी भी page पर signatures/annotations place करें।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "protect-pdf": [
+      {
+        "question": "Password protection कितना secure है?",
+        "answer": "हम PDF files protect करने के लिए AES-256 encryption use करते हैं, जो banks और government agencies में भी common standard है।"
+      },
+      {
+        "question": "क्या मैं बाद में password remove कर सकता हूँ?",
+        "answer": "हाँ। Unlock PDF tool से password protection remove कर सकते हैं, लेकिन correct password चाहिए।"
+      },
+      {
+        "question": "Strong password कैसा होना चाहिए?",
+        "answer": "Strong password कम से कम 8 characters का हो और uppercase, lowercase, numbers और special characters mix करे।"
+      },
+      {
+        "question": "क्या password protection PDF content बदलता है?",
+        "answer": "नहीं। यह सिर्फ encryption layer जोड़ता है; content, formatting और images same रहते हैं।"
+      }
+    ],
+    "unlock-pdf": [
+      {
+        "question": "क्या यह tool PDF passwords crack करता है?",
+        "answer": "नहीं। यह सिर्फ उन PDFs से password protection हटाता है जिन्हें आप own करते हैं और correct password से खोल सकते हैं।"
+      },
+      {
+        "question": "कौन सी PDF protection remove हो सकती है?",
+        "answer": "User password वाली protection remove की जा सकती है। यह copy-protected documents के owner/permission passwords bypass नहीं करता।"
+      },
+      {
+        "question": "क्या मेरा password secure है?",
+        "answer": "हाँ। Password secure connection पर भेजा जाता है, store नहीं होता, और file processing के बाद delete हो जाती है।"
+      },
+      {
+        "question": "अगर मैं PDF password भूल गया तो?",
+        "answer": "हम forgotten passwords recover नहीं कर सकते। Correct password के लिए document creator से संपर्क करें।"
+      }
+    ],
+    "jpg-to-pdf": [
+      {
+        "question": "कौन से image formats supported हैं?",
+        "answer": "JPEG/JPG, PNG और WebP image formats supported हैं।"
+      },
+      {
+        "question": "क्या मैं multiple images को एक PDF में convert कर सकता हूँ?",
+        "answer": "हाँ। Multiple images upload करें; वे एक single PDF में combine होंगी और आप order बदल सकते हैं।"
+      },
+      {
+        "question": "क्या page size choose कर सकता हूँ?",
+        "answer": "हाँ। A4, US Letter या Auto choose कर सकते हैं, जिसमें page image dimensions match करता है।"
+      },
+      {
+        "question": "Images की संख्या की limit है?",
+        "answer": "आप एक single PDF में 50 images तक convert कर सकते हैं।"
+      }
+    ],
+    "pdf-scanner": [
+      {
+        "question": "क्या मैं multiple pages scan करके एक PDF बना सकता हूँ?",
+        "answer": "हाँ। जितनी images चाहिए capture/upload करें; हर image final PDF का एक page बनेगी।"
+      },
+      {
+        "question": "कौन सा filter use करूँ?",
+        "answer": "Enhanced most documents के लिए अच्छा है। Black & White text-heavy pages और receipts के लिए बेहतर है। Original photo colors रखता है।"
+      },
+      {
+        "question": "क्या camera desktop पर काम करता है?",
+        "answer": "हाँ, अगर device में webcam है। Physical documents scan करने के लिए phone/tablet rear camera बेहतर रहता है।"
+      },
+      {
+        "question": "क्या मेरा data secure है?",
+        "answer": "Uploads transit में encrypted होते हैं। Files processing के 2 घंटे के अंदर automatically delete हो जाती हैं।"
+      }
+    ],
+    "pdf-to-word": [
+      {
+        "question": "PDF to Word conversion कितनी accurate है?",
+        "answer": "हम multi-engine pipeline use करते हैं — ConvertAPI (जब configured हो), Microsoft Word/LibreOffice, फिर pdf2docx — ताकि tables, fonts और images preserve हों।"
+      },
+      {
+        "question": "क्या scanned PDF को Word में convert कर सकता हूँ?",
+        "answer": "Image-only scanned PDFs के लिए पहले PDF Scanner tool से searchable PDF बनाएँ, फिर Word conversion करें।"
+      },
+      {
+        "question": "Output किस Word format में मिलता है?",
+        "answer": "Converter .docx format output करता है, जो Microsoft Word, Google Docs और LibreOffice में compatible है।"
+      },
+      {
+        "question": "Conversion के लिए page limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से page और file size limits लागू होती हैं।"
+      }
+    ],
+    "pdf-to-excel": [
+      {
+        "question": "क्या Excel में tables preserve होंगी?",
+        "answer": "Text-based PDFs जिनमें clear column structure है, अच्छी तरह convert होते हैं। Complex layouts या scanned documents में manual cleanup की ज़रूरत पड़ सकती है।"
+      },
+      {
+        "question": "क्या scanned PDFs पर काम करता है?",
+        "answer": "यह tool selectable text extract करता है। Scanned documents के लिए पहले PDF Scanner tool use करें या text layer वाली PDF upload करें।"
+      },
+      {
+        "question": "Output format क्या है?",
+        "answer": "Converter .xlsx (Excel) format output करता है, जो Microsoft Excel, Google Sheets और LibreOffice Calc में खुलता है।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "pdf-to-ppt": [
+      {
+        "question": "क्या images और layout preserve होते हैं?",
+        "answer": "हाँ। हर PDF page एक slide बनता है high-quality image के रूप में, इसलिए charts, logos और formatting intact रहते हैं।"
+      },
+      {
+        "question": "Conversion के बाद slides edit कर सकता हूँ?",
+        "answer": "हाँ, output .pptx file Microsoft PowerPoint, Google Slides और compatible apps में editable खुलती है।"
+      },
+      {
+        "question": "क्या multi-page PDFs supported हैं?",
+        "answer": "हाँ। हर page अलग slide बनता है; page count की कोई hard limit नहीं, plan file size limits लागू होती हैं।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "excel-to-pdf": [
+      {
+        "question": "क्या सभी worksheets include होती हैं?",
+        "answer": "हाँ, Excel file की हर worksheet PDF में अलग section के रूप में include होती है।"
+      },
+      {
+        "question": "क्या formulas preserve होंगे?",
+        "answer": "PDF calculated cell values दिखाता है, formulas नहीं। Formatting print-friendly output के लिए simplify होती है।"
+      },
+      {
+        "question": "कौन से Excel formats supported हैं?",
+        "answer": ".xlsx और .xls दोनों formats supported हैं। Best results के लिए .xlsx use करें।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "ppt-to-pdf": [
+      {
+        "question": "क्या slide designs exactly preserve होंगे?",
+        "answer": "Converter slides से text content extract करता है। Pixel-perfect rendering के लिए PowerPoint से direct export बेहतर हो सकता है।"
+      },
+      {
+        "question": "कितने slides convert कर सकता हूँ?",
+        "answer": "Slide count की कोई hard limit नहीं। Plan के हिसाब से file size limits लागू होती हैं।"
+      },
+      {
+        "question": "कौन से PowerPoint formats supported हैं?",
+        "answer": ".pptx और .ppt दोनों formats supported हैं।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "html-to-pdf": [
+      {
+        "question": "कौन से file types convert कर सकता हूँ?",
+        "answer": "HTML (.html, .htm), XHTML (.xhtml), MHTML (.mhtml) और SVG (.svg) files supported हैं।"
+      },
+      {
+        "question": "क्या CSS styles PDF में preserve होंगे?",
+        "answer": "हाँ, converter full CSS support के साथ render करता है — Flexbox, Grid, custom fonts, media queries और print stylesheets सहित।"
+      },
+      {
+        "question": "क्या PDF page size customize कर सकता हूँ?",
+        "answer": "हाँ, A4, US Letter या Auto choose कर सकते हैं। Orientation और margin preferences भी set कर सकते हैं।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "txt-to-pdf": [
+      {
+        "question": "कौन से file types convert कर सकता हूँ?",
+        "answer": "TXT, TEXT, LOG, CSV, MD, JSON, XML, YAML, INI, CFG, CONF और ENV — essentially कोई भी plain-text file supported है।"
+      },
+      {
+        "question": "क्या font और size choose कर सकता हूँ?",
+        "answer": "हाँ! Helvetica (sans-serif), Courier (monospace — code के लिए), या Times (serif) choose करें। Font size 9pt से 16pt तक।"
+      },
+      {
+        "question": "क्या long lines cut off होंगी?",
+        "answer": "नहीं। Long lines automatically word-wrap होती हैं page margins के अंदर fit होने के लिए।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "edit-pdf": [
+      {
+        "question": "PDF में किस तरह के edits कर सकता हूँ?",
+        "answer": "किसी भी page पर text add करें, images insert करें, elements drag करके reposition करें, और export करें — visual editor में।"
+      },
+      {
+        "question": "Editing से original PDF quality affect होगी?",
+        "answer": "नहीं। Additions existing content के ऊपर layer होते हैं; underlying document re-compress नहीं होता।"
+      },
+      {
+        "question": "क्या page या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से page और file size limits लागू होती हैं।"
+      },
+      {
+        "question": "क्या signup ज़रूरी है?",
+        "answer": "Basic edits free users के लिए available हैं। Advanced features और higher limits Pro plan में हैं।"
+      }
+    ],
+    "add-watermark": [
+      {
+        "question": "क्या company logo watermark के रूप में use कर सकता हूँ?",
+        "answer": "हाँ, PNG या JPG image upload करें और वह semi-transparent watermark के रूप में सभी pages पर place होगी।"
+      },
+      {
+        "question": "क्या specific pages पर watermark लगा सकता हूँ?",
+        "answer": "अभी tool सभी pages पर watermark apply करता है। Page-specific watermarks future update में add हो सकते हैं।"
+      },
+      {
+        "question": "Text watermark customize कर सकता हूँ?",
+        "answer": "हाँ। Text, opacity, rotation angle और font size adjust कर सकते हैं — CONFIDENTIAL, DRAFT जैसे labels के लिए।"
+      },
+      {
+        "question": "क्या file size limit है?",
+        "answer": "हाँ। Free और Pro plan के हिसाब से file size limits लागू होती हैं।"
+      }
+    ],
+    "ai-pdf-summarizer": [
+      {
+        "question": "AI PDF Summarizer कैसे काम करता है?",
+        "answer": "AI आपके PDF का text content पढ़कर key points, main arguments और important details identify करता है, फिर structured summary generate करता है।"
+      },
+      {
+        "question": "किस तरह के documents best results देते हैं?",
+        "answer": "Text-heavy documents जैसे research papers, reports, articles और legal documents best results देते हैं। Image-heavy PDFs में results limited हो सकते हैं।"
+      },
+      {
+        "question": "क्या document content private रहता है?",
+        "answer": "हाँ, content securely process होता है और summarization के बाद store नहीं होता। Documents AI training में use नहीं होते।"
+      },
+      {
+        "question": "क्या यह tool free है?",
+        "answer": "AI PDF Summarizer Pro feature है और login account के साथ Pro subscription require करता है।"
+      }
+    ]
+  },
+
+  "cookieBanner": {
+    "title": "कुकी और प्राइवेसी प्राथमिकताएँ",
+    "body": "OnlyMyPDF साइट सुरक्षित चलाने के लिए आवश्यक कुकीज़ उपयोग करता है। वैकल्पिक analytics/marketing कुकीज़ तब तक बंद रहती हैं जब तक आप चुन न लें। देखें",
+    "cookiePolicy": "कुकी पॉलिसी",
+    "privacyPolicy": "प्राइवेसी पॉलिसी",
+    "essential": "आवश्यक",
+    "essentialHint": "सुरक्षा और लॉगिन के लिए ज़रूरी",
+    "analytics": "Analytics",
+    "analyticsHint": "टूल्स सुधारने में मदद (वैकल्पिक)",
+    "marketing": "Marketing",
+    "marketingHint": "बाद में personalized ads के लिए",
+    "acceptAll": "सभी स्वीकार करें",
+    "rejectNonEssential": "गैर-आवश्यक अस्वीकार",
+    "customize": "कस्टमाइज़",
+    "savePreferences": "प्राथमिकताएँ सहेजें",
+    "dismissAria": "बंद करें और गैर-आवश्यक कुकीज़ अस्वीकार करें"
+  },
+
   "settingsPage": {
     "title": "प्राइवेसी और डेटा",
     "subtitle": "GDPR अधिकार: एक्सपोर्ट, मिटाना और कुकी प्राथमिकताएँ।",
     "back": "ओवरव्यू पर वापस",
     "exportTitle": "अपना डेटा डाउनलोड करें",
-    "exportDesc": "प्रोफ़ाइल, टूल जॉब मेटाडेटा और बिलिंग सारांश JSON में (GDPR पोर्टेबिलिटी)।",
+    "exportDesc": "प्रोफ़ाइल, टूल जॉब मेटाडेटा और बिलिंग सारांश JSON में (GDPR पोर्टेबिलिटी)। पासवर्ड से पुष्टि करें।",
+    "exportPasswordLabel": "अपने पासवर्ड से पुष्टि करें",
+    "exportPasswordPlaceholder": "अपना पासवर्ड दर्ज करें",
+    "exportReauthFail": "गलत पासवर्ड। एक्सपोर्ट के लिए पासवर्ड पुष्टि आवश्यक है।",
     "exportBtn": "मेरा डेटा एक्सपोर्ट करें",
     "exporting": "तैयार हो रहा है…",
     "exportDone": "डेटा एक्सपोर्ट डाउनलोड हो गया।",

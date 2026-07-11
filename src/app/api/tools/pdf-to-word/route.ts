@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
@@ -12,15 +13,17 @@ import {
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
 import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
+import { sanitizeFilename } from "@/lib/utils/file";
 import { clientIpForLogs } from "@/lib/server/request-security";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { heavyJobCapacityResponse, isHeavyJobCapacityError } from "@/lib/server/heavy-job-http";
 import { userBlockedResponse } from "@/lib/server/user-blocked-http";
 import { guardMaintenanceMode } from "@/lib/server/tool-request-guards";
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { guardToolRateLimit, guardApiKeyRateLimit } from "@/lib/server/rate-limiter";
+import { guardToolMutationOrigin } from "@/lib/server/mutation-origin";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { resolveToolJobOwnerKey } from "@/lib/server/job-owner";
 
@@ -43,22 +46,17 @@ function parsePassword(formData: FormData): string | undefined {
   }
 }
 
-function passwordErrorResponse(message: string) {
+function passwordErrorResponse(request: NextRequest, message: string) {
   const mapped = mapPdfToWordError(message);
   if (mapped === "PASSWORD_REQUIRED") {
-    return NextResponse.json(
-      {
-        error: "This PDF is password-protected. Enter the password to convert.",
-        code: "PASSWORD_REQUIRED",
-      },
-      { status: 422 }
-    );
+    return toolJsonError(request, "This PDF is password-protected. Enter the password to convert.", 422, {
+      code: "PASSWORD_REQUIRED",
+    });
   }
   if (mapped === "WRONG_PASSWORD") {
-    return NextResponse.json(
-      { error: "Incorrect password. Please try again.", code: "WRONG_PASSWORD" },
-      { status: 422 }
-    );
+    return toolJsonError(request, "Incorrect password. Please try again.", 422, {
+      code: "WRONG_PASSWORD",
+    });
   }
   return null;
 }
@@ -152,44 +150,47 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    const maintenance = await guardMaintenanceMode();
+    const originBlocked = guardToolMutationOrigin(request);
+    if (originBlocked) {
+      return toolJsonError(request, "Invalid request origin", 403);
+    }
+
+    const maintenance = await guardMaintenanceMode(request);
     if (maintenance) return maintenance;
+
+    const apiKeyRate = await guardApiKeyRateLimit(request, "pdf-to-word");
+    if (apiKeyRate) return apiKeyRate;
 
     const toolRate = await guardToolRateLimit(request, "pdf-to-word");
     if (toolRate) return toolRate;
 
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
     const userContext = await resolveToolUserContext(userId);
     const maxSizeMB = userContext.maxSizeMB;
 
     const usage = await checkUsageLimit(userId, getGuestUsageKey(request));
     if (!usage.allowed) {
-      return NextResponse.json(
-        { error: usage.message || "Daily usage limit reached." },
-        { status: 429 }
-      );
+      return toolJsonError(request, usage.message || "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only PDF files are accepted." },
-        { status: 400 }
-      );
+    const validated = await validateSingleUpload(file, ["pdf"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only PDF files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = validated.buffer;
     const originalName = file.name.replace(/\.pdf$/i, "");
     const outputFilename = `${sanitizeFilename(originalName)}.docx`;
     const pdfPassword = parsePassword(formData);
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
       prepared = await preparePdfInput(buffer, pdfPassword);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      const passwordResponse = passwordErrorResponse(message);
+      const passwordResponse = passwordErrorResponse(request, message);
       if (passwordResponse) return passwordResponse;
       throw err;
     }
@@ -282,25 +283,16 @@ export async function POST(request: NextRequest) {
     }).catch(() => {});
 
     if (message === "PASSWORD_REQUIRED") {
-      return NextResponse.json(
-        {
-          error: "This PDF is password-protected. Enter the password to convert.",
-          code: "PASSWORD_REQUIRED",
-        },
-        { status: 422 }
-      );
+      return toolJsonError(request, "This PDF is password-protected. Enter the password to convert.", 422);
     }
     if (message === "WRONG_PASSWORD") {
-      return NextResponse.json(
-        { error: "Incorrect password. Please try again.", code: "WRONG_PASSWORD" },
-        { status: 422 }
-      );
+      return toolJsonError(request, "Incorrect password. Please try again.", 422);
     }
 
     if (message.includes("usage limit") || message.includes("limit reached")) {
-      return NextResponse.json({ error: message }, { status: 429 });
+      return toolJsonError(request, message, 429);
     }
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return toolJsonError(request, message, 500);
   }
 }

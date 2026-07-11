@@ -1,14 +1,7 @@
 import type { ToolSEO } from "@/types";
-import {
-  FILE_LIMITS,
-  formatFileSizeMarketingLabel,
-} from "@/config/constants";
+import { planFileSizeFaqLine } from "@/lib/billing/billing-copy";
 
-function planFileSizeFaqLine(): string {
-  const free = formatFileSizeMarketingLabel(FILE_LIMITS.maxFreeFileSizeMB).toLowerCase();
-  const pro = formatFileSizeMarketingLabel(FILE_LIMITS.maxProFileSizeMB).toLowerCase();
-  return `Free: ${free}; Pro: ${pro}.`;
-}
+export { planFileSizeFaqLine };
 
 export const TOOL_SEO: Record<string, ToolSEO> = {
   "merge-pdf": {
@@ -17,7 +10,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       "Merge multiple PDF files into a single document online for free. Drag and drop to reorder pages. No signup required. Fast, secure, and easy to use.",
     h1: "Merge PDF Files Online — Free & Fast",
     seoContent:
-      "Combine two or more PDF files into a single document in seconds. OnlyMyPDF's Merge PDF tool lets you drag and drop multiple files, reorder pages as needed, and download a perfectly combined PDF — all from your browser. No software to install, no registration required. Whether you're merging reports, contracts, or study notes, our tool accepts files of any size with zero quality loss.",
+      "Combine two or more PDF files into a single document in seconds. OnlyMyPDF's Merge PDF tool lets you drag and drop multiple files, reorder pages as needed, and download a perfectly combined PDF — all from your browser. No software to install, no registration required.",
     faqs: [
       {
         question: "How do I merge PDF files?",
@@ -105,7 +98,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "How accurate is the PDF to Word conversion?",
         answer:
-          "We use a multi-engine pipeline for Smallpdf-class results: ConvertAPI (when configured), Microsoft Word or LibreOffice on the server, then pdf2docx (Python). Complex layouts like tax invoices keep tables, fonts, and images. The basic text-only fallback is never used when a quality engine is available.",
+          "We use a multi-engine pipeline for professional-grade results: ConvertAPI (when configured), Microsoft Word or LibreOffice on the server, then pdf2docx (Python). Complex layouts like tax invoices keep tables, fonts, and images. The basic text-only fallback is never used when a quality engine is available.",
       },
       {
         question: "Can I convert a scanned PDF to Word?",
@@ -120,7 +113,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       {
         question: "Is there a page limit for conversion?",
         answer:
-          "There is no specific page limit and no file size limit.",
+          "There is no specific page limit. " + planFileSizeFaqLine(),
       },
     ],
   },
@@ -470,7 +463,7 @@ export const TOOL_SEO: Record<string, ToolSEO> = {
       },
       {
         question: "How many slides can I convert?",
-        answer: "There is no slide count limit and no file size limit.",
+        answer: `There is no slide count limit. ${planFileSizeFaqLine()}`,
       },
     ],
   },

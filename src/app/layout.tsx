@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -95,14 +96,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerList = await headers();
+  const locale = headerList.get("x-locale") === "hi" ? "hi" : "en";
+
   return (
     <html
-      lang="en"
+      lang={locale}
       data-brand-theme={DEFAULT_BRAND_THEME}
       data-layout-style={DEFAULT_LAYOUT_STYLE}
       className={`${inter.variable} ${plusJakarta.variable} ${LAYOUT_BODY_CLASS[DEFAULT_LAYOUT_STYLE]} h-full antialiased`}

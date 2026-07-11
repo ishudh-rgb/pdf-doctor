@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getUserJobs, getUserProfile, getUserDailyUsage } from "@/lib/db/queries";
-import { getApiUser } from "@/lib/auth/get-api-user";
+import { tryGetApiUser } from "@/lib/auth/get-api-user";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 import { getCachedAdminSettings } from "@/lib/db/admin-settings-cache";
+import { isActivePro } from "@/lib/auth/plan-access";
 import {
   getLocalDevDailyUsage,
   getLocalDevJobs,
@@ -108,12 +109,13 @@ async function buildLocalDevFilesResponse(userId: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getApiUser();
-    if (!user) {
+    const auth = await tryGetApiUser();
+    if (!auth.ok) {
       const rateLimited = await guardGeneralApiRateLimit(request);
       if (rateLimited) return rateLimited;
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return auth.response;
     }
+    const user = auth.user;
 
     if (isLocalDevActivityEnabled()) {
       return buildLocalDevFilesResponse(user.id);
@@ -185,7 +187,7 @@ export async function GET(request: NextRequest) {
 
     const profile = await getUserProfile(user.id);
     const settings = await getCachedAdminSettings();
-    const isPro = (profile as { plan?: string }).plan === "pro";
+    const isPro = isActivePro(profile);
     const filesLimit =
       typeof settings.free_daily_limit === "number"
         ? settings.free_daily_limit

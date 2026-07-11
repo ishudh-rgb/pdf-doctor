@@ -1,4 +1,4 @@
-export const GDPR_EXPORT_FORMAT = "onlymypdf-gdpr-export-v2";
+export const GDPR_EXPORT_FORMAT = "onlymypdf-gdpr-export-v3";
 
 export type GdprExportSection =
   | "account"
@@ -9,7 +9,11 @@ export type GdprExportSection =
   | "consent_records"
   | "usage_logs"
   | "ai_usage_logs"
-  | "uploaded_files";
+  | "uploaded_files"
+  | "organizations"
+  | "organization_memberships"
+  | "api_keys"
+  | "billing_invoices";
 
 export const GDPR_EXPORT_SECTIONS: GdprExportSection[] = [
   "account",
@@ -21,6 +25,10 @@ export const GDPR_EXPORT_SECTIONS: GdprExportSection[] = [
   "usage_logs",
   "ai_usage_logs",
   "uploaded_files",
+  "organizations",
+  "organization_memberships",
+  "api_keys",
+  "billing_invoices",
 ];
 
 export function buildGdprExportPayload(data: {
@@ -33,6 +41,10 @@ export function buildGdprExportPayload(data: {
   usageLogs: Record<string, unknown>[];
   aiUsageLogs: Record<string, unknown>[];
   uploadedFiles: Record<string, unknown>[];
+  organizations: Record<string, unknown>[];
+  organizationMemberships: Record<string, unknown>[];
+  apiKeys: Record<string, unknown>[];
+  billingInvoices: Record<string, unknown>[];
 }) {
   return {
     exported_at: new Date().toISOString(),
@@ -51,5 +63,9 @@ export function buildGdprExportPayload(data: {
     usage_logs: data.usageLogs,
     ai_usage_logs: data.aiUsageLogs,
     uploaded_files: data.uploadedFiles,
+    organizations: data.organizations,
+    organization_memberships: data.organizationMemberships,
+    api_keys: data.apiKeys,
+    billing_invoices: data.billingInvoices,
   };
 }

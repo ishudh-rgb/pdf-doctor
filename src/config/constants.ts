@@ -7,13 +7,21 @@ export const PRO_PRICING = {
   yearlyPaise: 239900,
 } as const;
 
+/** Team / Business plan defaults (per-seat billing via contact sales in live mode). */
+export const TEAM_PRICING = {
+  monthlyInrPerSeat: 249,
+  yearlyInrPerSeat: 1999,
+  defaultSeatLimit: 5,
+  defaultDailyToolLimit: 500,
+} as const;
+
 export const APP_NAME = "OnlyMyPDF";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "support@onlymypdf.in";
 export const APP_DESCRIPTION =
   "Free online PDF tools to merge, split, compress, convert, edit, sign, and protect your PDFs. No signup required for basic tools.";
 
-/** 0 means no upload size cap (all tools accept any file size). */
+/** Internal bypass only — default UI uses FILE_LIMITS.maxFreeFileSizeMB. */
 export const UNLIMITED_FILE_SIZE_MB = 0;
 
 function parseFileSizeLimitMb(

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { FILE_SIZE_MARKETING, FILE_LIMITS } from "@/config/constants";
 import {
   ArrowRight,
   Sparkles,
@@ -21,14 +22,10 @@ import {
   Crown,
   Star,
   Users,
-  Infinity,
 } from "lucide-react";
-import { FILE_LIMITS } from "@/config/constants";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
-import { HeroVisual } from "@/components/marketing/hero-visual";
-import { StatsBar } from "@/components/marketing/stats-bar";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import {
   CATEGORY_FALLBACK_LABELS,
@@ -337,9 +334,9 @@ const PRICING_LEFT_BENEFITS = [
     bg: "bg-pd-brand-muted",
   },
   {
-    icon: Infinity,
-    title: "No file size limit",
-    desc: "Upload large PDFs others block",
+    icon: HardDrive,
+    title: "Clear file size limits",
+    desc: `${FILE_SIZE_MARKETING.freeLabel} free · ${FILE_SIZE_MARKETING.proLabel} on Pro`,
     accent: "text-amber-600",
     bg: "bg-amber-50",
   },
@@ -757,7 +754,12 @@ export function FAQSection() {
                                   freeSize: FILE_LIMITS.maxFreeFileSizeMB,
                                   proSize: FILE_LIMITS.maxProFileSizeMB,
                                 })
-                              : t(`landing.${key}a`)}
+                              : key === "faq4"
+                                ? t("landing.faq4a", {
+                                    freeSize: FILE_LIMITS.maxFreeFileSizeMB,
+                                    proSize: FILE_LIMITS.maxProFileSizeMB,
+                                  })
+                                : t(`landing.${key}a`)}
                           </p>
                         </div>
                       </div>

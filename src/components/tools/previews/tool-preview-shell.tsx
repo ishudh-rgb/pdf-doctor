@@ -46,7 +46,7 @@ export function PreviewStatGrid({ items }: { items: { label: string; value: stri
     <div className="grid shrink-0 grid-cols-3 gap-2 text-center text-xs">
       {items.map((item) => (
         <div key={item.label} className="rounded-lg border border-gray-100 bg-white px-2 py-2">
-          <p className="text-gray-500">{item.label}</p>
+          <p className="text-pd-muted">{item.label}</p>
           <p className="font-semibold text-gray-900">{item.value}</p>
         </div>
       ))}

@@ -8,6 +8,7 @@ import { updateAdminSetting } from "@/lib/db/queries";
 import { toSafeApiError } from "@/lib/server/safe-error";
 import { logAdminAction } from "@/lib/admin/audit-log";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
+import { storedAmountInInr } from "@/lib/payment/payment-amount";
 
 function dayLabel(date: Date): string {
   return date.toLocaleDateString("en-US", { weekday: "short" });
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const revenueThisMonth =
-      revenueRes.data?.reduce((sum, p) => sum + Number(p.amount), 0) ?? 0;
+      revenueRes.data?.reduce((sum, p) => sum + storedAmountInInr(Number(p.amount)), 0) ?? 0;
 
     const toolBreakdown: Record<string, number> = {};
     const dailyCounts = new Map<string, number>();
@@ -129,7 +130,7 @@ export async function GET(request: NextRequest) {
         totalUsers: totalUsersRes.count ?? 0,
         proUsers: proNow,
         filesProcessedToday: filesToday,
-        revenueThisMonth: Math.round(revenueThisMonth / 100),
+        revenueThisMonth: Math.round(revenueThisMonth),
         usersTrend: 0,
         proTrend,
         fileTrend,

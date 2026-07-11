@@ -80,7 +80,7 @@ export function SignPageThumb({
             Blank
           </div>
         ) : thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
+           
           <img src={thumb} alt={`Page ${pageNum}`} className="aspect-[3/4] w-full object-cover object-top" />
         ) : (
           <div className="aspect-[3/4] animate-pulse bg-pd-border/40" />

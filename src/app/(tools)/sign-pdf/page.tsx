@@ -1,5 +1,6 @@
 'use client';
 
+import { planFileSizeFaqLine } from '@/lib/billing/billing-copy';
 import { useCallback, useRef, useState } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { SignPdfWorkspace } from '@/components/tools/lazy-workspaces';
@@ -29,7 +30,7 @@ const FAQS = [
   },
   {
     q: 'Is there a file size limit?',
-    a: 'No. Sign PDFs of any size with no page restrictions.',
+    a: planFileSizeFaqLine(),
   },
 ];
 
@@ -76,7 +77,7 @@ export default function SignPdfPage() {
   return (
     <ToolPageShell
       title="Sign PDF"
-      description="Add signatures, initials, dates, and annotations — Smallpdf-style editor"
+      description="Add signatures, initials, dates, and annotations in a visual editor"
       fullWidthWorkspace={!!file}
       relatedTools={mapRelatedTools(RELATED_TOOLS)}
       faqs={mapFaqs(FAQS)}
@@ -105,7 +106,7 @@ export default function SignPdfPage() {
           <ToolDropzone
             chooseLabel="Select PDF"
             hint="or drag and drop your PDF here"
-            subHint="Any file size · PDF only"
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();

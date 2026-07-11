@@ -1,10 +1,12 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { htmlFileToPdf } from "@/lib/services/html-to-pdf-convert.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { validateFileSize, sanitizeFilename } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
+import { sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { createPdfSession } from "@/lib/pdf/pdf-session-store";
 import { clientIpForLogs, ownerHashFromRequest } from "@/lib/server/request-security";
@@ -12,12 +14,6 @@ import { probePdfAccess } from "@/lib/pdf/pdf-password.server";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 
 export const maxDuration = 300;
-
-const ALLOWED_EXTENSIONS = ["html", "htm", "xhtml", "mhtml", "svg"];
-
-function getFileExtension(name: string): string {
-  return name.split(".").pop()?.toLowerCase() ?? "";
-}
 
 export async function POST(request: NextRequest) {
   const early = await beginToolRoute(request, "html-to-pdf");
@@ -27,7 +23,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -36,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     const usageResult = await checkUsageLimit(userId, request, "html-to-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
@@ -46,26 +44,18 @@ export async function POST(request: NextRequest) {
     const margin = (formData.get("margin") as string) || "small";
 
     if (!file) {
-      return NextResponse.json(
-        { error: "HTML file is required" },
-        { status: 400 }
-      );
+      return toolJsonError(request, "HTML file is required", 400);
     }
 
-    const ext = getFileExtension(file.name);
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only HTML, HTM, XHTML, MHTML, and SVG files are accepted." },
-        { status: 400 }
-      );
+    const validated = await validateSingleUpload(file, ["html"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only HTML files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = validated.buffer;
     const pdfBuffer = await withHeavyJobGuard(() =>
       htmlFileToPdf(buffer, file.name, {
         pageSize: pageSize as "a4" | "letter" | "auto",
@@ -110,7 +100,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "html-to-pdf",
       userId,
       errorType: "CONVERT_ERROR",

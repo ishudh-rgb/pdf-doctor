@@ -1,13 +1,14 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { splitPDF, splitAllPages, extractPages } from "@/lib/services/pdf-split.service";
 import { buildPdfBuffersDownloadResponse } from "@/lib/pdf/pdf-buffers-response";
 import { buildZip } from "@/lib/services/zip-builder";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -21,7 +22,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     const usageResult = await checkUsageLimit(userId, request, "split-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
@@ -40,41 +43,31 @@ export async function POST(request: NextRequest) {
     const pages = formData.get("pages") as string | null;
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only PDF files are accepted." },
-        { status: 400 }
-      );
-    }
-
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
+    const validated = await validateSingleUpload(file, ["pdf"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only PDF files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
     const password = (formData.get("password") as string | null) || null;
     let buffer: Buffer;
 
     try {
-      buffer = await resolvePdfBuffer(Buffer.from(await file.arrayBuffer()), password);
+      buffer = await resolvePdfBuffer(validated.buffer, password);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to open PDF";
       if (msg === "PASSWORD_REQUIRED") {
-        return NextResponse.json(
-          { error: "This PDF is password-protected. Enter the password to continue." },
-          { status: 400 }
-        );
+        return toolJsonError(request, "This PDF is password-protected. Enter the password to continue.", 400);
       }
       if (msg === "WRONG_PASSWORD") {
-        return NextResponse.json(
-          { error: "Incorrect password. Please try again." },
-          { status: 400 }
-        );
+        return toolJsonError(request, "Incorrect password. Please try again.", 400);
       }
-      return NextResponse.json({ error: msg }, { status: 400 });
+      return toolJsonError(request, msg, 400);
     }
 
     let result: Buffer | Buffer[];
@@ -86,9 +79,10 @@ export async function POST(request: NextRequest) {
         break;
       case "range":
         if (!ranges) {
-          return NextResponse.json(
-            { error: "Ranges are required for range split mode (e.g., '1-3,5-7')" },
-            { status: 400 }
+          return toolJsonError(
+            request,
+            "Ranges are required for range split mode (e.g., 1-3, 5-7).",
+            400
           );
         }
         {
@@ -101,20 +95,21 @@ export async function POST(request: NextRequest) {
         break;
       case "extract":
         if (!pages) {
-          return NextResponse.json(
-            { error: "Page numbers are required for extract mode (e.g., '1,3,5')" },
-            { status: 400 }
+          return toolJsonError(
+            request,
+            "Page numbers are required for extract mode (e.g., 1, 3, 5).",
+            400
           );
         }
         const pageNumbers = pages.split(",").map((p) => parseInt(p.trim(), 10));
         if (pageNumbers.some(isNaN)) {
-          return NextResponse.json({ error: "Invalid page numbers" }, { status: 400 });
+          return toolJsonError(request, "Invalid page numbers", 400);
         }
         result = await extractPages(buffer, pageNumbers);
         filename = "extracted.pdf";
         break;
       default:
-        return NextResponse.json({ error: "Invalid split mode" }, { status: 400 });
+        return toolJsonError(request, "Invalid split mode", 400);
     }
 
     const processingTime = Date.now() - startTime;
@@ -198,7 +193,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "split-pdf",
       userId,
       errorType: "SPLIT_ERROR",

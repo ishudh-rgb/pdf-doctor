@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { addWatermarkToPDF, type WatermarkOptions } from "@/lib/services/pdf-watermark.service";
 import { createToolRoute } from "@/lib/api/tool-route";
 

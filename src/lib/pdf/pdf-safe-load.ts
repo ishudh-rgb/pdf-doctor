@@ -9,6 +9,7 @@ export async function safePdfLoad(
   buffer: Buffer,
   toolName?: string
 ): Promise<ReturnType<typeof PDFDocument.load>> {
+  void toolName;
   try {
     return await PDFDocument.load(buffer);
   } catch (err) {

@@ -3,6 +3,7 @@ const ALLOWED_ADMIN_SETTING_KEYS = new Set([
   "free_daily_file_limit",
   "free_max_file_size_mb",
   "pro_max_file_size_mb",
+  "pro_daily_tool_limit",
   "free_daily_ai_limit",
   "ads_enabled",
   "maintenance_mode",
@@ -25,7 +26,8 @@ export function normalizeAdminSettingValue(key: string, value: unknown): string 
     key === "free_daily_limit" ||
     key === "free_daily_file_limit" ||
     key === "free_daily_ai_limit" ||
-    key === "file_retention_hours"
+    key === "file_retention_hours" ||
+    key === "pro_daily_tool_limit"
   ) {
     const n = Number(raw);
     if (!Number.isFinite(n) || n < 0) {

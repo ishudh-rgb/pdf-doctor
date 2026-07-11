@@ -6,6 +6,7 @@
 
 # testing
 /coverage
+/e2e/fixtures/*.pdf
 /test-results/
 /playwright-report/
 /blob-report/

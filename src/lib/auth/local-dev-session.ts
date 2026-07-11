@@ -1,11 +1,8 @@
 import crypto from "crypto";
 import type { NextRequest } from "next/server";
+import { getLocalDevSessionSecret } from "@/lib/auth/local-dev-session-secret";
 
 export const LOCAL_DEV_SESSION_COOKIE = "pdf-doctor-dev-session";
-
-function getSessionSecret(): string {
-  return process.env.CRON_SECRET || "pdf-doctor-local-dev-secret";
-}
 
 export function createLocalDevSessionToken(userId: string): string {
   const payload = JSON.stringify({
@@ -13,7 +10,7 @@ export function createLocalDevSessionToken(userId: string): string {
     exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
   });
   const signature = crypto
-    .createHmac("sha256", getSessionSecret())
+    .createHmac("sha256", getLocalDevSessionSecret())
     .update(payload)
     .digest("hex");
   return Buffer.from(`${payload}.${signature}`).toString("base64url");
@@ -28,7 +25,7 @@ export function parseLocalDevSessionToken(token: string): string | null {
     const payload = decoded.slice(0, separator);
     const signature = decoded.slice(separator + 1);
     const expected = crypto
-      .createHmac("sha256", getSessionSecret())
+      .createHmac("sha256", getLocalDevSessionSecret())
       .update(payload)
       .digest("hex");
 

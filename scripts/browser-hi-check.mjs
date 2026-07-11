@@ -8,7 +8,8 @@ page.on("pageerror", (e) => errors.push(e.message));
 
 await page.goto(base + "/word-to-pdf", { waitUntil: "networkidle2", timeout: 60000 });
 await page.click('button:has-text("HI")').catch(async () => {
-  const hi = await page.$('[aria-label*="Hindi"], button');
+  const hiButton = await page.$('[aria-label*="Hindi"], button');
+  void hiButton;
   const buttons = await page.$$("button");
   for (const b of buttons) {
     const t = await page.evaluate((el) => el.textContent, b);

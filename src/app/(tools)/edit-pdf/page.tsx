@@ -6,6 +6,7 @@ import { EditPdfWorkspace } from '@/components/tools/lazy-workspaces';
 import { mapRelatedTools } from '@/components/tools/tool-helpers';
 import { ToolDropzone, ToolErrorBanner } from '@/components/tools/tool-ui';
 import { TOOLS } from '@/config/constants';
+import { planFileSizeFaqLine } from '@/lib/billing/billing-copy';
 import type { FAQ } from '@/types';
 
 const FAQS: FAQ[] = [
@@ -22,7 +23,7 @@ const FAQS: FAQ[] = [
   {
     question: 'Is there a page or file size limit?',
     answer:
-      'There is no file size limit. Edit PDFs of any size with no page restrictions.',
+      `There is no page limit for editing. ${planFileSizeFaqLine()}`,
   },
 ];
 
@@ -61,7 +62,7 @@ export default function EditPdfPage() {
   return (
     <ToolPageShell
       title="Edit PDF"
-      description="Edit text, draw, highlight, add shapes, images & signatures — Smallpdf-style workspace"
+      description="Edit text, draw, highlight, add shapes, images & signatures in a full-screen workspace"
       fullWidthWorkspace
       relatedTools={mapRelatedTools(relatedTools.map((t) => ({ name: t.name, href: `/${t.slug}` })))}
       faqs={FAQS}
@@ -71,7 +72,7 @@ export default function EditPdfPage() {
           <ToolDropzone
             chooseLabel="Select PDF"
             hint="or drag and drop your PDF here"
-            subHint="Any file size · PDF only"
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();
@@ -88,7 +89,7 @@ export default function EditPdfPage() {
           {uploadError && <ToolErrorBanner message={uploadError} />}
           <p className="mt-4 text-center text-xs text-pd-muted">
             After upload you&apos;ll enter a full-screen editor with page thumbnails, toolbar, and
-            click-to-place editing — inspired by Smallpdf.
+            click-to-place editing.
           </p>
         </div>
       ) : (

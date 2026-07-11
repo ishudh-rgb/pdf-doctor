@@ -1,4 +1,5 @@
 import type { HowToStep, ToolAeo } from "@/types";
+import { compressToolAeoSizeFact } from "@/lib/billing/billing-copy";
 
 function aeo(
   shortAnswer: string,
@@ -38,7 +39,7 @@ export const TOOL_AEO: Record<string, ToolAeo> = {
       { name: "Pick compression level", text: "Choose low (best quality), medium (balanced), or high (smallest file)." },
       { name: "Download compressed PDF", text: "Process the file and download the optimized PDF with the new file size shown." },
     ],
-    ["Typical savings: 30–80% depending on content", "Three compression presets", "No file size upload cap", "Runs in the browser", "Encrypted transfer and auto-deletion"]
+    ["Typical savings: 30–80% depending on content", "Three compression presets", compressToolAeoSizeFact(), "Runs in the browser", "Encrypted transfer and auto-deletion"]
   ),
   "rotate-pdf": aeo(
     "OnlyMyPDF Rotate PDF turns pages 90°, 180°, or 270° in a visual editor. Rotate one page, multiple selected pages, or bulk-rotate from the toolbar.",

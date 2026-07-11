@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface Job {

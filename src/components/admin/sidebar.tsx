@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils/cn";
 import {
   LayoutDashboard,
   Users,
+  Building2,
   BarChart3,
   Clock,
   Settings,
@@ -22,6 +23,7 @@ import { Logo } from "@/components/common/logo";
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Organizations", href: "/admin/organizations", icon: Building2 },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Jobs", href: "/admin/jobs", icon: Clock },
   { label: "Settings", href: "/admin/settings", icon: Settings },

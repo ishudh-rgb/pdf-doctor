@@ -10,7 +10,7 @@ interface SignThumbScrollPanelProps {
 }
 
 /**
- * Smallpdf-style thumbnail column: fixed-height panel with custom scrollbar rail.
+ * Thumbnail column with custom scrollbar rail.
  * Parent MUST constrain height (flex-1 min-h-0 or absolute inset-0).
  */
 export function SignThumbScrollPanel({ children, className }: SignThumbScrollPanelProps) {
@@ -149,8 +149,7 @@ export function SignThumbScrollPanel({ children, className }: SignThumbScrollPan
           ref={railRef}
           className="relative min-h-0 flex-1 cursor-pointer bg-[#eef2f7]"
           onClick={onRailClick}
-          role="scrollbar"
-          aria-orientation="vertical"
+          aria-hidden
         >
           <div
             className={cn(

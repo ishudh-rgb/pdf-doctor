@@ -4,7 +4,7 @@ import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
 import { getUserConsentRecords, logConsentRecord } from "@/lib/db/queries";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
-import { getApiUser } from "@/lib/auth/get-api-user";
+import { tryGetApiUser } from "@/lib/auth/get-api-user";
 import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 
 export async function GET(request: NextRequest) {
@@ -12,10 +12,9 @@ export async function GET(request: NextRequest) {
   if (rateLimited) return rateLimited;
 
   try {
-    const user = await getApiUser();
-    if (!user) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-    }
+    const auth = await tryGetApiUser();
+    if (!auth.ok) return auth.response;
+    const user = auth.user;
 
     const records = await getUserConsentRecords(user.id);
     const latest = records[0] ?? null;
@@ -51,10 +50,16 @@ export async function POST(request: NextRequest) {
       consent_version?: string;
     };
 
-    const user = await getApiUser();
+    let userId: string | null = null;
+    const auth = await tryGetApiUser();
+    if (auth.ok) {
+      userId = auth.user.id;
+    } else if (auth.response.status !== 401) {
+      return auth.response;
+    }
 
     await logConsentRecord({
-      user_id: user?.id ?? null,
+      user_id: userId,
       guest_session_id: getGuestSessionIdFromRequest(request),
       consent_version: body.consent_version ?? CONSENT_VERSION,
       essential: true,

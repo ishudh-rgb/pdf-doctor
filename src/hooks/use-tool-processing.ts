@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useToolErrors } from "@/hooks/use-tool-errors";
 
 type ProcessingStatus = "idle" | "uploading" | "processing" | "completed" | "error";
 
@@ -20,6 +21,7 @@ interface UseToolProcessingOptions {
 
 export function useToolProcessing(options: UseToolProcessingOptions) {
   const { toolEndpoint, onSuccess, onError } = options;
+  const { resolveApiError, resolveCatchError } = useToolErrors();
 
   const [status, setStatus] = useState<ProcessingStatus>("idle");
   const [progress, setProgress] = useState(0);
@@ -54,8 +56,10 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
-          const message =
-            errorData?.error || `Processing failed (${response.status})`;
+          const message = resolveApiError(
+            errorData as { error?: string; correlationId?: string } | null,
+            "errors.processingFailed"
+          );
 
           if (
             response.status === 429 ||
@@ -94,13 +98,13 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
         const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
         notifyActivityUpdated();
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Processing failed";
+        const message = resolveCatchError(err);
         setError(message);
         setStatus("error");
         onError?.(message);
       }
     },
-    [toolEndpoint, onSuccess, onError]
+    [toolEndpoint, onSuccess, onError, resolveApiError, resolveCatchError]
   );
 
   const processWithJson = useCallback(
@@ -127,8 +131,10 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
-          const message =
-            errorData?.error || `Processing failed (${response.status})`;
+          const message = resolveApiError(
+            errorData as { error?: string; correlationId?: string } | null,
+            "errors.processingFailed"
+          );
 
           if (
             response.status === 429 ||
@@ -164,13 +170,13 @@ export function useToolProcessing(options: UseToolProcessingOptions) {
         const { notifyActivityUpdated } = await import("@/lib/client/activity-events");
         notifyActivityUpdated();
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Processing failed";
+        const message = resolveCatchError(err);
         setError(message);
         setStatus("error");
         onError?.(message);
       }
     },
-    [toolEndpoint, onSuccess, onError]
+    [toolEndpoint, onSuccess, onError, resolveApiError, resolveCatchError]
   );
 
   const downloadResult = useCallback(() => {

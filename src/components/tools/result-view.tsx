@@ -42,7 +42,7 @@ export function ResultView({
       </h2>
 
       {/* File info */}
-      <div className="mt-4 flex flex-col items-center gap-1 text-sm text-gray-500">
+      <div className="mt-4 flex flex-col items-center gap-1 text-sm text-pd-muted">
         <span className="font-medium text-gray-700">{fileName}</span>
         <span>{fileSize}</span>
         {compressionRatio && (

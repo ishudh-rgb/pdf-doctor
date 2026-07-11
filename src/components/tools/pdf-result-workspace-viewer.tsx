@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 import {
   loadPdfDocumentPreview,
   pageThumbFromSession,
@@ -36,6 +37,7 @@ export function PdfResultWorkspaceViewer({
   initialSessionId = null,
   initialTotalPages = 0,
 }: PdfResultWorkspaceViewerProps) {
+  const ws = useToolWorkspaceMessages();
   const [sessionId, setSessionId] = useState(initialSessionId ?? "");
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,7 +86,7 @@ export function PdfResultWorkspaceViewer({
       })
       .catch(() => {
         if (!cancelled) {
-          setLoadError("Could not load PDF preview.");
+          setLoadError(ws.couldNotLoadPreview);
           setLoading(false);
         }
       });
@@ -92,7 +94,7 @@ export function PdfResultWorkspaceViewer({
     return () => {
       cancelled = true;
     };
-  }, [blobUrl, filename, initialSessionId, initialTotalPages]);
+  }, [blobUrl, filename, initialSessionId, initialTotalPages, ws.couldNotLoadPreview]);
 
   const renderWidth = Math.min(
     1200,
@@ -225,7 +227,7 @@ export function PdfResultWorkspaceViewer({
             onClick={goPrev}
             disabled={currentPage <= 1}
             className="flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10 disabled:opacity-35"
-            aria-label="Previous page"
+            aria-label={ws.previousPage}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -237,7 +239,7 @@ export function PdfResultWorkspaceViewer({
             onClick={goNext}
             disabled={currentPage >= totalPages}
             className="flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10 disabled:opacity-35"
-            aria-label="Next page"
+            aria-label={ws.nextPage}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -248,7 +250,7 @@ export function PdfResultWorkspaceViewer({
             type="button"
             onClick={() => setZoom((z) => Math.max(60, z - 10))}
             className="flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10"
-            aria-label="Zoom out"
+            aria-label={ws.zoomOut}
           >
             <Minus className="h-4 w-4" />
           </button>
@@ -257,7 +259,7 @@ export function PdfResultWorkspaceViewer({
             type="button"
             onClick={() => setZoom((z) => Math.min(160, z + 10))}
             className="flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10"
-            aria-label="Zoom in"
+            aria-label={ws.zoomIn}
           >
             <Plus className="h-4 w-4" />
           </button>
@@ -308,7 +310,7 @@ export function PdfResultWorkspaceViewer({
                         )}
                       >
                         {thumb ? (
-                          // eslint-disable-next-line @next/next/no-img-element
+                           
                           <img
                             src={thumb}
                             alt={`Page ${pageNum}`}
@@ -317,7 +319,7 @@ export function PdfResultWorkspaceViewer({
                             className="h-full w-full object-contain bg-white"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center bg-white text-xs text-gray-400">
+                          <div className="flex h-full items-center justify-center bg-white text-xs text-pd-muted">
                             …
                           </div>
                         )}
@@ -378,7 +380,7 @@ export function PdfResultWorkspaceViewer({
                       style={{ width: frameWidth, maxWidth: "100%" }}
                     >
                       {src ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                         
                         <img
                           src={src}
                           alt={`Page ${pageNum}`}
@@ -387,7 +389,7 @@ export function PdfResultWorkspaceViewer({
                           className="block w-full h-auto max-h-full bg-white shadow-md"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-white text-sm text-gray-400">
+                        <div className="flex h-full w-full items-center justify-center bg-white text-sm text-pd-muted">
                           …
                         </div>
                       )}

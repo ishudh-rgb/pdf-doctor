@@ -1,7 +1,4 @@
 import { createDeflateRaw } from "zlib";
-import { promisify } from "util";
-
-const deflateRaw = promisify(createDeflateRaw);
 
 /**
  * Builds a minimal valid .docx (PKZIP/OOXML) from a map of file paths to

@@ -10,7 +10,7 @@ interface MergeSelectionCheckboxProps {
   inline?: boolean;
 }
 
-/** Smallpdf-style card checkbox — always visible, blue when checked */
+/** Card checkbox — always visible, blue when checked */
 export function MergeSelectionCheckbox({
   selected,
   onToggle,

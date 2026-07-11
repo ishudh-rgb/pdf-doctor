@@ -62,7 +62,7 @@ export function SignaturePlacementPreview({
             }}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
+          <div className="absolute inset-0 flex items-center justify-center text-xs text-pd-muted">
             Create a signature to preview placement
           </div>
         )}

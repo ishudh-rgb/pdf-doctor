@@ -237,7 +237,7 @@ You should see the PDF Doctor homepage!
 ### Test File Auto-Delete:
 - Files in Supabase Storage should have `expires_at` timestamps
 - After 2 hours, the cleanup job should mark them as deleted
-- Manually trigger: Visit `/api/cron/cleanup?secret=your_cron_secret`
+- Manually trigger (Bearer auth): `curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain/api/cron/cleanup`
 
 ### Test AI Summarizer:
 1. Log in
@@ -288,13 +288,13 @@ Add to `vercel.json` in project root:
 {
   "crons": [
     {
-      "path": "/api/cron/cleanup?secret=YOUR_CRON_SECRET",
+      "path": "/api/cron/cleanup",
       "schedule": "0 */1 * * *"
     }
   ]
 }
 ```
-This runs cleanup every hour. Note: Vercel cron requires Pro plan ($20/month). Alternative: use a free cron service like cron-job.org to hit your cleanup URL every hour.
+Set `CRON_SECRET` in Vercel env vars. Vercel sends `Authorization: Bearer <CRON_SECRET>` automatically for cron invocations. For external cron services, call `GET /api/cron/cleanup` with the same Bearer header (query-string secrets are not supported).
 
 ### Option B: Deploy to Railway (Alternative)
 1. Go to https://railway.app

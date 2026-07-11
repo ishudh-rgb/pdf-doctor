@@ -1,16 +1,24 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button } from "@/components/ui/button";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { MfaChallengeForm } from "@/components/auth/mfa-challenge-form";
+import { EnterpriseSsoForm } from "@/components/auth/enterprise-sso-form";
 import { useTranslation } from "@/i18n";
 
 const inputClass =
   "w-full rounded-xl border border-pd-border bg-pd-surface py-2.5 text-sm text-pd-foreground outline-none transition focus:border-pd-brand focus:ring-2 focus:ring-pd-brand/20";
+
+type MfaState = {
+  factorId: string;
+  challengeId: string;
+};
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -19,9 +27,39 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mfa, setMfa] = useState<MfaState | null>(null);
   const searchParams = useSearchParams();
   const successMessage = searchParams.get("message");
+  const oauthError = searchParams.get("error");
   const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const mfaResumeStep = searchParams.get("step") === "mfa";
+
+  useEffect(() => {
+    if (!mfaResumeStep || mfa) return;
+
+    let cancelled = false;
+
+    async function resumePendingMfa() {
+      try {
+        const res = await fetch("/api/auth/session", { credentials: "include" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (data.requiresMfa && data.mfaChallenge?.factorId && data.mfaChallenge?.challengeId) {
+          setMfa({
+            factorId: data.mfaChallenge.factorId,
+            challengeId: data.mfaChallenge.challengeId,
+          });
+        }
+      } catch {
+        // ignore — user can log in again
+      }
+    }
+
+    void resumePendingMfa();
+    return () => {
+      cancelled = true;
+    };
+  }, [mfaResumeStep, mfa]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -36,9 +74,15 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Invalid email or password. Please try again.");
+      }
+
+      if (data.requiresMfa && data.factorId && data.challengeId) {
+        setMfa({ factorId: data.factorId, challengeId: data.challengeId });
+        return;
       }
 
       window.location.assign(redirectTo);
@@ -49,6 +93,22 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (mfa) {
+    return (
+      <AuthShell title={t("auth.mfaTitle")} subtitle={t("auth.mfaSubtitle")}>
+        <MfaChallengeForm
+          factorId={mfa.factorId}
+          challengeId={mfa.challengeId}
+          redirectTo={redirectTo}
+          onCancel={() => {
+            void fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+            setMfa(null);
+          }}
+        />
+      </AuthShell>
+    );
   }
 
   return (
@@ -67,9 +127,9 @@ export default function LoginPage() {
         </div>
       )}
 
-      {error && (
+      {(error || oauthError) && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
-          {error}
+          {error || oauthError}
         </div>
       )}
 
@@ -129,6 +189,9 @@ export default function LoginPage() {
           {t("auth.loginButton")}
         </Button>
       </form>
+
+      <OAuthButtons redirectTo={redirectTo} className="mt-6" />
+      <EnterpriseSsoForm redirectTo={redirectTo} />
 
       <p className="mt-6 text-center text-sm text-pd-muted">
         {t("auth.noAccount")}{" "}

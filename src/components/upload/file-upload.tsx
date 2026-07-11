@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils/cn";
 import { Progress } from "@/components/ui/progress";
 import { FileCard, type FileCardFile } from "@/components/upload/file-card";
 import { PrivacyBadge } from "@/components/common/privacy-badge";
-import { UNLIMITED_FILE_SIZE_MB, isUnlimitedFileSizeMB } from "@/config/constants";
+import { FILE_LIMITS, isUnlimitedFileSizeMB } from "@/config/constants";
+import { uploadDropzoneSizeLabel } from "@/lib/billing/billing-copy";
+import { useToolErrors } from "@/hooks/use-tool-errors";
 
 type UploadState = "idle" | "dragging" | "uploading" | "uploaded" | "error";
 
@@ -19,22 +21,15 @@ interface FileUploadProps {
   className?: string;
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
-
 export function FileUpload({
   accept = ".pdf",
-  maxSizeMB = UNLIMITED_FILE_SIZE_MB,
+  maxSizeMB = FILE_LIMITS.maxFreeFileSizeMB,
   multiple = false,
   onFilesSelected,
   uploadProgress,
   className,
 }: FileUploadProps) {
+  const { errors } = useToolErrors();
   const [state, setState] = React.useState<UploadState>("idle");
   const [files, setFiles] = React.useState<FileCardFile[]>([]);
   const [rawFiles, setRawFiles] = React.useState<File[]>([]);
@@ -50,7 +45,7 @@ export function FileUpload({
 
     for (const f of incoming) {
       if (!unlimited && f.size > maxSizeBytes) {
-        setErrorMsg(`"${f.name}" exceeds the ${maxSizeMB}MB limit.`);
+        setErrorMsg(errors.fileTooBig(maxSizeMB));
         continue;
       }
       validFiles.push(f);
@@ -152,11 +147,11 @@ export function FileUpload({
               ? "Drop your files here"
               : "Drag & drop your files here"}
           </p>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-pd-muted">
             or click to select files
           </p>
-          <p className="mt-3 text-xs text-gray-400">
-            {unlimited ? "Any file size accepted" : `Max file size: ${maxSizeMB}MB`}
+          <p className="mt-3 text-xs text-pd-muted">
+            {uploadDropzoneSizeLabel(maxSizeMB)}
           </p>
         </div>
       ) : (
@@ -172,7 +167,7 @@ export function FileUpload({
           {!multiple && files.length < 1 && (
             <button
               onClick={() => inputRef.current?.click()}
-              className="w-full rounded-xl border-2 border-dashed border-gray-300 py-3 text-sm text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 cursor-pointer"
+              className="w-full rounded-xl border-2 border-dashed border-gray-300 py-3 text-sm text-pd-muted transition-colors hover:border-gray-400 hover:text-pd-foreground cursor-pointer"
             >
               Add another file
             </button>
@@ -180,7 +175,7 @@ export function FileUpload({
           {multiple && (
             <button
               onClick={() => inputRef.current?.click()}
-              className="w-full rounded-xl border-2 border-dashed border-gray-300 py-3 text-sm text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 cursor-pointer"
+              className="w-full rounded-xl border-2 border-dashed border-gray-300 py-3 text-sm text-pd-muted transition-colors hover:border-gray-400 hover:text-pd-foreground cursor-pointer"
             >
               Add more files
             </button>

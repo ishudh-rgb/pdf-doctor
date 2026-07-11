@@ -1,10 +1,7 @@
 import type { NextRequest } from "next/server";
+import { getLocalDevSessionSecret } from "@/lib/auth/local-dev-session-secret";
 
 export const LOCAL_DEV_SESSION_COOKIE = "pdf-doctor-dev-session";
-
-function getSessionSecret(): string {
-  return process.env.CRON_SECRET || "pdf-doctor-local-dev-secret";
-}
 
 function decodeBase64Url(value: string): string {
   const padded = value + "=".repeat((4 - (value.length % 4)) % 4);
@@ -51,7 +48,7 @@ export async function parseLocalDevSessionTokenEdge(
 
     const payload = decoded.slice(0, separator);
     const signature = decoded.slice(separator + 1);
-    const expected = await createHmacHex(payload, getSessionSecret());
+    const expected = await createHmacHex(payload, getLocalDevSessionSecret());
 
     if (signature !== expected) return null;
 
@@ -76,6 +73,6 @@ export async function createLocalDevSessionTokenEdge(userId: string): Promise<st
     userId,
     exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
   });
-  const signature = await createHmacHex(payload, getSessionSecret());
+  const signature = await createHmacHex(payload, getLocalDevSessionSecret());
   return encodeBase64Url(`${payload}.${signature}`);
 }

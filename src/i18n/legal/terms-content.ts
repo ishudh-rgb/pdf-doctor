@@ -1,4 +1,5 @@
 import { FILE_LIMITS, SUPPORT_EMAIL, formatFileSizeMarketingLabel } from "@/config/constants";
+import { BILLING_COPY } from "@/lib/billing/billing-copy";
 import type { LegalDocument } from "./index";
 
 const freeMb = FILE_LIMITS.maxFreeFileSizeMB;
@@ -9,7 +10,7 @@ const proSizeLabel = formatFileSizeMarketingLabel(proMb);
 export const termsLegal: Record<"en" | "hi", LegalDocument> = {
   en: {
     pageTitle: "Terms of Service",
-    lastUpdated: "May 22, 2026",
+    lastUpdated: "July 1, 2026",
     sections: [
       {
         title: "1. Acceptance of Terms",
@@ -54,7 +55,9 @@ export const termsLegal: Record<"en" | "hi", LegalDocument> = {
         title: "6. Payment and Subscriptions",
         bullets: [
           "Pro plans are billed via Razorpay in INR (monthly or yearly).",
-          "Subscriptions renew unless cancelled before the billing date.",
+          BILLING_COPY.checkoutModel,
+          "Auto-renewing subscriptions renew unless cancelled from Dashboard → Billing before the next charge.",
+          "GST tax invoices are available in Dashboard → Billing after successful payment.",
           "Refunds follow our refund policy and applicable law.",
         ],
       },
@@ -130,7 +133,9 @@ export const termsLegal: Record<"en" | "hi", LegalDocument> = {
         title: "6. भुगतान और सब्सक्रिप्शन",
         bullets: [
           "Pro प्लान Razorpay के ज़रिए INR में (मासिक/वार्षिक) बिल होते हैं।",
-          "बिलिंग तिथि से पहले रद्द न करने पर सब्सक्रिप्शन नवीनीकृत होता है।",
+          "कॉन्फ़िगर होने पर auto-renew subscription; अन्यथा one-time खरीद।",
+          "Dashboard → Billing से auto-renew रद्द करें; अवधि समाप्त होने तक Pro access जारी।",
+          "सफल भुगतान के बाद GST tax invoice Dashboard → Billing में उपलब्ध।",
           "रिफंड हमारी रिफंड नीति और लागू कानून के अनुसार।",
         ],
       },

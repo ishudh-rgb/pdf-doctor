@@ -1,12 +1,19 @@
 "use client";
 
 import { cn } from "@/lib/utils/cn";
+import { usePathname } from "next/navigation";
 import { PrivacyBadge } from "@/components/common/privacy-badge";
 import { useDesignPreview } from "@/components/design/design-preview-provider";
 import type { LayoutStyleId } from "@/config/design-system";
 import { RelatedToolCard } from "@/components/tools/related-tool-card";
 import type { MappedRelatedTool } from "@/components/tools/tool-helpers";
 import { useToolSeo } from "@/lib/seo/tool-seo-context";
+import { useTranslation } from "@/i18n";
+import {
+  resolveLocalizedToolDescription,
+  resolveLocalizedToolTitle,
+} from "@/lib/i18n/tool-page-copy";
+import { stripLocalePrefix } from "@/lib/i18n/locale-path";
 
 interface FAQ {
   question: string;
@@ -161,6 +168,7 @@ function Workspace({
   preview,
   splitWorkspace,
   previewPlaceholder,
+  livePreviewLabel,
   fullWidthWorkspace,
   compactWorkspace,
 }: {
@@ -171,6 +179,7 @@ function Workspace({
   preview?: React.ReactNode;
   splitWorkspace?: boolean;
   previewPlaceholder?: string;
+  livePreviewLabel: string;
   fullWidthWorkspace?: boolean;
   compactWorkspace?: boolean;
 }) {
@@ -240,12 +249,12 @@ function Workspace({
             {useSplit && (
               <aside
                 className="hidden min-h-0 lg:flex lg:flex-col"
-                aria-label="Live preview"
+                aria-label={livePreviewLabel}
               >
                 <div className="flex min-h-0 flex-1 flex-col">
                   {preview ?? (
                     <div className="flex h-full min-h-[12rem] flex-1 items-center justify-center rounded-xl border border-dashed border-pd-border bg-pd-brand-muted/30 px-4 py-6 text-center text-sm text-pd-muted">
-                      {previewPlaceholder ?? "Upload a file to see live preview"}
+                      {previewPlaceholder}
                     </div>
                   )}
                 </div>
@@ -274,15 +283,34 @@ export function ToolPageShell({
 }: ToolPageShellProps) {
   const { layoutStyle } = useDesignPreview();
   const toolSeo = useToolSeo();
+  const pathname = usePathname();
+  const { t } = useTranslation();
+  const slug = stripLocalePrefix(pathname).replace(/^\//, "").split("/")[0] ?? "";
 
-  const resolvedTitle = toolSeo?.h1 ?? title;
-  const resolvedDescription = toolSeo?.metaDescription ?? description;
+  const localizedTitle = resolveLocalizedToolTitle(slug, t, title);
+  const localizedDescription = resolveLocalizedToolDescription(slug, t, description);
+
+  const resolvedTitle = toolSeo?.h1 ?? localizedTitle;
+  const resolvedDescription = toolSeo?.metaDescription ?? localizedDescription;
   const resolvedFaqs = faqs ?? toolSeo?.faqs;
+  const localizedFaqs = resolvedFaqs?.map((faq, idx) => {
+    const questionKey = `toolFaqs.${slug}.${idx}.question`;
+    const answerKey = `toolFaqs.${slug}.${idx}.answer`;
+    const question = t(questionKey);
+    const answer = t(answerKey);
+    return {
+      question: question === questionKey ? faq.question : question,
+      answer: answer === answerKey ? faq.answer : answer,
+    };
+  });
   const resolvedSeoContent =
     seoContent ??
     (toolSeo?.seoContent ? (
       <p className="leading-relaxed">{toolSeo.seoContent}</p>
     ) : undefined);
+
+  const resolvedPreviewPlaceholder = previewPlaceholder ?? t("toolPage.previewPlaceholder");
+  const livePreviewLabel = t("toolPage.livePreview");
 
   return (
     <div className={cn("flex flex-col", className)}>
@@ -293,7 +321,8 @@ export function ToolPageShell({
         description={resolvedDescription}
         preview={preview}
         splitWorkspace={splitWorkspace}
-        previewPlaceholder={previewPlaceholder}
+        previewPlaceholder={resolvedPreviewPlaceholder}
+        livePreviewLabel={livePreviewLabel}
         fullWidthWorkspace={fullWidthWorkspace}
         compactWorkspace={compactWorkspace}
       >
@@ -304,7 +333,7 @@ export function ToolPageShell({
         <section className="mesh-section py-6 sm:py-8">
           <div className="pd-container max-w-5xl">
             <h2 className="mb-5 text-center text-lg font-bold text-pd-foreground sm:text-xl">
-              Related Tools
+              {t("toolPage.relatedTools")}
             </h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {relatedTools.map((tool) => (
@@ -321,14 +350,14 @@ export function ToolPageShell({
         </section>
       )}
 
-      {resolvedFaqs && resolvedFaqs.length > 0 && (
+      {localizedFaqs && localizedFaqs.length > 0 && (
         <section className="bg-pd-surface py-8 sm:py-10">
           <div className="pd-container max-w-3xl">
             <h2 className="mb-4 text-center text-lg font-semibold text-pd-foreground">
-              Frequently Asked Questions
+              {t("toolPage.faqHeading")}
             </h2>
             <div className="space-y-4">
-              {resolvedFaqs.map((faq, idx) => (
+              {localizedFaqs.map((faq, idx) => (
                 <div
                   key={idx}
                   className="rounded-2xl border border-pd-border bg-pd-background p-5"

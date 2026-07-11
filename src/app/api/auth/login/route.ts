@@ -5,7 +5,8 @@ import {
   isLocalDevAuthEnabled,
   localDevSignIn,
 } from "@/lib/auth/local-dev-auth";
-import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { isUserLoginBlocked, BLOCKED_LOGIN_MESSAGE } from "@/lib/auth/blocked-login";
+import { checkLoginRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
 import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 import { toSafeApiError } from "@/lib/server/safe-error";
 
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
     const originBlocked = guardMutationOrigin(request);
     if (originBlocked) return originBlocked;
 
-    const rate = await checkAuthRateLimit(request);
+    const rate = await checkLoginRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 
     const { email, password } = await request.json();
@@ -52,14 +53,41 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    }
+
+    if (data.user && (await isUserLoginBlocked(data.user.id))) {
+      await supabase.auth.signOut();
+      return NextResponse.json({ error: BLOCKED_LOGIN_MESSAGE }, { status: 403 });
+    }
+
+    const { data: factorsData } = await supabase.auth.mfa.listFactors();
+    const totpFactor = factorsData?.totp?.find((f) => f.status === "verified");
+
+    if (totpFactor && data.session) {
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: totpFactor.id,
+      });
+      if (challengeError || !challenge) {
+        await supabase.auth.signOut();
+        return NextResponse.json(
+          {
+            error:
+              "Multi-factor authentication is temporarily unavailable. Please try again later.",
+          },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json({
+        requiresMfa: true,
+        factorId: totpFactor.id,
+        challengeId: challenge.id,
+        user: data.user,
+      });
     }
 
     return NextResponse.json({ user: data.user, session: data.session });
   } catch (err) {
-    return NextResponse.json(
-      { error: toSafeApiError(err, "Login failed") },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: toSafeApiError(err) }, { status: 401 });
   }
 }

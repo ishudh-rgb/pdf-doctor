@@ -1,5 +1,5 @@
 /**
- * ConvertAPI PDF→DOCX — commercial-grade layout (closest to Smallpdf).
+ * ConvertAPI PDF→DOCX — commercial-grade layout quality.
  * Requires CONVERTAPI_SECRET in environment.
  * @see https://www.convertapi.com/pdf-to-docx
  */

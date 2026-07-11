@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const rate = await checkAuthRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 
-    let response = NextResponse.json({ message: "Logged out successfully" });
+    const response = NextResponse.json({ message: "Logged out successfully" });
 
     if (isLocalDevAuthEnabled()) {
       return clearLocalDevSessionCookie(response);

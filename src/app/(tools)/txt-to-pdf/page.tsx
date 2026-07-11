@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   CheckCircle2,
   ChevronRight,
@@ -19,10 +19,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
-import { ToolResultSizeBadge } from "@/components/tools/tool-ui";
+import { ToolResultSizeBadge, ToolHiddenFileInput, ToolUploadSizeHint } from "@/components/tools/tool-ui";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ToolHiddenFileInput } from "@/components/tools/tool-ui";
 
 type PageSize = "a4" | "letter";
 type Orientation = "portrait" | "landscape";
@@ -182,7 +181,7 @@ export default function TxtToPdfPage() {
               </a>
 
               <div className="mt-6">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">
                   Continue in
                 </p>
                 <div className="flex flex-col gap-1">
@@ -207,7 +206,7 @@ export default function TxtToPdfPage() {
               <button
                 type="button"
                 onClick={reset}
-                className="mt-6 w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                className="mt-6 w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-medium text-pd-muted transition-colors hover:bg-gray-50 hover:text-pd-foreground"
               >
                 Convert another file
               </button>
@@ -227,7 +226,7 @@ export default function TxtToPdfPage() {
           <Type className="h-7 w-7 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">TXT to PDF</h1>
-        <p className="mt-1.5 text-sm text-gray-500">
+        <p className="mt-1.5 text-sm text-pd-muted">
           Convert text files to professionally formatted PDF documents
         </p>
       </div>
@@ -252,9 +251,10 @@ export default function TxtToPdfPage() {
           <p className="text-lg font-semibold text-gray-700">
             Drop your text file here
           </p>
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-pd-muted">
             or click to browse · Supports TXT, LOG, CSV, MD, JSON, XML, YAML, INI
           </p>
+          <ToolUploadSizeHint className="mt-2 text-center text-pd-muted" />
           <button
             type="button"
             className="mt-5 rounded-xl bg-pd-brand px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-pd-brand/20 transition-all hover:bg-pd-brand-hover hover:shadow-lg hover:shadow-pd-brand/30"
@@ -273,7 +273,7 @@ export default function TxtToPdfPage() {
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-gray-800">{file.name}</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-pd-muted">
                   {formatFileSize(file.size)} · {lineCount.toLocaleString()} lines · {charCount.toLocaleString()} chars
                 </p>
               </div>
@@ -297,7 +297,7 @@ export default function TxtToPdfPage() {
               <button
                 type="button"
                 onClick={reset}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-pd-muted transition-colors hover:bg-gray-100 hover:text-pd-foreground"
                 title="Remove file"
               >
                 <X className="h-4 w-4" />
@@ -310,7 +310,7 @@ export default function TxtToPdfPage() {
             <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4">
               <div className="flex flex-wrap gap-6">
                 <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Page Size</h3>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">Page Size</h3>
                   <div className="flex gap-2">
                     {(["a4", "letter"] as const).map((v) => (
                       <button
@@ -321,7 +321,7 @@ export default function TxtToPdfPage() {
                           "rounded-lg border px-3.5 py-1.5 text-sm font-medium transition-all",
                           pageSize === v
                             ? "border-pd-brand/30 bg-pd-brand-muted text-pd-brand shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
+                            : "border-gray-200 text-pd-muted hover:border-gray-300"
                         )}
                       >
                         {v === "a4" ? "A4" : "Letter"}
@@ -331,7 +331,7 @@ export default function TxtToPdfPage() {
                 </div>
 
                 <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Orientation</h3>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">Orientation</h3>
                   <div className="flex gap-2">
                     {(["portrait", "landscape"] as const).map((v) => (
                       <button
@@ -342,7 +342,7 @@ export default function TxtToPdfPage() {
                           "rounded-lg border px-3.5 py-1.5 text-sm font-medium capitalize transition-all",
                           orientation === v
                             ? "border-pd-brand/30 bg-pd-brand-muted text-pd-brand shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
+                            : "border-gray-200 text-pd-muted hover:border-gray-300"
                         )}
                       >
                         {v}
@@ -352,7 +352,7 @@ export default function TxtToPdfPage() {
                 </div>
 
                 <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Margin</h3>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">Margin</h3>
                   <div className="flex gap-2">
                     {(["none", "small", "medium"] as const).map((v) => (
                       <button
@@ -363,7 +363,7 @@ export default function TxtToPdfPage() {
                           "rounded-lg border px-3.5 py-1.5 text-sm font-medium capitalize transition-all",
                           margin === v
                             ? "border-pd-brand/30 bg-pd-brand-muted text-pd-brand shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
+                            : "border-gray-200 text-pd-muted hover:border-gray-300"
                         )}
                       >
                         {v}
@@ -373,7 +373,7 @@ export default function TxtToPdfPage() {
                 </div>
 
                 <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Font</h3>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">Font</h3>
                   <div className="flex gap-2">
                     {FONT_OPTIONS.map((f) => (
                       <button
@@ -385,7 +385,7 @@ export default function TxtToPdfPage() {
                           f.css,
                           fontFamily === f.value
                             ? "border-pd-brand/30 bg-pd-brand-muted text-pd-brand shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
+                            : "border-gray-200 text-pd-muted hover:border-gray-300"
                         )}
                       >
                         {f.label}
@@ -395,7 +395,7 @@ export default function TxtToPdfPage() {
                 </div>
 
                 <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Font Size</h3>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">Font Size</h3>
                   <div className="flex gap-1.5">
                     {FONT_SIZE_OPTIONS.map((s) => (
                       <button
@@ -406,7 +406,7 @@ export default function TxtToPdfPage() {
                           "rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-all",
                           fontSize === s
                             ? "border-pd-brand/30 bg-pd-brand-muted text-pd-brand shadow-sm"
-                            : "border-gray-200 text-gray-500 hover:border-gray-300"
+                            : "border-gray-200 text-pd-muted hover:border-gray-300"
                         )}
                       >
                         {s}
@@ -421,8 +421,8 @@ export default function TxtToPdfPage() {
           {/* Live text preview */}
           <div className="bg-gradient-to-b from-gray-50 to-gray-100 px-5 py-5">
             <div className="mb-3 flex items-center gap-2">
-              <Eye className="h-4 w-4 text-gray-400" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <Eye className="h-4 w-4 text-pd-muted" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-pd-muted">
                 Live Preview
               </span>
             </div>
@@ -440,7 +440,7 @@ export default function TxtToPdfPage() {
                     : textContent}
                 </pre>
               ) : (
-                <div className="flex h-64 items-center justify-center text-sm text-gray-400">
+                <div className="flex h-64 items-center justify-center text-sm text-pd-muted">
                   Loading preview…
                 </div>
               )}
@@ -456,7 +456,7 @@ export default function TxtToPdfPage() {
 
           {/* Convert button */}
           <div className="flex items-center justify-between border-t border-gray-100 bg-white px-5 py-4">
-            <p className="hidden text-sm text-gray-400 sm:block">
+            <p className="hidden text-sm text-pd-muted sm:block">
               Text will be formatted with {currentFont.label} {fontSize}pt on {pageSize.toUpperCase()} {orientation}
             </p>
             <Button
@@ -513,7 +513,7 @@ export default function TxtToPdfPage() {
                 <feat.icon className="h-4.5 w-4.5 text-pd-brand" />
               </div>
               <h3 className="text-sm font-semibold text-gray-800">{feat.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-gray-500">{feat.desc}</p>
+              <p className="mt-1 text-xs leading-relaxed text-pd-muted">{feat.desc}</p>
             </div>
           ))}
         </div>

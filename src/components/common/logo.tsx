@@ -150,8 +150,7 @@ function useActiveLogoConfig(variant: LogoVariant) {
     };
   }
 
-  const useSplit =
-    option.layout === "split" && placement === "header";
+  const useSplit = option.layout === "split" && placement === "header";
 
   const src =
     option.layout === "split" && variant === "icon"
@@ -164,7 +163,7 @@ function useActiveLogoConfig(variant: LogoVariant) {
     slot: getLogoSlot(logoVariant, placement),
     placement,
     logoKey: logoVariant,
-    useSplit: placement === "header" && option.layout === "split",
+    useSplit,
   };
 }
 

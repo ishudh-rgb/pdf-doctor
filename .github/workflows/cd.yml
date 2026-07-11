@@ -1,0 +1,124 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      push_image:
+        description: "Push Docker image to GHCR (requires packages:write)"
+        required: false
+        default: false
+        type: boolean
+      target_url:
+        description: "Production URL for post-deploy smoke (optional)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  docker:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name == 'workflow_dispatch' && inputs.push_image == true
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build slim image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: ${{ github.event_name == 'workflow_dispatch' && inputs.push_image == true }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=https://example.com
+            NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build full image (LibreOffice + Python)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.full
+          push: ${{ github.event_name == 'workflow_dispatch' && inputs.push_image == true }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:full-${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=https://example.com
+            NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  smoke:
+    needs: docker
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target URL
+        id: url
+        run: |
+          if [ -n "${{ github.event.inputs.target_url }}" ]; then
+            echo "base=${{ github.event.inputs.target_url }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ secrets.PRODUCTION_URL }}" ]; then
+            echo "base=${{ secrets.PRODUCTION_URL }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip smoke (no PRODUCTION_URL)
+        if: steps.url.outputs.base == ''
+        run: echo "Set PRODUCTION_URL secret or pass target_url to run post-deploy smoke."
+
+      - name: Production smoke
+        if: steps.url.outputs.base != ''
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          BASE="${{ steps.url.outputs.base }}"
+          echo "CD smoke testing $BASE"
+          curl -fsS "$BASE/api/health" | tee health.json
+          node -e "
+            const h = require('./health.json');
+            if (!h.status) throw new Error('Missing health status');
+            if (h.status === 'degraded') throw new Error('Health is degraded');
+          "
+          curl -fsS -o /dev/null -w "%{http_code}" "$BASE/status" | grep -E '^200$'
+          if [ -n "$CRON_SECRET" ]; then
+            curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$BASE/api/health" | tee health-detail.json
+            node -e "
+              const h = require('./health-detail.json');
+              if (!h.checks) throw new Error('Missing detailed health checks');
+            "
+          fi

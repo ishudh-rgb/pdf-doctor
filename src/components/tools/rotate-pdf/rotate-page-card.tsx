@@ -88,7 +88,7 @@ export const RotatePageCard = memo(function RotatePageCard({
           </label>
         </div>
 
-        {/* Hover toolbar — Smallpdf style: icons appear on hover */}
+        {/* Hover toolbar — icons appear on hover */}
         <div className="absolute right-2 top-3 z-20 flex gap-0.5 opacity-0 transition-opacity duration-150 group-hover/card:opacity-100">
           <button
             type="button"
@@ -119,7 +119,7 @@ export const RotatePageCard = memo(function RotatePageCard({
           </button>
         </div>
 
-        {/* Page thumbnail — Smallpdf-style: white card, shadow, image fills naturally */}
+        {/* Page thumbnail — white card with shadow */}
         <button
           type="button"
           onClick={onSelect}
@@ -150,7 +150,7 @@ export const RotatePageCard = memo(function RotatePageCard({
             ) : loadingThumb ? (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-b from-gray-50 to-gray-100" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 text-xs text-gray-400">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 text-xs text-pd-muted">
                 …
               </div>
             )}
@@ -161,7 +161,7 @@ export const RotatePageCard = memo(function RotatePageCard({
           </div>
         </button>
 
-        {/* Rotate overlay — Smallpdf style: circular buttons at bottom center */}
+        {/* Rotate overlay — circular buttons at bottom center */}
         <div className="absolute bottom-14 left-1/2 z-20 flex -translate-x-1/2 gap-1 opacity-0 transition-opacity duration-150 group-hover/card:opacity-100">
           <button
             type="button"

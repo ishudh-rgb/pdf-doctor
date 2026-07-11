@@ -33,10 +33,10 @@ export function ScanFilterPreview({
                   style={{ filter: FILTER_STYLES[option] }}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-[10px] text-gray-400">No image</div>
+                <div className="flex h-full items-center justify-center text-[10px] text-pd-muted">No image</div>
               )}
             </div>
-            <p className={cn("mt-1 text-[11px] font-medium capitalize", filter === option ? "text-blue-700" : "text-gray-500")}>
+            <p className={cn("mt-1 text-[11px] font-medium capitalize", filter === option ? "text-blue-700" : "text-pd-muted")}>
               {option === "bw" ? "B&W" : option}
             </p>
           </div>

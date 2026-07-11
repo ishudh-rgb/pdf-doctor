@@ -15,55 +15,6 @@ interface AnalyticsData {
   peakHours: { hour: string; count: number }[];
 }
 
-const mockAnalytics: AnalyticsData = {
-  dateRange: { from: "2026-05-15", to: "2026-05-22" },
-  toolUsage: [
-    { tool: "Merge PDF", count: 4520, percentage: 28 },
-    { tool: "Compress PDF", count: 3810, percentage: 24 },
-    { tool: "PDF to Word", count: 2930, percentage: 18 },
-    { tool: "Split PDF", count: 2100, percentage: 13 },
-    { tool: "JPG to PDF", count: 1840, percentage: 11 },
-    { tool: "Protect PDF", count: 920, percentage: 6 },
-  ],
-  dailyActiveUsers: [
-    { date: "May 15", count: 1200 },
-    { date: "May 16", count: 1350 },
-    { date: "May 17", count: 1100 },
-    { date: "May 18", count: 1480 },
-    { date: "May 19", count: 1600 },
-    { date: "May 20", count: 950 },
-    { date: "May 21", count: 870 },
-  ],
-  aiStats: { totalCalls: 2450, totalTokens: 12500000, totalCost: 45.80, avgPerUser: 3.2 },
-  fileSizeDistribution: [
-    { range: "0-1 MB", count: 4200 },
-    { range: "1-5 MB", count: 3100 },
-    { range: "5-10 MB", count: 1800 },
-    { range: "10-25 MB", count: 900 },
-    { range: "25-50 MB", count: 350 },
-    { range: "50+ MB", count: 120 },
-  ],
-  popularTools: [
-    { rank: 1, tool: "Merge PDF", uses: 4520 },
-    { rank: 2, tool: "Compress PDF", uses: 3810 },
-    { rank: 3, tool: "PDF to Word", uses: 2930 },
-    { rank: 4, tool: "Split PDF", uses: 2100 },
-    { rank: 5, tool: "JPG to PDF", uses: 1840 },
-  ],
-  peakHours: [
-    { hour: "6 AM", count: 120 },
-    { hour: "8 AM", count: 340 },
-    { hour: "10 AM", count: 580 },
-    { hour: "12 PM", count: 620 },
-    { hour: "2 PM", count: 710 },
-    { hour: "4 PM", count: 650 },
-    { hour: "6 PM", count: 480 },
-    { hour: "8 PM", count: 380 },
-    { hour: "10 PM", count: 250 },
-    { hour: "12 AM", count: 90 },
-  ],
-};
-
 export default function AdminAnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);

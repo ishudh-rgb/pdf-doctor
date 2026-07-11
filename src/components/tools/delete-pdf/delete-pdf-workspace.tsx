@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Check,
   Download,
   Loader2,
   RotateCcw,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
@@ -38,6 +38,7 @@ export function DeletePdfWorkspace({
   onChangeFile,
   onReset,
 }: DeletePdfWorkspaceProps) {
+  const ws = useToolWorkspaceMessages();
   const [pageSlots, setPageSlots] = useState<WorkspacePageSlot[]>([]);
   const [selectedSlotIds, setSelectedSlotIds] = useState<Set<string>>(
     () => new Set()
@@ -119,15 +120,15 @@ export function DeletePdfWorkspace({
           return;
         }
         if (result.wrongPassword) {
-          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
           return;
         }
         if (result.totalPages === 0) {
           setError(
-            result.error ?? "Could not read this PDF. Try another file."
+            result.error ?? ws.couldNotReadPdf
           );
         } else if (result.error) {
-          setError(result.error);
+          setError(ws.resolveApiError(result.error));
         } else {
           setError(null);
         }
@@ -139,13 +140,13 @@ export function DeletePdfWorkspace({
         setError(
           err instanceof Error
             ? err.message
-            : "Could not read this PDF. Try another file."
+            : ws.couldNotReadPdf
         );
       })
       .finally(() => {
         if (requestId === loadRequestRef.current) setLoadingThumbs(false);
       });
-  }, [fileKey, file]);
+  }, [fileKey, file, ws]);
 
   const retryWithPassword = useCallback((pw: string) => {
     if (!passwordPrompt) return;
@@ -164,20 +165,20 @@ export function DeletePdfWorkspace({
       }
     }, pw).then((result) => {
       if (result.wrongPassword) {
-        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
         return;
       }
       setPdfPassword(pw);
       setPasswordPrompt(null);
       if (result.error) {
-        setError(result.error);
+        setError(ws.resolveApiError(result.error));
       } else {
         setError((prev) =>
           prev && /password/i.test(prev) ? null : prev
         );
       }
     });
-  }, [passwordPrompt]);
+  }, [passwordPrompt, ws]);
 
   /* ─── slot actions ─── */
 
@@ -281,7 +282,7 @@ export function DeletePdfWorkspace({
           error?: string;
         };
         if (!res.ok || !data.sessionId || !data.totalPages) {
-          setError(data.error ?? "Could not add document.");
+          setError(ws.resolveApiError(data.error) || ws.couldNotAddDocument);
           return;
         }
 
@@ -309,10 +310,10 @@ export function DeletePdfWorkspace({
           return [...nextVisible, ...hidden];
         });
       } catch {
-        setError("Could not add document.");
+        setError(ws.couldNotAddDocument);
       }
     },
-    [hiddenSlotIds]
+    [hiddenSlotIds, ws]
   );
 
   /* ─── export ─── */
@@ -353,7 +354,7 @@ export function DeletePdfWorkspace({
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(
-            (data as { error?: string }).error || "Failed to export PDF."
+            (data as { error?: string }).error || ws.failedExportPdf
           );
         }
 
@@ -381,7 +382,7 @@ export function DeletePdfWorkspace({
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
             throw new Error(
-              (data as { error?: string }).error || "Failed to delete pages."
+              (data as { error?: string }).error || ws.failedDeletePages
             );
           }
           return res.blob();
@@ -393,7 +394,7 @@ export function DeletePdfWorkspace({
       setCompleted(true);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "An unexpected error occurred.";
+        err instanceof Error ? err.message : ws.unexpectedError;
       if (/password/i.test(message)) {
         setPasswordPrompt({
           file,
@@ -414,13 +415,13 @@ export function DeletePdfWorkspace({
       <ToolWorkspaceReadyPanel
         description={
           deletedCount > 0
-            ? `${deletedCount} page${deletedCount > 1 ? "s" : ""} removed. Your document is ready to download.`
-            : "Your document is ready to download."
+            ? ws.pagesRemovedReady(deletedCount)
+            : ws.documentReadyDownload
         }
         downloadUrl={resultUrl}
         downloadFilename={file.name.replace(/\.pdf$/i, "-pages-removed.pdf")}
         resultSizeBytes={resultSize}
-        resetLabel="Delete pages from another file"
+        resetLabel={ws.deletePagesAnother}
         onReset={() => {
           setCompleted(false);
           setResultUrl(null);
@@ -451,7 +452,7 @@ export function DeletePdfWorkspace({
       <ToolHiddenFileInput
         ref={insertFileRef}
         accept=".pdf,application/pdf"
-        ariaLabel="Insert PDF documents"
+        ariaLabel={ws.insertPdfDocuments}
         onChange={handleInsertDocuments}
       />
 
@@ -513,7 +514,7 @@ export function DeletePdfWorkspace({
               onClick={removeSelected}
               disabled={selectedVisibleCount === 0}
               className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-35"
-              title="Delete selected pages"
+              title={ws.deleteSelectedPages}
             >
               <Trash2 className="h-4 w-4" />
               <span className="hidden sm:inline">Delete selected</span>
@@ -528,8 +529,8 @@ export function DeletePdfWorkspace({
                 void toRotate;
               }}
               disabled={true}
-              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 sm:flex"
-              title="Rotate left"
+              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-pd-muted sm:flex"
+              title={ws.rotateLeft}
             >
               <RotateCcw className="h-4 w-4" />
             </button>
@@ -537,15 +538,15 @@ export function DeletePdfWorkspace({
               type="button"
               onClick={() => {}}
               disabled={true}
-              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 sm:flex"
-              title="Rotate right"
+              className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-pd-muted sm:flex"
+              title={ws.rotateRight}
             >
               <RotateCw className="h-4 w-4" />
             </button>
           </div>
 
           {selectedVisibleCount > 0 && (
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-pd-muted">
               {selectedVisibleCount} of {visibleSlots.length} selected
             </span>
           )}
@@ -557,9 +558,9 @@ export function DeletePdfWorkspace({
           )}
 
           <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-sm text-gray-500 lg:inline">
+            <span className="hidden text-sm text-pd-muted lg:inline">
               {file.name}
-              <span className="ml-1.5 text-gray-400">
+              <span className="ml-1.5 text-pd-muted">
                 {totalPages} pages · {formatFileSize(file.size)}
               </span>
             </span>
@@ -602,7 +603,7 @@ export function DeletePdfWorkspace({
         {/* ── Page grid ── */}
         <div className="bg-gray-100 px-4 py-5 sm:px-6 sm:py-6">
           {loadingThumbs && !thumbnails.some(Boolean) && (
-            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-pd-muted">
               <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
               Generating page previews…
             </div>
@@ -611,12 +612,12 @@ export function DeletePdfWorkspace({
           {totalPages > 0 && (
             <>
               {truncated && (
-                <p className="mb-3 text-center text-xs text-gray-400">
+                <p className="mb-3 text-center text-xs text-pd-muted">
                   Showing first {thumbnails.length} of {totalPages} page
                   previews.
                 </p>
               )}
-              <p className="mb-4 text-center text-sm text-gray-400">
+              <p className="mb-4 text-center text-sm text-pd-muted">
                 Click the <strong className="text-red-500">trash icon</strong>{" "}
                 to delete a page · Click{" "}
                 <strong className="text-blue-600">+</strong> between pages to
@@ -660,7 +661,7 @@ export function DeletePdfWorkspace({
           )}
         </div>
 
-        <div className="border-t border-gray-200 bg-white px-4 py-2.5 text-center text-xs text-gray-400 sm:px-5">
+        <div className="border-t border-gray-200 bg-white px-4 py-2.5 text-center text-xs text-pd-muted sm:px-5">
           Deleted pages are removed on export · Files auto-delete after 2 hours
         </div>
       </div>

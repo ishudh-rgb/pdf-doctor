@@ -261,12 +261,6 @@ function extractStyledTables(xml: string): ParsedStyledTable[] {
   return tables;
 }
 
-function extractTables(xml: string): string[][][] {
-  return extractStyledTables(xml).map((table) =>
-    table.rows.map((row) => row.map((cell) => cell.text))
-  );
-}
-
 function slideNumber(path: string): number {
   const match = path.match(/slide(\d+)\.xml$/i);
   return match ? Number(match[1]) : 0;

@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, RotateCw, Copy, ZoomIn, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { formatFileSize } from '@/lib/utils/file';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
 import { PdfResultPreview } from '@/components/tools/pdf-result-preview';
@@ -144,16 +143,6 @@ export default function JpgToPdfPage() {
     setPreviews(prev => [...prev.slice(0, index + 1), newPreview, ...prev.slice(index + 1)]);
   };
 
-  const moveFile = (from: number, to: number) => {
-    if (to < 0 || to >= files.length) return;
-    const newFiles = [...files];
-    const newPreviews = [...previews];
-    [newFiles[from], newFiles[to]] = [newFiles[to], newFiles[from]];
-    [newPreviews[from], newPreviews[to]] = [newPreviews[to], newPreviews[from]];
-    setFiles(newFiles);
-    setPreviews(newPreviews);
-  };
-
   const handleProcess = async () => {
     if (files.length === 0) return;
     setProcessing(true);
@@ -234,7 +223,7 @@ export default function JpgToPdfPage() {
         <>
           <ToolDropzone
             hint="Drop images here or click to browse"
-            subHint="Supports JPG, PNG, and WebP"
+            formatNote="Supports JPG, PNG, and WebP"
             dragOver={dragOver}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}

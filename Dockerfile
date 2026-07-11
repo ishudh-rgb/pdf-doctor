@@ -1,4 +1,5 @@
 # Production image for self-hosted / container deploys (Vercel users can ignore).
+# Slim image — no LibreOffice/Python. For full conversion stack use Dockerfile.full.
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./

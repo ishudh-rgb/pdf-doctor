@@ -68,16 +68,6 @@ type QualityHints = {
   pdfTextChars?: number;
 };
 
-async function readOutputDocx(
-  diskOnly: boolean,
-  outputPath: string | undefined,
-  buffer: Buffer | undefined
-): Promise<Buffer | undefined> {
-  if (buffer?.length) return buffer;
-  if (diskOnly && outputPath) return fs.readFile(outputPath);
-  return undefined;
-}
-
 async function finalizeDocxResult(
   engine: PdfToWordEngine,
   raw: Buffer | undefined,
@@ -140,7 +130,7 @@ async function estimatePdfHints(
 }
 
 /**
- * PDF → Word with engine priority (Smallpdf-class quality):
+ * PDF → Word with engine priority (professional-grade quality):
  * 1. ConvertAPI (commercial, if CONVERTAPI_SECRET set)
  * 2. LibreOffice headless (cross-platform, invoice-grade layout)
  * 3. pdf2docx (Python — fast server fallback)

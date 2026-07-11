@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { composePdfFromSlots } from "@/lib/services/pdf-compose.service";
 import { buildPdfBuffersDownloadResponse } from "@/lib/pdf/pdf-buffers-response";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
@@ -6,10 +7,11 @@ import { splitPDF } from "@/lib/services/pdf-split.service";
 import { parseComposeSlots } from "@/lib/api/compose-validation";
 import { isValidFileType, validateFileSize } from "@/lib/utils/file";
 import { validateBufferMagic } from "@/lib/utils/file-magic";
-import { FILE_LIMITS } from "@/config/constants";
-import { createClient } from "@/lib/supabase/server";
 import { ownerHashFromRequest } from "@/lib/server/request-security";
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
+import { checkUsageLimit } from "@/lib/services/usage-limit.service";
+import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -19,11 +21,19 @@ export async function POST(request: NextRequest) {
   if (early) return early;
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const ownerHash = ownerHashFromRequest(request, user?.id ?? null);
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    const userId = mutationAuth.userId;
+
+    const usageResult = await checkUsageLimit(userId, request, "compose-pdf");
+    if (!usageResult.allowed) {
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
+    }
+
+    const userContext = await resolveToolUserContext(userId);
+    const maxSizeMB = userContext.maxSizeMB;
+
+    const ownerHash = ownerHashFromRequest(request, userId);
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -31,30 +41,27 @@ export async function POST(request: NextRequest) {
     const separate = formData.get("separate") === "true";
 
     if (!file || !slotsRaw) {
-      return NextResponse.json({ error: "PDF file and slots are required" }, { status: 400 });
+      return toolJsonError(request, "PDF file and slots are required", 400);
     }
 
     if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json({ error: "Only PDF files are accepted" }, { status: 400 });
+      return toolJsonError(request, "Only PDF files are accepted", 400);
     }
 
-    const sizeCheck = validateFileSize(file, FILE_LIMITS.maxFreeFileSizeMB);
+    const sizeCheck = validateFileSize(file, maxSizeMB);
     if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
+      return toolJsonError(request, sizeCheck.message, 400);
     }
 
     const slots = parseComposeSlots(slotsRaw);
     if (!slots) {
-      return NextResponse.json({ error: "Invalid or too many page slots." }, { status: 400 });
+      return toolJsonError(request, "Invalid or too many page slots.", 400);
     }
 
     const rawBuffer = Buffer.from(await file.arrayBuffer());
     const magic = validateBufferMagic(rawBuffer, ["pdf"]);
     if (!magic.valid) {
-      return NextResponse.json(
-        { error: magic.message ?? "Invalid PDF file content." },
-        { status: 400 }
-      );
+      return toolJsonError(request, magic.message ?? "Invalid PDF file content.", 400);
     }
 
     const password = (formData.get("password") as string | null) || null;
@@ -65,18 +72,12 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to open PDF";
       if (msg === "PASSWORD_REQUIRED") {
-        return NextResponse.json(
-          { error: "This PDF is password-protected. Enter the password to continue." },
-          { status: 400 }
-        );
+        return toolJsonError(request, "This PDF is password-protected. Enter the password to continue.", 400);
       }
       if (msg === "WRONG_PASSWORD") {
-        return NextResponse.json(
-          { error: "Incorrect password. Please try again." },
-          { status: 400 }
-        );
+        return toolJsonError(request, "Incorrect password. Please try again.", 400);
       }
-      return NextResponse.json({ error: msg }, { status: 400 });
+      return toolJsonError(request, msg, 400);
     }
     const splitRangesRaw = formData.get("splitRanges") as string | null;
 
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "compose-pdf",
       errorType: "COMPOSE_ERROR",
       fallbackMessage: "Failed to compose PDF",

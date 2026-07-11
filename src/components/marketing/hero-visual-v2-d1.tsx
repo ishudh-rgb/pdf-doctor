@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Upload,
 } from "lucide-react";
+import { FILE_SIZE_MARKETING } from "@/config/constants";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils/cn";
 
@@ -182,9 +183,9 @@ export function HeroVisualV2D1() {
       </div>
       <div className="absolute -left-2 top-1/2 z-20 hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-amber-200/80 bg-pd-surface px-3 py-2 shadow-lg sm:block">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-          No limit
+          {FILE_SIZE_MARKETING.freeLabel}
         </p>
-        <p className="text-xs font-bold text-pd-foreground">Any file size · Free</p>
+        <p className="text-xs font-bold text-pd-foreground">{FILE_SIZE_MARKETING.proLabel} on Pro</p>
       </div>
       <div className="absolute -right-2 bottom-16 z-20 hidden whitespace-nowrap rounded-xl border border-pd-border bg-pd-surface px-3 py-2 shadow-lg sm:block">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-pd-brand">

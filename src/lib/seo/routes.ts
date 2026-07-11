@@ -12,6 +12,10 @@ export const MARKETING_ROUTES = [
   "/privacy",
   "/cookies",
   "/terms",
+  "/refund",
+  "/trust",
+  "/sla",
+  "/status",
 ] as const;
 
 export const TOOL_SLUGS = TOOLS.map((tool) => tool.slug);

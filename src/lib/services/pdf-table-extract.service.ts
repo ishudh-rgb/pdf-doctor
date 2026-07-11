@@ -325,10 +325,6 @@ function extractTableFromLines(
   };
 }
 
-function sameColumnCount(a: string[][], b: string[][]): boolean {
-  return (a[0]?.length ?? 0) === (b[0]?.length ?? 0) && (a[0]?.length ?? 0) > 0;
-}
-
 function mergePageTables(tables: string[][][]): string[][] | null {
   if (tables.length === 0) return null;
 

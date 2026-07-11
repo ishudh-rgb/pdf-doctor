@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Trash2, RefreshCw, Clock, HardDrive, FileX, Loader2, CheckCircle } from "lucide-react";
 
 interface CleanupStats {
@@ -16,11 +16,7 @@ export default function AdminCleanupPage() {
   const [cleaning, setCleaning] = useState(false);
   const [cleanResult, setCleanResult] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/cleanup");
       if (res.ok) {
@@ -32,7 +28,11 @@ export default function AdminCleanupPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
 
   const runCleanup = async () => {
     setCleaning(true);

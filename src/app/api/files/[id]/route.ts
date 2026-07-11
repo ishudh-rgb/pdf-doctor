@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { deleteFile, getFileUrl } from "@/lib/services/upload.service";
 import { getUploadedFileById, deleteUploadedFileRecord, logError } from "@/lib/db/queries";
 import { createClient } from "@/lib/supabase/server";
+import { assertMfaAal2Satisfied } from "@/lib/auth/mfa-assurance";
+import { authGuardResponse } from "@/lib/server/auth-guard-http";
 import { sanitizeFilename } from "@/lib/utils/file";
 import { toSafeApiError } from "@/lib/server/safe-error";
 import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
@@ -22,6 +24,9 @@ export async function GET(
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    if (user) {
+      await assertMfaAal2Satisfied(supabase);
+    }
 
     const file = await getUploadedFileById(id);
 
@@ -66,6 +71,9 @@ export async function GET(
       },
     });
   } catch (error) {
+    const guarded = authGuardResponse(error);
+    if (guarded) return guarded;
+
     const message = toSafeApiError(error, "Failed to download file");
 
     await logError({
@@ -97,6 +105,9 @@ export async function DELETE(
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    if (user) {
+      await assertMfaAal2Satisfied(supabase);
+    }
 
     const file = await getUploadedFileById(id);
 
@@ -120,6 +131,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: "File deleted successfully" });
   } catch (error) {
+    const guarded = authGuardResponse(error);
+    if (guarded) return guarded;
+
     const message = toSafeApiError(error, "Failed to delete file");
 
     await logError({

@@ -1,11 +1,12 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { applyEditPdfOperations, type EditPdfOperations } from "@/lib/services/pdf-edit.service";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
-import { logToolUsage, getUserProfile } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
-import { FILE_LIMITS } from "@/config/constants";
+import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
+import { logToolUsage } from "@/lib/db/queries";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
 export const maxDuration = 120;
@@ -18,14 +19,16 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
-    const isPro = userId ? (await getUserProfile(userId)).plan === "pro" : false;
-    const maxSizeMB = isPro ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
+    const userContext = await resolveToolUserContext(userId);
+    const maxSizeMB = userContext.maxSizeMB;
 
     const usageResult = await checkUsageLimit(userId, request, "edit-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
@@ -34,37 +37,33 @@ export async function POST(request: NextRequest) {
     const images = formData.getAll("images") as File[];
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only PDF files are accepted." },
-        { status: 400 }
-      );
-    }
-
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
+    const validated = await validateSingleUpload(file, ["pdf"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only PDF files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
     if (!operationsJson) {
-      return NextResponse.json({ error: "Operations JSON is required" }, { status: 400 });
+      return toolJsonError(request, "Operations JSON is required", 400);
     }
 
     let operations: EditPdfOperations;
     try {
       operations = JSON.parse(operationsJson);
     } catch {
-      return NextResponse.json({ error: "Invalid operations JSON" }, { status: 400 });
+      return toolJsonError(request, "Invalid operations JSON", 400);
     }
 
     const imageBuffers = await Promise.all(
       images.map(async (img) => Buffer.from(await img.arrayBuffer()))
     );
 
-    const pdfBuffer = Buffer.from(await file.arrayBuffer());
+    const pdfBuffer = validated.buffer;
     const edited = await applyEditPdfOperations(pdfBuffer, operations, imageBuffers);
     const outputBuffer = Buffer.from(edited);
 
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "edit-pdf",
       userId,
       errorType: "EDIT_ERROR",

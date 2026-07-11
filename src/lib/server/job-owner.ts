@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
 
@@ -16,7 +16,8 @@ export function resolveJobOwnerKey(
 export async function resolveToolJobOwnerKey(
   request: NextRequest
 ): Promise<string> {
-  const userId = await getToolRequestUserId();
+  const auth = await resolveMutationToolUser(request);
+  const userId = auth.userId;
   return resolveJobOwnerKey(request, userId);
 }
 

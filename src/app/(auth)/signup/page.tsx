@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/common/logo";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { useTranslation } from "@/i18n";
 
 const inputClass =
@@ -222,6 +223,8 @@ function SignupForm() {
           {t("auth.signupButton")}
         </Button>
       </form>
+
+      <OAuthButtons redirectTo={redirectTo} className="mt-6" />
 
       <p className="mt-6 text-center text-sm text-pd-muted">
         {t("auth.hasAccount")}{" "}

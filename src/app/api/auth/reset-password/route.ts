@@ -4,17 +4,18 @@ import {
   isLocalDevAuthEnabled,
   localDevResetPasswordWithToken,
 } from "@/lib/auth/local-dev-auth";
-import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
+import { checkPasswordResetRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
 import { guardMutationOrigin } from "@/lib/server/mutation-origin";
-import { toSafeApiError } from "@/lib/server/safe-error";
+import { jsonApiError, jsonApiMessage } from "@/lib/server/api-error";
+import { isPasswordRecoverySession } from "@/lib/auth/recovery-session";
 
 export async function POST(request: NextRequest) {
   try {
     const originBlocked = guardMutationOrigin(request);
     if (originBlocked) return originBlocked;
 
-    const rate = await checkAuthRateLimit(request);
-    if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+    const rate = await checkPasswordResetRateLimit(request);
+    if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec, request, "password-reset");
 
     const { token, password } = await request.json();
 
@@ -55,19 +56,27 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    const recoverySession = await isPasswordRecoverySession(supabase);
+    if (!recoverySession) {
+      return jsonApiMessage(
+        request,
+        "Open the reset link from your email to continue, or request a new one.",
+        403
+      );
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return jsonApiError(request, error, 400, "Could not reset password");
     }
+
+    await supabase.auth.signOut({ scope: "global" });
 
     return NextResponse.json({
       message: "Password updated successfully. You can now log in.",
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: toSafeApiError(err, "Could not reset password") },
-      { status: 400 }
-    );
+    return jsonApiError(request, err, 400, "Could not reset password");
   }
 }

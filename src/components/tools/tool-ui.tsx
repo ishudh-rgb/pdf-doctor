@@ -7,6 +7,23 @@ import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { useTranslation } from "@/i18n";
+import { formatUploadSizeDisplay, useToolUploadSizeLine } from "@/hooks/use-tool-upload-limits";
+
+export function ToolUploadSizeHint({
+  formatNote,
+  className,
+}: {
+  formatNote?: string;
+  className?: string;
+}) {
+  const sizeLine = useToolUploadSizeLine();
+  return (
+    <div className={cn("space-y-0.5 text-xs text-pd-muted/90", className)}>
+      {formatNote ? <p>{formatNote}</p> : null}
+      <p className="text-balance">{formatUploadSizeDisplay(sizeLine)}</p>
+    </div>
+  );
+}
 
 export function ToolResultSizeBadge({
   sizeBytes,
@@ -28,9 +45,15 @@ export function ToolResultSizeBadge({
     </div>
   );
 }
+
 interface ToolDropzoneProps {
   hint?: string;
+  /** Optional format/type note; upload size line is appended automatically. */
+  formatNote?: string;
+  /** Full override — skips automatic size hint. */
   subHint?: string;
+  /** Show plan upload size line (default true). */
+  showSizeHint?: boolean;
   dragOver: boolean;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
@@ -45,23 +68,27 @@ interface ToolDropzoneProps {
 }
 
 export function ToolDropzone({
-  hint = "or drag and drop your file here",
+  hint,
+  formatNote,
   subHint,
+  showSizeHint = true,
   dragOver,
   onDragOver,
   onDragLeave,
   onDrop,
   onChooseFiles,
-  chooseLabel = "Select file",
+  chooseLabel,
   className,
   fileInputRef,
   fileInputAccept,
   fileInputMultiple,
   onFileInputChange,
 }: ToolDropzoneProps) {
+  const { t } = useTranslation();
+  const sizeLine = useToolUploadSizeLine();
   const zoneId = useId();
-  const resolvedChooseLabel = chooseLabel;
-  const resolvedHint = hint;
+  const resolvedChooseLabel = chooseLabel ?? t("toolPage.selectFile");
+  const resolvedHint = hint ?? t("toolPage.orDragDropFile");
 
   return (
     <div className={cn("w-full", className)}>
@@ -95,7 +122,22 @@ export function ToolDropzone({
         <p id={zoneId} className="mt-1.5 text-sm text-pd-muted">
           {resolvedHint}
         </p>
-        {subHint && <p className="mt-0.5 text-xs text-pd-muted/90">{subHint}</p>}
+        {subHint ? (
+          <p className="mt-0.5 text-xs text-pd-muted/90 text-balance">
+            {formatUploadSizeDisplay(subHint)}
+          </p>
+        ) : (
+          <div className="mt-0.5 space-y-0.5">
+            {formatNote ? (
+              <p className="text-xs text-pd-muted/90">{formatNote}</p>
+            ) : null}
+            {showSizeHint ? (
+              <p className="text-xs text-pd-muted/90 text-balance">
+                {formatUploadSizeDisplay(sizeLine)}
+              </p>
+            ) : null}
+          </div>
+        )}
       </div>
       {fileInputRef ? (
         <ToolHiddenFileInput
@@ -104,7 +146,7 @@ export function ToolDropzone({
           multiple={fileInputMultiple}
           onChange={onFileInputChange}
           labelledBy={zoneId}
-          ariaLabel="Choose file to upload"
+          ariaLabel={t("toolPage.chooseFileAria")}
         />
       ) : null}
     </div>
@@ -169,6 +211,8 @@ function FileSizeComparison({
   resultSizeBytes: number;
   savedPercent?: number;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="mt-5 w-full rounded-2xl border border-pd-border bg-pd-background p-4">
       <div
@@ -180,7 +224,7 @@ function FileSizeComparison({
         )}
       >
         <div className="rounded-xl border border-pd-border/80 bg-pd-surface px-4 py-3 text-center">
-          <p className="text-xs font-medium uppercase tracking-wide text-pd-muted">Original</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-pd-muted">{t("toolPage.sizeOriginal")}</p>
           <p className="mt-1 text-base font-bold tabular-nums text-pd-foreground">
             {formatFileSize(originalSizeBytes)}
           </p>
@@ -189,7 +233,7 @@ function FileSizeComparison({
           &rarr;
         </div>
         <div className="rounded-xl border border-pd-brand/25 bg-pd-brand-muted/50 px-4 py-3 text-center">
-          <p className="text-xs font-medium uppercase tracking-wide text-pd-muted">Output</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-pd-muted">{t("toolPage.sizeOutput")}</p>
           <p className="mt-1 text-base font-bold tabular-nums text-pd-brand">
             {formatFileSize(resultSizeBytes)}
           </p>
@@ -198,7 +242,7 @@ function FileSizeComparison({
           <>
             <div className="hidden h-10 w-px bg-pd-border sm:block" aria-hidden />
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
-              <p className="text-xs font-medium uppercase tracking-wide text-emerald-700/80">Saved</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-emerald-700/80">{t("toolPage.sizeSaved")}</p>
               <p className="mt-1 text-base font-bold tabular-nums text-emerald-700">
                 {savedPercent}%
               </p>

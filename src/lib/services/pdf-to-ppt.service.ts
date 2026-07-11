@@ -38,7 +38,7 @@ function pointsToInches(pt: number): number {
   return Math.round((pt / PT_PER_INCH) * 1000) / 1000;
 }
 
-/** Pick slide size from PDF pages — matches original page aspect ratio (Smallpdf-style). */
+/** Pick slide size from PDF pages — matches original page aspect ratio. */
 function resolveSlideSizeInches(pages: RenderedPage[]): { width: number; height: number } {
   if (pages.length === 1) {
     return {

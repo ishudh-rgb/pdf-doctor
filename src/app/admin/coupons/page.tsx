@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, X, Ticket, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -38,18 +38,7 @@ export default function AdminCouponsPage() {
     valid_until: "",
   });
 
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
-
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
-  async function fetchCoupons() {
+  const fetchCoupons = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/coupons");
       if (res.ok) {
@@ -61,7 +50,18 @@ export default function AdminCouponsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    void fetchCoupons();
+  }, [fetchCoupons]);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();

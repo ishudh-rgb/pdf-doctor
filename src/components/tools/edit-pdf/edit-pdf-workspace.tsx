@@ -9,7 +9,6 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import {
-  Check,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -48,6 +47,7 @@ import {
   type TextStyle,
 } from "@/components/tools/edit-pdf/edit-pdf-types";
 import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 
 const CANVAS_RENDER_WIDTH = 880;
 const DEFAULT_IMAGE_WIDTH_NORM = 0.22;
@@ -74,6 +74,8 @@ function textDecorationClass(decoration: TextStyle["decoration"]): string {
 }
 
 export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspaceProps) {
+  void onChangeFile;
+  const ws = useToolWorkspaceMessages();
   const [sessionId, setSessionId] = useState("");
   const [thumbnails, setThumbnails] = useState<string[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -224,7 +226,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
         return;
       }
       if (!preview.sessionId || preview.totalPages === 0) {
-        setError(preview.error ?? "Could not read this PDF.");
+        setError(preview.error ?? ws.couldNotReadPdfShort);
         return;
       }
       setSessionId(preview.sessionId);
@@ -239,7 +241,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
     }).then((result) => {
       if (requestId !== loadRef.current) return;
       if (result.passwordRequired) return;
-      if (result.totalPages === 0) setError(result.error ?? "Could not read this PDF.");
+      if (result.totalPages === 0) setError(ws.resolveApiError(result.error, "errors.corruptedPdf") || ws.couldNotReadPdfShort);
       setLoading(false);
     });
 
@@ -256,7 +258,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
       .finally(() => {
         if (requestId === loadRef.current) setLoadingText(false);
       });
-  }, [fileKey, file]);
+  }, [fileKey, file, ws]);
 
   useEffect(() => {
     return () => imageItems.forEach((item) => URL.revokeObjectURL(item.previewUrl));
@@ -667,14 +669,14 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
       const res = await fetch("/api/tools/edit-pdf", { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to export PDF.");
+        throw new Error(data.error || ws.failedExportPdf);
       }
       const blob = await res.blob();
       setResultUrl(URL.createObjectURL(blob));
       setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed.");
+      setError(err instanceof Error ? err.message : ws.exportFailed);
     } finally {
       setProcessing(false);
     }
@@ -699,13 +701,13 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
 
     loadPdfDocumentPreview(pFile, pw).then((preview) => {
       if (preview.wrongPassword) {
-        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: preview.error ?? "Incorrect password.", loading: false } : prev);
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: preview.error ?? ws.incorrectPassword, loading: false } : prev);
         return;
       }
       if (preview.passwordRequired) return;
       setPasswordPrompt(null);
       if (!preview.sessionId || preview.totalPages === 0) {
-        setError(preview.error ?? "Could not read this PDF.");
+        setError(preview.error ?? ws.couldNotReadPdfShort);
         return;
       }
       setSessionId(preview.sessionId);
@@ -717,7 +719,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
         setLoading(false);
       }, pw);
     });
-  }, [passwordPrompt]);
+  }, [passwordPrompt, ws]);
 
   if (passwordPrompt) {
     return (
@@ -734,13 +736,13 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
   if (completed && resultUrl) {
     return (
       <ToolWorkspaceReadyPanel
-        title="PDF exported"
-        description="Your edited document is ready."
+        title={ws.pdfExported}
+        description={ws.editedDocumentReady}
         downloadUrl={resultUrl}
         downloadFilename="edited.pdf"
-        downloadLabel="Download PDF"
+        downloadLabel={ws.downloadPdf}
         resultSizeBytes={resultSize}
-        resetLabel="Edit another file"
+        resetLabel={ws.editAnotherFile}
         onReset={() => {
           setCompleted(false);
           setResultUrl(null);
@@ -762,7 +764,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
       <ToolHiddenFileInput
         ref={imageInputRef}
         accept="image/*"
-        ariaLabel="Choose image to add to PDF"
+        ariaLabel={ws.chooseImageForPdf}
         onChange={(e) => {
           const picked = e.target.files?.[0];
           e.target.value = "";
@@ -831,7 +833,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
                     <button key={pageNum} type="button" onClick={() => setCurrentPage(pageNum)}
                       className={cn("relative w-full overflow-hidden rounded-lg border-2 bg-white shadow-sm",
                         active ? "border-pd-brand ring-2 ring-pd-brand/20" : "border-transparent hover:border-pd-border")}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <img src={thumb as string} alt={`Page ${pageNum}`} className="aspect-[3/4] w-full object-cover object-top" />
                       <span className={cn("absolute bottom-1 left-1 rounded px-1.5 py-0.5 text-[10px] font-semibold",
                         active ? "bg-pd-brand text-white" : "bg-black/60 text-white")}>{pageNum}</span>
@@ -846,7 +848,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
             {error && <div className="p-3"><ToolErrorBanner message={error} /></div>}
             {(loading || loadingText) && (
               <p className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs text-white">
-                {loading ? "Loading pages…" : "Detecting editable text…"}
+                {loading ? ws.loadingPages : ws.detectingText}
               </p>
             )}
 
@@ -855,7 +857,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
                 <Loader2 className="h-8 w-8 animate-spin text-pd-brand" />
               ) : (
                 <div className="relative w-full max-w-full">
-                  {/* Floating toolbar over canvas (Smallpdf-style) */}
+                  {/* Floating toolbar over canvas */}
                   <div className="pointer-events-none absolute left-1/2 top-2 z-20 w-full max-w-3xl -translate-x-1/2 px-2">
                     <div className="pointer-events-auto rounded-xl border border-pd-border bg-white/95 shadow-lg backdrop-blur-sm">
                       <EditPdfToolbar
@@ -886,7 +888,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
                   onMouseUp={handleCanvasMouseUp}
                   onMouseLeave={handleCanvasMouseUp}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img src={canvasUrl} alt={`Page ${currentPage}`} className="block h-auto w-full pointer-events-none"
                     draggable={false}
                     onLoad={(e) => {
@@ -1100,7 +1102,7 @@ export function EditPdfWorkspace({ file, onChangeFile, onReset }: EditPdfWorkspa
 
                   {/* Images */}
                   {pageImages.map((item) => (
-                    // eslint-disable-next-line @next/next/no-img-element
+                     
                     <img key={item.id} src={item.previewUrl} alt="" draggable={false}
                       className={cn("absolute cursor-move object-contain",
                         selectedId === item.id && "ring-2 ring-pd-brand ring-offset-1")}

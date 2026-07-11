@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { StatsBar } from "@/components/marketing/stats-bar";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import {
-  AISection,
   CTASection,
   FAQSection,
   PricingSection,
@@ -18,7 +16,7 @@ import {
 } from "@/components/marketing/home/home-sections";
 import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 
-/** Layout A — Smallpdf-style: tools-first, minimal hero, dense grid */
+/** Layout A — tools-first, minimal hero, dense grid */
 export function HomeLayoutA() {
   const { t } = useTranslation();
 

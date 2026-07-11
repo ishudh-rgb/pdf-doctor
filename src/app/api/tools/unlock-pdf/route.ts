@@ -1,10 +1,11 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { unlockPDF } from "@/lib/services/pdf-security.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -18,7 +19,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const usageResult = await checkUsageLimit(userId, request, "unlock-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
@@ -35,26 +38,22 @@ export async function POST(request: NextRequest) {
     const password = formData.get("password") as string | null;
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
     if (!password) {
-      return NextResponse.json({ error: "Password is required" }, { status: 400 });
+      return toolJsonError(request, "Password is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only PDF files are accepted." },
-        { status: 400 }
-      );
+    const validated = await validateSingleUpload(file, ["pdf"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only PDF files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = validated.buffer;
 
     let unlockedPdf: Buffer;
     try {
@@ -67,10 +66,7 @@ export async function POST(request: NextRequest) {
         errMsg.toLowerCase().includes("wrong") ||
         errMsg.toLowerCase().includes("invalid")
       ) {
-        return NextResponse.json(
-          { error: "Incorrect password. Please try again with the correct password." },
-          { status: 400 }
-        );
+        return toolJsonError(request, "Incorrect password. Please try again with the correct password.", 400);
       }
       throw err;
     }
@@ -101,7 +97,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "unlock-pdf",
       userId,
       errorType: "UNLOCK_ERROR",

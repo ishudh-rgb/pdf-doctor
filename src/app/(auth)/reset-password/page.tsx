@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, Suspense } from "react";
+import { useState, useEffect, type FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Lock, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils/cn";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/common/logo";
+import { resolveRateLimitError } from "@/lib/rate-limit-message";
+import { useTranslation } from "@/i18n";
 
 const inputClass =
   "w-full rounded-xl border border-pd-border bg-pd-surface py-2.5 text-sm text-pd-foreground outline-none transition focus:border-pd-brand focus:ring-2 focus:ring-pd-brand/20";
@@ -18,10 +20,29 @@ function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [sessionReady, setSessionReady] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { language } = useTranslation();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+
+  useEffect(() => {
+    if (token) {
+      setSessionReady(true);
+      setCheckingSession(false);
+      return;
+    }
+
+    fetch("/api/auth/recovery-session")
+      .then((res) => res.json())
+      .then((data: { ready?: boolean }) => setSessionReady(Boolean(data.ready)))
+      .catch(() => setSessionReady(false))
+      .finally(() => setCheckingSession(false));
+  }, [token]);
+
+  const canReset = Boolean(token) || sessionReady;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -43,13 +64,20 @@ function ResetPasswordForm() {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token: token ?? undefined, password }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error || "Could not reset password.");
+        throw new Error(
+          resolveRateLimitError(
+            data,
+            res.status,
+            language,
+            data.error || "Could not reset password."
+          )
+        );
       }
 
       router.push("/login?message=Password updated. Please log in with your new password.");
@@ -60,7 +88,11 @@ function ResetPasswordForm() {
     }
   }
 
-  if (!token) {
+  if (checkingSession) {
+    return <div className="text-sm text-pd-muted">Loading...</div>;
+  }
+
+  if (!canReset) {
     return (
       <div className="space-y-4 text-center">
         <p className="text-sm text-pd-muted">This reset link is invalid or has expired.</p>

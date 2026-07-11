@@ -55,14 +55,14 @@ export function FileCard({ file, onRemove, className }: FileCardProps) {
         <p className="truncate text-sm font-medium text-gray-900">
           {truncateFilename(file.name)}
         </p>
-        <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+        <p className="text-xs text-pd-muted">{formatFileSize(file.size)}</p>
       </div>
 
       <div className="flex items-center gap-2">
         {statusIcons[file.status]}
         <button
           onClick={onRemove}
-          className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+          className="rounded-lg p-1 text-pd-muted transition-colors hover:bg-gray-100 hover:text-pd-foreground cursor-pointer"
           aria-label={`Remove ${file.name}`}
         >
           <X className="h-4 w-4" />

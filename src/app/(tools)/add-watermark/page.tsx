@@ -237,7 +237,7 @@ export default function AddWatermarkPage() {
         <>
           <ToolDropzone
             hint="or drop files here"
-            subHint={file ? `${file.name} · ${formatFileSize(file.size)}` : "Drop or click to select a PDF"}
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
@@ -258,7 +258,12 @@ export default function AddWatermarkPage() {
               setCompleted(false);
             }}
           />
-          
+          {file ? (
+            <div className="mt-2 flex items-center gap-2 rounded-lg border border-pd-border bg-pd-brand-muted px-3 py-2">
+              <p className="min-w-0 flex-1 truncate text-sm font-medium text-pd-foreground">{file.name}</p>
+              <p className="shrink-0 text-xs text-pd-muted">{formatFileSize(file.size)}</p>
+            </div>
+          ) : null}
 
           <div className="mt-3 grid grid-cols-2 gap-3">
             {(["text", "image"] as const).map((type) => (

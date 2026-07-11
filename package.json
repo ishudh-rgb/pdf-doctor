@@ -9,17 +9,25 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium",
+    "test:e2e:smoke": "playwright test e2e/smoke.spec.ts e2e/legal.spec.ts e2e/conversion.spec.ts e2e/checkout.spec.ts e2e/tools.spec.ts",
+    "test:e2e:verify": "playwright test e2e/smoke.spec.ts e2e/tools.spec.ts e2e/a11y.spec.ts e2e/cwv.spec.ts e2e/perf-budget.spec.ts",
     "test:all": "npm run test && npm run test:e2e",
-    "audit:ci": "npm audit --audit-level=high",
+    "audit:ci": "npm audit --omit=dev --audit-level=high",
+    "audit:dev": "npm audit --audit-level=high",
+    "audit:moderate": "npm audit --audit-level=moderate",
     "clean:next": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
   },
   "overrides": {
     "postcss": "^8.5.10",
     "esbuild": "^0.25.0",
-    "tar": "^7.5.16",
+    "tar": "^7.5.19",
+    "muhammara": {
+      "tar": "^7.5.19"
+    },
     "exceljs": {
       "uuid": "^11.1.1"
     }
@@ -67,13 +75,15 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^3.2.6",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",

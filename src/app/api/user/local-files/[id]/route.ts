@@ -1,7 +1,7 @@
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
-import { getApiUser } from "@/lib/auth/get-api-user";
+import { tryGetApiUser } from "@/lib/auth/get-api-user";
 import { getLocalDevJobForDownload } from "@/lib/auth/local-dev-activity";
 import { sanitizeFilename } from "@/lib/utils/file";
 
@@ -10,12 +10,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getApiUser();
-    if (!user) {
+    const auth = await tryGetApiUser();
+    if (!auth.ok) {
       const rateLimited = await guardGeneralApiRateLimit(request);
       if (rateLimited) return rateLimited;
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return auth.response;
     }
+    const user = auth.user;
 
     const { id } = await params;
     const job = await getLocalDevJobForDownload(id, user.id);

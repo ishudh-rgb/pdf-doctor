@@ -129,7 +129,7 @@ export default function UnlockPdfPage() {
 
           <ToolDropzone
             hint="or drop files here"
-            subHint="Select a PDF file to unlock"
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}

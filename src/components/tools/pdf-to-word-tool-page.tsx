@@ -13,6 +13,7 @@ import {
 import { mapRelatedTools } from "@/components/tools/tool-helpers";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { notifyActivityUpdated } from "@/lib/client/activity-events";
+import { useToolErrors } from "@/hooks/use-tool-errors";
 
 interface RelatedTool {
   name: string;
@@ -39,6 +40,7 @@ export function PdfToWordToolPage({
 }: {
   relatedTools?: RelatedTool[];
 }) {
+  const { resolveApiError, resolveCatchError } = useToolErrors();
   const [file, setFile] = useState<File | null>(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -124,7 +126,7 @@ export function PdfToWordToolPage({
           });
           return;
         }
-        throw new Error(err.error || "Conversion failed. Please try again.");
+        throw new Error(resolveApiError(err, "errors.processingFailed"));
       }
 
       const { jobId } = (await startRes.json()) as { jobId?: string };
@@ -220,15 +222,7 @@ export function PdfToWordToolPage({
       setCompleted(true);
       notifyActivityUpdated();
     } catch (err) {
-      const message =
-        err instanceof DOMException && err.name === "AbortError"
-          ? "Conversion timed out. Large or complex PDFs can take several minutes — please try again and keep this tab open."
-          : err instanceof TypeError && /failed to fetch/i.test(err.message)
-            ? "Server not reachable. Make sure `npm run dev` is running, then retry."
-            : err instanceof Error
-              ? err.message
-              : "An unexpected error occurred.";
-      setError(message);
+      setError(resolveCatchError(err));
     } finally {
       window.clearTimeout(timeoutId);
       setProcessing(false);
@@ -270,7 +264,7 @@ export function PdfToWordToolPage({
         <>
           <ToolDropzone
             hint="Drop a file here or click to browse"
-            subHint="Select a PDF file to convert to Word"
+            formatNote="Select a PDF file to convert to Word"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();

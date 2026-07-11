@@ -278,7 +278,7 @@ export function WatermarkPreview({
                   className="relative overflow-visible rounded-sm bg-white transition-transform duration-200"
                   style={pageRotationVisual ? { transform: `rotate(${pageRotationVisual}deg)` } : undefined}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img
                     ref={mainImgRef}
                     key={`${mainThumbUrl}-${currentOriginalPage}`}
@@ -312,7 +312,7 @@ export function WatermarkPreview({
                     />
                   ) : (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs text-gray-400">Upload image to preview</span>
+                      <span className="text-xs text-pd-muted">Upload image to preview</span>
                     </div>
                   )}
                 </div>

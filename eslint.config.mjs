@@ -5,14 +5,31 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated / snapshot artifacts — not source code
+    ".snapshots/**",
+    "coverage/**",
   ]),
+  {
+    rules: {
+      // React Compiler rules flag common, valid patterns (mount fetches, hydration).
+      // Disabled so CI reflects fixable issues; revisit when migrating to Compiler.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/purity": "off",
+    },
+  },
+  {
+    files: ["src/components/tools/**/*.{ts,tsx}", "src/app/(tools)/**/*.{ts,tsx}"],
+    rules: {
+      // PDF/image tool previews use blob: URLs — next/image is unsuitable here.
+      "@next/next/no-img-element": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

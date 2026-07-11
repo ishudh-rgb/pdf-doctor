@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { PDFParse } from "pdf-parse";
 import { summarizePDF } from "@/lib/services/ai-summary.service";
 import { checkAIUsageLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage, logError } from "@/lib/db/queries";
-import { getApiUser } from "@/lib/auth/get-api-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
-import { FILE_LIMITS } from "@/config/constants";
+import { tryGetApiUser } from "@/lib/auth/get-api-user";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { isAIProviderConfigured } from "@/lib/ai/config";
 import { clientIpForLogs } from "@/lib/server/request-security";
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { beginToolRoute } from "@/lib/server/tool-request-guards";
+import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
+import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
 
 export const maxDuration = 120;
 
@@ -46,26 +48,25 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    const toolRate = await guardToolRateLimit(request, "ai-pdf-summarizer");
-    if (toolRate) return toolRate;
+    const early = await beginToolRoute(request, "ai-pdf-summarizer");
+    if (early) return early;
 
-    const user = await getApiUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Authentication required. Please sign in to use AI features." },
-        { status: 401 }
-      );
+    const auth = await tryGetApiUser();
+    if (!auth.ok) {
+      return auth.response.status === 401
+        ? NextResponse.json(
+            { error: "Authentication required. Please sign in to use AI features." },
+            { status: 401 }
+          )
+        : auth.response;
     }
+    const user = auth.user;
 
     userId = user.id;
 
     const usageLimit = await checkAIUsageLimit(userId, user.plan);
     if (!usageLimit.allowed) {
-      return NextResponse.json(
-        { error: usageLimit.message || "Daily AI usage limit reached." },
-        { status: 429 }
-      );
+      return toolJsonError(request, usageLimit.message || "Daily AI usage limit reached.", 429);
     }
 
     const formData = await request.formData();
@@ -74,24 +75,21 @@ export async function POST(request: NextRequest) {
     const pdfPassword = (formData.get("password") as string | null)?.trim() || undefined;
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only PDF files are accepted." },
-        { status: 400 }
-      );
+    const userContext = await resolveToolUserContext(userId);
+    const maxSizeMB = userContext.maxSizeMB;
+
+    const validated = await validateSingleUpload(file, ["pdf"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only PDF files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const maxSizeMB =
-      user.plan === "pro" ? FILE_LIMITS.maxProFileSizeMB : FILE_LIMITS.maxFreeFileSizeMB;
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = validated.buffer;
 
     let textContent = "";
     let pageCount = 0;
@@ -104,13 +102,10 @@ export async function POST(request: NextRequest) {
       const message = getErrorMessage(error).toLowerCase();
 
       if (message.includes("password")) {
-        return NextResponse.json(
-          {
-            error:
-              "This PDF is password-protected. Unlock it first using the Unlock PDF tool, or enter the PDF password and try again.",
-            code: "PDF_PASSWORD_REQUIRED",
-          },
-          { status: 400 }
+        return toolJsonError(
+          request,
+          "This PDF is password-protected. Unlock it first using the Unlock PDF tool, or enter the PDF password and try again.",
+          400
         );
       }
 
@@ -118,12 +113,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!textContent || textContent.trim().length < 50) {
-      return NextResponse.json(
-        {
-          error:
-            "Could not extract enough text from this PDF. The file may be image-based, scanned, or empty.",
-        },
-        { status: 400 }
+      return toolJsonError(
+        request,
+        "Could not extract enough text from this PDF. The file may be image-based, scanned, or empty.",
+        400
       );
     }
 
@@ -173,7 +166,7 @@ export async function POST(request: NextRequest) {
     }).catch(() => {});
 
     if (message.includes("usage limit") || message.includes("limit reached")) {
-      return NextResponse.json({ error: message }, { status: 429 });
+      return toolJsonError(request, message, 429);
     }
 
     if (
@@ -182,15 +175,18 @@ export async function POST(request: NextRequest) {
       message.includes("GEMINI_API_KEY") ||
       message.includes("OPENAI_API_KEY")
     ) {
-      return NextResponse.json(
-        {
-          error:
-            "AI service is not configured yet. Add GEMINI_API_KEY in .env.local and restart the server.",
-        },
-        { status: 503 }
+      return toolJsonError(
+        request,
+        "AI summarization is temporarily unavailable. Please try again later.",
+        503
       );
     }
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    captureApiError(error, { route: "ai/summarize", user_id: userId });
+    return toolJsonError(
+      request,
+      toSafeApiError(error, "AI summarization failed. Please try again."),
+      500
+    );
   }
 }

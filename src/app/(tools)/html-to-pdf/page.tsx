@@ -19,13 +19,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
-import { ToolResultSizeBadge } from "@/components/tools/tool-ui";
+import { ToolResultSizeBadge, ToolHiddenFileInput, ToolUploadSizeHint } from "@/components/tools/tool-ui";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CircularProgress } from "@/components/ui/circular-progress";
 import { useConversionProgress } from "@/hooks/use-conversion-progress";
 import { PdfResultWorkspaceViewer } from "@/components/tools/pdf-result-workspace-viewer";
-import { ToolHiddenFileInput } from "@/components/tools/tool-ui";
 
 type PageSize = "a4" | "letter" | "auto";
 type Orientation = "portrait" | "landscape";
@@ -211,7 +210,7 @@ export default function HtmlToPdfPage() {
 
               {/* Continue in */}
               <div className="mt-6">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">
                   Continue in
                 </p>
                 <div className="flex flex-col gap-1">
@@ -237,7 +236,7 @@ export default function HtmlToPdfPage() {
               <button
                 type="button"
                 onClick={reset}
-                className="mt-6 w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                className="mt-6 w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-medium text-pd-muted transition-colors hover:bg-gray-50 hover:text-pd-foreground"
               >
                 Convert another file
               </button>
@@ -257,7 +256,7 @@ export default function HtmlToPdfPage() {
           <Code2 className="h-7 w-7 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">HTML to PDF</h1>
-        <p className="mt-1.5 text-sm text-gray-500">
+        <p className="mt-1.5 text-sm text-pd-muted">
           Convert HTML pages to pixel-perfect PDF documents
         </p>
       </div>
@@ -282,9 +281,10 @@ export default function HtmlToPdfPage() {
           <p className="text-lg font-semibold text-gray-700">
             Drop your HTML file here
           </p>
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-pd-muted">
             or click to browse · Supports HTML, HTM, XHTML, SVG
           </p>
+          <ToolUploadSizeHint className="mt-2 text-center text-pd-muted" />
           <button
             type="button"
             className="mt-5 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-200 transition-all hover:shadow-lg hover:shadow-orange-300"
@@ -303,7 +303,7 @@ export default function HtmlToPdfPage() {
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-gray-800">{file.name}</p>
-                <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+                <p className="text-xs text-pd-muted">{formatFileSize(file.size)}</p>
               </div>
             </div>
 
@@ -394,7 +394,7 @@ export default function HtmlToPdfPage() {
                 type="button"
                 onClick={reset}
                 disabled={processing}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-pd-muted transition-colors hover:bg-gray-100 hover:text-pd-foreground disabled:opacity-50"
                 title="Remove file"
               >
                 <X className="h-4 w-4" />
@@ -405,8 +405,8 @@ export default function HtmlToPdfPage() {
           {/* Live HTML preview */}
           <div className="bg-gradient-to-b from-gray-50 to-gray-100 px-5 py-5">
             <div className="mb-3 flex items-center gap-2">
-              <Eye className="h-4 w-4 text-gray-400" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <Eye className="h-4 w-4 text-pd-muted" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-pd-muted">
                 Live Preview
               </span>
             </div>
@@ -419,7 +419,7 @@ export default function HtmlToPdfPage() {
                   title="HTML Preview"
                 />
               ) : (
-                <div className="flex h-64 items-center justify-center text-sm text-gray-400">
+                <div className="flex h-64 items-center justify-center text-sm text-pd-muted">
                   Loading preview…
                 </div>
               )}
@@ -468,7 +468,7 @@ export default function HtmlToPdfPage() {
                 <feat.icon className="h-4.5 w-4.5 text-orange-600" />
               </div>
               <h3 className="text-sm font-semibold text-gray-800">{feat.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-gray-500">{feat.desc}</p>
+              <p className="mt-1 text-xs leading-relaxed text-pd-muted">{feat.desc}</p>
             </div>
           ))}
         </div>

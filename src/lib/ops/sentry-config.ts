@@ -1,4 +1,5 @@
-import type { ErrorEvent, EventHint } from "@sentry/nextjs";
+import type { ErrorEvent } from "@sentry/nextjs";
+import { redactSensitiveText } from "@/lib/server/safe-log";
 
 const SENSITIVE_HEADERS = new Set([
   "authorization",
@@ -6,6 +7,25 @@ const SENSITIVE_HEADERS = new Set([
   "x-health-key",
   "x-api-key",
   "x-cron-secret",
+]);
+
+const SENSITIVE_EXTRA_KEYS = new Set([
+  "password",
+  "email",
+  "user_id",
+  "admin_email",
+  "razorpay_signature",
+  "stack_trace",
+  "token",
+  "access_token",
+  "refresh_token",
+  "api_key",
+  "authorization",
+  "replyTo",
+  "message",
+  "full_name",
+  "phone",
+  "contact",
 ]);
 
 function scrubEvent(event: ErrorEvent): ErrorEvent {
@@ -20,12 +40,19 @@ function scrubEvent(event: ErrorEvent): ErrorEvent {
   if (event.user) {
     delete event.user.email;
     delete event.user.ip_address;
+    delete event.user.username;
   }
 
   if (event.extra) {
-    delete event.extra.password;
-    delete event.extra.razorpay_signature;
-    delete event.extra.stack_trace;
+    for (const key of Object.keys(event.extra)) {
+      if (SENSITIVE_EXTRA_KEYS.has(key.toLowerCase())) {
+        delete event.extra[key];
+      }
+    }
+  }
+
+  if (typeof event.message === "string") {
+    event.message = redactSensitiveText(event.message);
   }
 
   return event;
@@ -38,7 +65,7 @@ export function getSentryInitOptions() {
     environment: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "development",
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
     enabled: Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN),
-    beforeSend(event: ErrorEvent, _hint: EventHint) {
+    beforeSend(event: ErrorEvent) {
       return scrubEvent(event);
     },
   };

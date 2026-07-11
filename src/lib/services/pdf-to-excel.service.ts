@@ -71,20 +71,6 @@ interface ExtractResult {
   pagesText?: string[];
 }
 
-function findHeaderRowIndex(table: TableData): number {
-  for (let i = 0; i < Math.min(table.rows.length, 12); i++) {
-    const rowText = table.rows[i].join(" ").toLowerCase();
-    if (rowText.includes("particulars") || rowText.includes("description")) {
-      return i;
-    }
-    const nonEmpty = table.rows[i].filter((cell) => cell.trim()).length;
-    if (nonEmpty >= 3 && table.rows[i].slice(1).some(isNumericValue)) {
-      return i;
-    }
-  }
-  return 0;
-}
-
 function computeExtractTimeoutMs(pageCount: number, fileBytes: number): number {
   const sizeMb = fileBytes / (1024 * 1024);
   const base = 120_000;
@@ -109,11 +95,6 @@ async function getPdfPageCount(python: string, pdfPath: string): Promise<number>
 
 /* ─── helpers ─── */
 
-function isNumericValue(value: string): boolean {
-  const cleaned = value.replace(/[$,\s%]/g, "");
-  return /^-?\d+(\.\d+)?$/.test(cleaned);
-}
-
 function parseNumeric(value: string): number | null {
   const cleaned = value.replace(/[$,\s]/g, "");
   if (/^-?\d+(\.\d+)?%?$/.test(cleaned)) {
@@ -123,71 +104,6 @@ function parseNumeric(value: string): number | null {
     return parseFloat(cleaned);
   }
   return null;
-}
-
-function isDateValue(value: string): boolean {
-  return /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(value.trim());
-}
-
-function parseDate(value: string): Date | null {
-  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (!match) return null;
-  const month = parseInt(match[1], 10);
-  const day = parseInt(match[2], 10);
-  let year = parseInt(match[3], 10);
-  if (year < 100) year += year < 50 ? 2000 : 1900;
-  // Use UTC to avoid timezone offset issues
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (isNaN(date.getTime())) return null;
-  return date;
-}
-
-function detectColumnTypes(table: TableData, headerRowIndex = 0): Map<number, "number" | "percent" | "currency" | "date" | "text"> {
-  const types = new Map<number, "number" | "percent" | "currency" | "date" | "text">();
-  if (table.rows.length < 2) return types;
-
-  const header = table.rows[headerRowIndex];
-  const dataRows = table.rows.slice(headerRowIndex + 1, Math.min(headerRowIndex + 21, table.rows.length));
-
-  for (let col = 0; col < (header?.length ?? 0); col++) {
-    const headerText = (header[col] ?? "").toLowerCase();
-    const values = dataRows
-      .map((r) => (r[col] ?? "").trim())
-      .filter(Boolean);
-
-    if (values.length === 0) {
-      types.set(col, "text");
-      continue;
-    }
-
-    const dateCount = values.filter(isDateValue).length;
-    if (dateCount > values.length * 0.6 || /\bdate\b/i.test(headerText)) {
-      types.set(col, "date");
-      continue;
-    }
-
-    const percentCount = values.filter((v) => v.includes("%")).length;
-    if (percentCount > values.length * 0.5 || /bonus\s*%|percent|rate/i.test(headerText)) {
-      types.set(col, "percent");
-      continue;
-    }
-
-    const currencyCount = values.filter((v) => /^\$/.test(v.trim())).length;
-    if (currencyCount > values.length * 0.5 || /salary|amount|price|cost|total|pay/i.test(headerText)) {
-      types.set(col, "currency");
-      continue;
-    }
-
-    const numCount = values.filter(isNumericValue).length;
-    if (numCount > values.length * 0.7 || /\bage\b|count|qty|quantity|num/i.test(headerText)) {
-      types.set(col, "number");
-      continue;
-    }
-
-    types.set(col, "text");
-  }
-
-  return types;
 }
 
 function autoFitColumns(sheet: ExcelJS.Worksheet, maxWidth = 48) {
@@ -231,53 +147,6 @@ function documentCellValue(
   }
 
   return text;
-}
-
-function styleHeaderRow(sheet: ExcelJS.Worksheet, rowNumber: number, columnCount: number) {
-  const row = sheet.getRow(rowNumber);
-  row.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-  row.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF4472C4" },
-  };
-  row.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-  row.height = 24;
-
-  for (let col = 1; col <= columnCount; col++) {
-    sheet.getCell(rowNumber, col).border = {
-      top: { style: "thin", color: { argb: "FF4472C4" } },
-      bottom: { style: "thin", color: { argb: "FF4472C4" } },
-      left: { style: "thin", color: { argb: "FFD9E2F3" } },
-      right: { style: "thin", color: { argb: "FFD9E2F3" } },
-    };
-  }
-}
-
-function addAlternatingRowStyle(
-  sheet: ExcelJS.Worksheet,
-  startRow: number,
-  endRow: number,
-  columnCount: number
-) {
-  for (let r = startRow; r <= endRow; r++) {
-    const isEven = (r - startRow) % 2 === 0;
-    for (let c = 1; c <= columnCount; c++) {
-      const cell = sheet.getCell(r, c);
-      if (isEven) {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFD9E2F3" },
-        };
-      }
-      cell.border = {
-        bottom: { style: "hair", color: { argb: "FFBDD0EB" } },
-        left: { style: "hair", color: { argb: "FFBDD0EB" } },
-        right: { style: "hair", color: { argb: "FFBDD0EB" } },
-      };
-    }
-  }
 }
 
 /* ─── main extraction via Python ─── */

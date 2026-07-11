@@ -1,4 +1,5 @@
 import { FILE_SIZE_MARKETING } from "@/config/constants";
+import { BILLING_COPY, planFileSizeFaqLine } from "@/lib/billing/billing-copy";
 
 export interface FaqItem {
   question: string;
@@ -46,8 +47,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       },
       {
         question: "What is the maximum file size I can upload?",
-        answer:
-          `Free uploads: ${FILE_SIZE_MARKETING.freeLabel.toLowerCase()}. Pro uploads: ${FILE_SIZE_MARKETING.proLabel.toLowerCase()}.`,
+        answer: planFileSizeFaqLine(),
       },
       {
         question: "How accurate is PDF to Word conversion?",
@@ -96,28 +96,24 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     questions: [
       {
         question: "What is included in the Pro plan?",
-        answer:
-          `The Pro plan includes 100 tool uses per day, ${FILE_SIZE_MARKETING.proLabel.toLowerCase()}, all tools including Sign PDF and AI Summarizer, priority processing, no ads, and priority email support.`,
+        answer: BILLING_COPY.proIncludes,
       },
       {
         question: "How do I upgrade to Pro?",
         answer:
-          "You can upgrade to Pro from the Pricing page or your Dashboard. Complete payment through Razorpay and Pro features activate immediately.",
+          `Upgrade from the Pricing page or Dashboard → Pricing. ${BILLING_COPY.checkoutModel} Pro features activate immediately after successful checkout.`,
       },
       {
         question: "What payment methods are accepted?",
-        answer:
-          "We accept credit/debit cards, UPI, net banking, and digital wallets through Razorpay. All transactions are processed securely in INR.",
+        answer: BILLING_COPY.paymentMethods,
       },
       {
-        question: "Can I cancel my subscription?",
-        answer:
-          "Yes, you can cancel your Pro subscription at any time from your Dashboard. You'll continue to have Pro access until the end of your current billing period.",
+        question: "Can I cancel auto-renew?",
+        answer: BILLING_COPY.cancelAutoRenew,
       },
       {
         question: "Do you offer refunds?",
-        answer:
-          "We offer a 7-day money-back guarantee on new Pro subscriptions. Contact support within 7 days for a full refund.",
+        answer: BILLING_COPY.refundSummary,
       },
     ],
   },

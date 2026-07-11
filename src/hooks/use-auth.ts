@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { isActivePro } from "@/lib/auth/plan-access";
 
 interface UserProfile {
   id: string;
@@ -69,6 +70,8 @@ export function useAuth(): AuthState & {
     });
 
     return () => subscription.unsubscribe();
+    // Mount-only auth bootstrap — fetchProfile/supabase are stable for session setup.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const signOut = async () => {
@@ -88,7 +91,7 @@ export function useAuth(): AuthState & {
     profile,
     loading,
     isAdmin: profile?.role === "admin",
-    isPro: profile?.plan === "pro",
+    isPro: profile ? isActivePro(profile) : false,
     signOut,
     refreshProfile,
   };

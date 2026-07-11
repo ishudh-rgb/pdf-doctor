@@ -42,7 +42,7 @@ export function ProcessingView({
           variant="ghost"
           size="sm"
           onClick={onCancel}
-          className="mt-6 text-gray-500"
+          className="mt-6 text-pd-muted"
         >
           Cancel
         </Button>

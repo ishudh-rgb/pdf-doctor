@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedSupabaseUser } from "@/lib/auth/get-api-user";
+import { authGuardResponse } from "@/lib/server/auth-guard-http";
 import { createOrder } from "@/lib/services/payment.service";
+import { isBillingCheckoutAvailable, isMockBillingMode } from "@/lib/billing/billing-config";
 import { createPayment, getCouponCode } from "@/lib/db/queries";
 import { checkAuthRateLimit, rateLimitResponse } from "@/lib/server/rate-limiter";
 import { guardMutationOrigin } from "@/lib/server/mutation-origin";
@@ -23,10 +26,15 @@ export async function POST(request: NextRequest) {
     const rate = await checkAuthRateLimit(request);
     if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
 
+    if (!isBillingCheckoutAvailable()) {
+      return NextResponse.json(
+        { error: "Online payments are not configured. Set BILLING_MODE=mock or add Razorpay keys." },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getAuthenticatedSupabaseUser(supabase);
 
     if (!user) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -75,7 +83,7 @@ export async function POST(request: NextRequest) {
     await createPayment({
       user_id: user.id,
       razorpay_order_id: order.id,
-      amount,
+      amount: amount / 100,
       currency: "INR",
       status: "pending",
       plan_name: plan,
@@ -90,8 +98,12 @@ export async function POST(request: NextRequest) {
       plan,
       duration,
       discount_applied: discountApplied,
+      mock: isMockBillingMode(),
+      billing_mode: isMockBillingMode() ? "mock" : "live",
     });
   } catch (err) {
+    const guarded = authGuardResponse(err);
+    if (guarded) return guarded;
     return NextResponse.json(
       { error: toSafeApiError(err, "Failed to create order") },
       { status: 500 }

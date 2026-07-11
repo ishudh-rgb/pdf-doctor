@@ -3,11 +3,6 @@ import path from "path";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const maxBodyMb = Number(process.env.MAX_UPLOAD_BODY_MB) || 110;
-const isProd = process.env.NODE_ENV === "production";
-
-const scriptSrc = isProd
-  ? "'self' 'unsafe-inline' https://checkout.razorpay.com https://apis.google.com https://www.dropbox.com"
-  : "'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://apis.google.com https://www.dropbox.com";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -20,23 +15,6 @@ const securityHeaders = [
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
-  },
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src " + scriptSrc,
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https:",
-      "connect-src 'self' blob: https://*.supabase.co https://*.supabase.in https://api.razorpay.com https://www.googleapis.com https://api.dropboxapi.com",
-      "frame-src 'self' blob: https://checkout.razorpay.com https://docs.google.com",
-      "worker-src 'self' blob:",
-      "object-src 'none'",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join("; "),
   },
 ];
 
@@ -54,6 +32,16 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_MAX_PRO_FILE_SIZE_MB ??
       process.env.MAX_PRO_FILE_SIZE_MB ??
       "200",
+    NEXT_PUBLIC_BILLING_MODE: process.env.BILLING_MODE ?? "",
+    NEXT_PUBLIC_RAZORPAY_PRO_MONTHLY_PLAN_ID:
+      process.env.NEXT_PUBLIC_RAZORPAY_PRO_MONTHLY_PLAN_ID ??
+      process.env.RAZORPAY_PRO_MONTHLY_PLAN_ID ??
+      "",
+    NEXT_PUBLIC_RAZORPAY_PRO_YEARLY_PLAN_ID:
+      process.env.NEXT_PUBLIC_RAZORPAY_PRO_YEARLY_PLAN_ID ??
+      process.env.RAZORPAY_PRO_YEARLY_PLAN_ID ??
+      "",
+    NEXT_PUBLIC_STATUS_PAGE_URL: process.env.NEXT_PUBLIC_STATUS_PAGE_URL ?? "",
   },
   turbopack: {
     root: path.join(__dirname),

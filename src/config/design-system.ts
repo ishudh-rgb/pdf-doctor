@@ -50,7 +50,7 @@ export const LAYOUT_STYLES: Record<
   A: {
     id: "A",
     name: "Tool-first",
-    description: "Smallpdf — upload hero, dense tool grid, minimal nav",
+    description: "Upload hero, dense tool grid, minimal nav",
   },
   B: {
     id: "B",

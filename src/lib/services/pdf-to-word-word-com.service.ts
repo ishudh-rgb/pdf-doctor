@@ -42,7 +42,7 @@ export type PdfToWordWordComOptions = {
 
 /**
  * Convert PDF → DOCX via Microsoft Word COM (Windows only).
- * Matches Smallpdf-class layout for invoices, forms, and complex PDFs.
+ * Matches professional-grade layout for invoices, forms, and complex PDFs.
  */
 export async function pdfToWordWordCom(
   fileBuffer: Buffer,

@@ -1,5 +1,6 @@
 'use client';
 
+import { planFileSizeFaqLine } from '@/lib/billing/billing-copy';
 import { useState, useRef, useCallback } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
@@ -17,7 +18,7 @@ const FAQS = [
   { q: 'How do I extract specific pages?', a: 'Upload your PDF, click the pages you want to extract (they turn blue), then click "Finish" to download a new PDF with only those pages.' },
   { q: 'Can I extract non-consecutive pages?', a: 'Yes! Click any combination of pages — they don\'t need to be in order. Your extracted PDF will contain them in the order they appear.' },
   { q: 'Can I add pages from another PDF?', a: 'Yes! Click the + button between any two pages to add documents or blank pages before extracting.' },
-  { q: 'Is there a file size limit?', a: 'No! You can upload PDFs of any size. The tool handles large files efficiently.' },
+  { q: 'Is there a file size limit?', a: planFileSizeFaqLine() },
 ];
 
 export default function ExtractPdfPage() {
@@ -55,7 +56,7 @@ export default function ExtractPdfPage() {
           <ToolDropzone
             chooseLabel="Select PDF"
             hint="or drag and drop your PDF here"
-            subHint="Any file size · PDF only"
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();

@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils/cn";
 import { useTranslation } from "@/i18n";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-layout";
+import { ProRenewalBanner } from "@/components/dashboard/pro-renewal-banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { slugToToolKey } from "@/lib/dashboard/tool-key";
 import { ACTIVITY_UPDATED_EVENT } from "@/lib/client/activity-events";
@@ -238,6 +239,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <DashboardMobileNav />
+      <ProRenewalBanner />
 
       {showUpgradeSuccess ? (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">

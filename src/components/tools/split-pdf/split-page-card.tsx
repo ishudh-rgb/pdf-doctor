@@ -85,7 +85,7 @@ export const SplitPageCard = memo(function SplitPageCard({
               : "border-2 border-pd-border group-hover/card:border-pd-brand/40"
           )}
         >
-        {/* Hover toolbar — Smallpdf-style */}
+        {/* Hover toolbar — shows on card hover */}
         <div className="absolute inset-x-0 top-0 z-20 flex justify-center gap-0.5 bg-pd-foreground/85 px-1 py-1 opacity-0 transition-opacity group-hover/card:opacity-100">
           <button
             type="button"

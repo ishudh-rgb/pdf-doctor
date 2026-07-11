@@ -52,7 +52,7 @@ export function PdfPasswordModal({
           type="button"
           onClick={onCancel}
           aria-label="Close password dialog"
-          className="absolute right-3 top-3 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          className="absolute right-3 top-3 rounded-full p-1 text-pd-muted hover:bg-slate-100 hover:text-pd-foreground"
         >
           <X className="h-4 w-4" />
         </button>
@@ -76,7 +76,7 @@ export function PdfPasswordModal({
             PDF password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-muted" aria-hidden="true" />
             <input
               id="pdf-password-input"
               ref={inputRef}
@@ -85,14 +85,14 @@ export function PdfPasswordModal({
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               disabled={loading}
-              className="w-full rounded-lg border border-slate-300 bg-white py-3 pl-10 pr-10 text-sm text-pd-foreground placeholder:text-slate-400 focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20 disabled:opacity-60"
+              className="w-full rounded-lg border border-slate-300 bg-white py-3 pl-10 pr-10 text-sm text-pd-foreground placeholder:text-pd-muted focus:border-pd-brand focus:outline-none focus:ring-2 focus:ring-pd-brand/20 disabled:opacity-60"
               autoComplete="off"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-pd-muted hover:text-pd-foreground"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

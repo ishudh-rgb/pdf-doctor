@@ -1,10 +1,16 @@
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import {
   getLocalDevSessionUser,
   isLocalDevAuthEnabled,
 } from "@/lib/auth/local-dev-auth";
 import { guardAdminRateLimit } from "@/lib/server/rate-limiter";
+import {
+  assertMfaAal2Satisfied,
+  MfaAssuranceUnavailableError,
+  MfaVerificationRequiredError,
+} from "@/lib/auth/mfa-assurance";
 
 export type VerifyAdminResult = { id: string; email?: string } | Response | null;
 
@@ -26,6 +32,19 @@ export async function verifyAdmin(request?: NextRequest): Promise<VerifyAdminRes
   } = await supabase.auth.getUser();
 
   if (!user) return null;
+
+  try {
+    await assertMfaAal2Satisfied(supabase);
+  } catch (error) {
+    if (error instanceof MfaVerificationRequiredError) return null;
+    if (error instanceof MfaAssuranceUnavailableError) {
+      return NextResponse.json(
+        { error: error.message, code: "MFA_ASSURANCE_UNAVAILABLE" },
+        { status: 503 }
+      );
+    }
+    throw error;
+  }
 
   const serviceClient = await createServiceClient();
   const { data: profile } = await serviceClient

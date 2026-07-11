@@ -1,5 +1,6 @@
 'use client';
 
+import { planFileSizeFaqLine } from '@/lib/billing/billing-copy';
 import { useState, useRef, useCallback } from 'react';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
 import { mapFaqs, mapRelatedTools } from '@/components/tools/tool-helpers';
@@ -17,7 +18,7 @@ const FAQS = [
   { q: 'Can I delete individual pages?', a: 'Yes! Hover over any page and click the red trash icon, or select multiple pages and delete them all at once.' },
   { q: 'Can I add pages from another PDF?', a: 'Yes! Click the + button between any two pages to add documents or blank pages.' },
   { q: 'Is the original quality preserved?', a: 'Absolutely. Only the selected pages are removed — all remaining content and quality stay identical.' },
-  { q: 'Is there a file size limit?', a: 'No! You can upload PDFs of any size. The tool processes everything in your browser and on our servers efficiently.' },
+  { q: 'Is there a file size limit?', a: planFileSizeFaqLine() },
 ];
 
 export default function DeletePdfPage() {
@@ -55,7 +56,7 @@ export default function DeletePdfPage() {
           <ToolDropzone
             chooseLabel="Select PDF"
             hint="or drag and drop your PDF here"
-            subHint="Any file size · PDF only"
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();

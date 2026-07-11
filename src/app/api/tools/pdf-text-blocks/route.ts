@@ -1,7 +1,8 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { extractPdfTextBlocks } from "@/lib/pdf/pdf-edit-text-blocks.server";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 
 export const runtime = "nodejs";
@@ -16,24 +17,23 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json({ error: "Only PDF files are accepted" }, { status: 400 });
+    const validated = await validateSingleUpload(file, ["pdf"], FILE_LIMITS.maxFreeFileSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Only PDF files are accepted", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, FILE_LIMITS.maxFreeFileSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = validated.buffer;
     const blocks = await extractPdfTextBlocks(buffer);
 
     return NextResponse.json({ blocks });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "pdf-text-blocks",
       errorType: "TEXT_BLOCKS_ERROR",
       fallbackMessage: "Failed to extract text blocks",

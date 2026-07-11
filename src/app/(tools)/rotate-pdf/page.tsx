@@ -55,7 +55,7 @@ export default function RotatePdfPage() {
           <ToolDropzone
             chooseLabel="Select PDF"
             hint="or drag and drop your PDF here"
-            subHint="Any file size · PDF only"
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();

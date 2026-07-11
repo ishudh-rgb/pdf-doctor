@@ -241,7 +241,7 @@ html[data-lang="hi"] h3 {
   box-shadow: 0 14px 28px -8px rgba(0, 0, 0, 0.45);
 }
 
-/* iLovePDF-style tool tiles on homepage */
+/* Colored tool tiles on homepage */
 .tool-card-ilove:focus-visible {
   outline: 2px solid var(--pd-brand);
   outline-offset: 2px;

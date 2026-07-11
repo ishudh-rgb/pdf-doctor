@@ -1,5 +1,8 @@
 import type { NextRequest } from "next/server";
+import { extractApiKeyFromRequest, hashApiKey } from "@/lib/auth/api-key-auth";
+import { buildRateLimitMessage, type RateLimitScope } from "@/lib/rate-limit-message";
 import { getTrustedClientIp } from "@/lib/server/client-ip";
+import { CORRELATION_ID_HEADER, getCorrelationId } from "@/lib/server/correlation-id";
 
 type Bucket = { count: number; resetAt: number };
 
@@ -54,7 +57,7 @@ function memoryRateLimit(
   };
 }
 
-let upstashLimiters = new Map<
+const upstashLimiters = new Map<
   string,
   { limit: (key: string) => Promise<{ success: boolean; reset: number }> }
 >();
@@ -121,20 +124,52 @@ export async function checkRateLimit(
   return memoryRateLimit(request, options);
 }
 
-export function rateLimitResponse(retryAfterSec: number) {
+export function rateLimitResponse(
+  retryAfterSec: number,
+  request?: NextRequest,
+  scope: RateLimitScope = "generic"
+) {
+  const correlationId = getCorrelationId(request);
+  const error = buildRateLimitMessage(scope, retryAfterSec, "en");
   return new Response(
-    JSON.stringify({ error: "Too many requests. Please try again later." }),
+    JSON.stringify({
+      error,
+      correlationId,
+      retryAfterSec,
+      rateLimitScope: scope,
+    }),
     {
       status: 429,
       headers: {
         "Content-Type": "application/json",
         "Retry-After": String(retryAfterSec),
+        [CORRELATION_ID_HEADER]: correlationId,
       },
     }
   );
 }
 
-/** Auth endpoints: 10 attempts per 15 minutes per IP */
+/** Login / signup: 5 attempts per minute per IP */
+export async function checkLoginRateLimit(request: NextRequest): Promise<RateLimitResult> {
+  return checkRateLimit(request, {
+    keyPrefix: "auth-login",
+    maxRequests: 5,
+    windowMs: 60 * 1000,
+  });
+}
+
+/** Password reset + OTP: 3 attempts per hour per IP */
+export async function checkPasswordResetRateLimit(
+  request: NextRequest
+): Promise<RateLimitResult> {
+  return checkRateLimit(request, {
+    keyPrefix: "auth-password-reset",
+    maxRequests: 3,
+    windowMs: 60 * 60 * 1000,
+  });
+}
+
+/** Other auth mutations (OAuth, MFA, logout): 10 per 15 minutes per IP */
 export async function checkAuthRateLimit(request: NextRequest): Promise<RateLimitResult> {
   return checkRateLimit(request, {
     keyPrefix: "auth",
@@ -206,6 +241,40 @@ export async function checkGeneralApiRateLimit(request: NextRequest): Promise<Ra
 
 export async function guardGeneralApiRateLimit(request: NextRequest): Promise<Response | null> {
   const rate = await checkGeneralApiRateLimit(request);
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+  return null;
+}
+
+/** Razorpay webhooks: cap unsigned/signed flood per IP before HMAC verification. */
+export async function checkWebhookRateLimit(request: NextRequest): Promise<RateLimitResult> {
+  return checkRateLimit(request, {
+    keyPrefix: "webhook",
+    maxRequests: 200,
+    windowMs: 60 * 1000,
+  });
+}
+
+export async function guardWebhookRateLimit(request: NextRequest): Promise<Response | null> {
+  const rate = await checkWebhookRateLimit(request);
+  if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
+  return null;
+}
+
+/** Per-API-key bucket: 120 tool mutations per minute (when x-api-key / Bearer omp_* present). */
+export async function guardApiKeyRateLimit(
+  request: NextRequest,
+  toolSlug: string
+): Promise<Response | null> {
+  const raw = extractApiKeyFromRequest(request);
+  if (!raw) return null;
+
+  const keySuffix = `${hashApiKey(raw).slice(0, 20)}:${toolSlug}`;
+  const rate = await checkRateLimit(request, {
+    keyPrefix: "api-key",
+    keySuffix,
+    maxRequests: 120,
+    windowMs: 60 * 1000,
+  });
   if (!rate.allowed) return rateLimitResponse(rate.retryAfterSec);
   return null;
 }

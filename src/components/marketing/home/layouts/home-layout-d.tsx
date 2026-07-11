@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "@/i18n";
-import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import {
   AISection,
@@ -13,7 +12,6 @@ import {
   PricingSection,
   SecuritySection,
   ToolsGrid,
-  WorkflowSection,
 } from "@/components/marketing/home/home-sections";
 import { TestimonialsSection } from "@/components/marketing/testimonials-section";
 

@@ -1,8 +1,25 @@
 "use client";
 
+interface RazorpaySubscriptionOptions {
+  key: string;
+  subscription_id: string;
+  name: string;
+  description: string;
+  prefill?: { name?: string; email?: string; contact?: string };
+  theme?: { color?: string };
+  handler: (response: RazorpaySubscriptionResponse) => void;
+  modal?: { ondismiss?: () => void };
+}
+
+interface RazorpaySubscriptionResponse {
+  razorpay_subscription_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
 declare global {
   interface Window {
-    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+    Razorpay: new (options: RazorpayOptions | RazorpaySubscriptionOptions) => RazorpayInstance;
   }
 }
 
@@ -89,4 +106,28 @@ export async function openRazorpayCheckout(params: {
 
   const rzp = new window.Razorpay(options);
   rzp.open();
+}
+
+export async function openRazorpaySubscriptionCheckout(params: {
+  subscriptionId: string;
+  userName?: string;
+  userEmail?: string;
+  onSuccess: (response: RazorpaySubscriptionResponse) => void;
+  onDismiss?: () => void;
+}): Promise<void> {
+  const loaded = await loadRazorpayScript();
+  if (!loaded) throw new Error("Failed to load Razorpay SDK");
+
+  const options: RazorpaySubscriptionOptions = {
+    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+    subscription_id: params.subscriptionId,
+    name: "OnlyMyPDF",
+    description: "Pro Plan (auto-renew)",
+    prefill: { name: params.userName, email: params.userEmail },
+    theme: { color: "#DC2626" },
+    handler: params.onSuccess,
+    modal: { ondismiss: params.onDismiss },
+  };
+
+  new window.Razorpay(options).open();
 }

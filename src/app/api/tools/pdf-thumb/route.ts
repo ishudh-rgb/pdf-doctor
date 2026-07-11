@@ -1,5 +1,6 @@
 import { guardPdfHelperRateLimit } from "@/lib/server/rate-limiter";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import {
   cacheThumb,
   getCachedThumb,
@@ -8,6 +9,7 @@ import {
 import { renderPageThumb } from "@/lib/pdf/pdf-thumbnails.server";
 import { createClient } from "@/lib/supabase/server";
 import { ownerHashFromRequest } from "@/lib/server/request-security";
+import { toSafeApiError } from "@/lib/server/safe-error";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -35,12 +37,12 @@ export async function GET(request: NextRequest) {
       : 300;
 
     if (!sessionId || page < 1) {
-      return NextResponse.json({ error: "Invalid session or page" }, { status: 400 });
+      return toolJsonError(request, "Invalid session or page", 400);
     }
 
     const buffer = await getPdfSessionBuffer(sessionId, ownerHash);
     if (!buffer) {
-      return NextResponse.json({ error: "Session expired. Re-upload the PDF." }, { status: 410 });
+      return toolJsonError(request, "Session expired. Re-upload the PDF.", 410);
     }
 
     const cacheKey = thumbCacheKey(page, desiredWidth);
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!dataUrl) {
-      return NextResponse.json({ error: "Could not render page" }, { status: 500 });
+      return toolJsonError(request, "Could not render page", 500);
     }
 
     const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "");
@@ -64,8 +66,11 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to render thumbnail";
-    console.error("[pdf-thumb]", message, error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[pdf-thumb]", error);
+    return toolJsonError(
+      request,
+      toSafeApiError(error, "Could not render page thumbnail."),
+      500
+    );
   }
 }

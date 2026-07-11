@@ -21,18 +21,6 @@ interface UserRow {
   [key: string]: unknown;
 }
 
-const mockUsers: UserRow[] = Array.from({ length: 47 }).map((_, i) => ({
-  id: `usr_${i + 1}`,
-  full_name: `User ${i + 1}`,
-  email: `user${i + 1}@example.com`,
-  plan: i % 5 === 0 ? "pro" : "free",
-  files_processed: Math.floor(Math.random() * 500),
-  status: i % 12 === 0 ? "blocked" : "active",
-  created_at: new Date(Date.now() - Math.random() * 90 * 86400000).toISOString(),
-  last_login_at: Math.random() > 0.3 ? new Date(Date.now() - Math.random() * 7 * 86400000).toISOString() : null,
-  total_usage_count: Math.floor(Math.random() * 1000),
-}));
-
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);

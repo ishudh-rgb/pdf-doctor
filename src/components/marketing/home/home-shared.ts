@@ -115,7 +115,7 @@ export const CATEGORY_FALLBACK_LABELS: Record<string, string> = {
   scan: "Scan",
 };
 
-/** iLovePDF-style colored icon tiles per tool */
+/** Colored icon tiles per tool category */
 export const TOOL_ACCENT: Record<string, string> = {
   "merge-pdf": "bg-[#E74C3C]",
   "split-pdf": "bg-[#E67E22]",

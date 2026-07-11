@@ -42,7 +42,7 @@ export function ConvertPageContent() {
         tools: convertTools.filter((tool) => tool.category === cat),
       }))
       .filter((group) => group.tools.length > 0);
-  }, [filter, t]);
+  }, [filter, t, convertTools]);
 
   const filters: { id: ConvertFilter; label: string }[] = [
     { id: "all", label: t("landing.toolsFilterAll") },

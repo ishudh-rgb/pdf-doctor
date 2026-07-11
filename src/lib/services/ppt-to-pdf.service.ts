@@ -64,7 +64,7 @@ function renderPlainTable(table: string[][]): string {
   const bodyHtml = bodyRows
     .map((row) => {
       const cells = row
-        .map((cell, index) => {
+        .map((cell) => {
           const numeric = isLikelyNumericCell(cell);
           const className = numeric ? ' class="num"' : "";
           return `<td${className}>${escapeHtml(cell || " ")}</td>`;

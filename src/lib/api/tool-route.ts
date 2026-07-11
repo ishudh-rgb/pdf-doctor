@@ -3,13 +3,15 @@ import { checkUsageLimit } from "@/lib/services/usage-limit.service";
 import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { logToolUsage, logError } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
 import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { guardToolRateLimit, guardApiKeyRateLimit } from "@/lib/server/rate-limiter";
+import { guardToolMutationOrigin } from "@/lib/server/mutation-origin";
 import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { heavyJobCapacityResponse } from "@/lib/server/heavy-job-http";
-import { userBlockedResponse } from "@/lib/server/user-blocked-http";
+import { authGuardResponse } from "@/lib/server/auth-guard-http";
 import {
   isMaintenanceModeEnabled,
   MAINTENANCE_MESSAGE,
@@ -34,14 +36,24 @@ export function createToolRoute(options: ToolRouteOptions) {
     let userId: string | null = null;
 
     try {
+      const originBlocked = guardToolMutationOrigin(request);
+      if (originBlocked) {
+        return toolJsonError(request, "Invalid request origin", 403);
+      }
+
       if (await isMaintenanceModeEnabled()) {
-        return NextResponse.json({ error: MAINTENANCE_MESSAGE }, { status: 503 });
+        return toolJsonError(request, MAINTENANCE_MESSAGE, 503);
       }
 
       const toolRate = await guardToolRateLimit(request, options.toolSlug);
       if (toolRate) return toolRate;
 
-      userId = await getToolRequestUserId();
+      const apiKeyRate = await guardApiKeyRateLimit(request, options.toolSlug);
+      if (apiKeyRate) return apiKeyRate;
+
+      const mutationAuth = await resolveMutationToolUser(request);
+      if (mutationAuth.denied) return mutationAuth.denied;
+      userId = mutationAuth.userId;
 
       const userContext = await resolveToolUserContext(userId);
       const maxSizeMB = userContext.maxSizeMB;
@@ -52,35 +64,37 @@ export function createToolRoute(options: ToolRouteOptions) {
         options.toolSlug
       );
       if (!usageResult.allowed) {
-        return NextResponse.json({ error: usageResult.message }, { status: 429 });
+        return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
       }
 
       const formData = await request.formData();
       const file = formData.get("file") as File | null;
 
       if (!file) {
-        return NextResponse.json({ error: "File is required" }, { status: 400 });
+        return toolJsonError(request, "File is required", 400);
       }
 
       if (!isValidFileType(file, options.allowedTypes)) {
-        return NextResponse.json(
-          { error: `Invalid file type for ${options.toolSlug}.` },
-          { status: 400 }
+        return toolJsonError(
+          request,
+          `Invalid file type for ${options.toolSlug}.`,
+          400
         );
       }
 
       const sizeCheck = validateFileSize(file, maxSizeMB);
       if (!sizeCheck.valid) {
-        return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
+        return toolJsonError(request, sizeCheck.message ?? "File is too large.", 400);
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
 
       const magic = validateBufferMagic(buffer, options.allowedTypes);
       if (!magic.valid) {
-        return NextResponse.json(
-          { error: magic.message ?? "Invalid file content." },
-          { status: 400 }
+        return toolJsonError(
+          request,
+          magic.message ?? "Invalid file content.",
+          400
         );
       }
 
@@ -119,7 +133,7 @@ export function createToolRoute(options: ToolRouteOptions) {
         },
       });
     } catch (error) {
-      const blocked = userBlockedResponse(error);
+      const blocked = authGuardResponse(error);
       if (blocked) return blocked;
 
       const capacity = heavyJobCapacityResponse(error);
@@ -137,7 +151,7 @@ export function createToolRoute(options: ToolRouteOptions) {
 
       captureApiError(error, { route: `tools/${options.toolSlug}`, user_id: userId });
 
-      return NextResponse.json({ error: message }, { status: 500 });
+      return toolJsonError(request, message, 500);
     }
   };
 

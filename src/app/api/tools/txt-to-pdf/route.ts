@@ -1,20 +1,16 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { txtFileToPdf } from "@/lib/services/txt-to-pdf.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { validateFileSize, sanitizeFilename } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
+import { sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
 export const maxDuration = 60;
-
-const ALLOWED_EXTENSIONS = ["txt", "text", "log", "csv", "md", "json", "xml", "yaml", "yml", "ini", "cfg", "conf", "env"];
-
-function getFileExtension(name: string): string {
-  return name.split(".").pop()?.toLowerCase() ?? "";
-}
 
 export async function POST(request: NextRequest) {
   const early = await beginToolRoute(request, "txt-to-pdf");
@@ -24,7 +20,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -33,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     const usageResult = await checkUsageLimit(userId, request, "txt-to-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
@@ -45,23 +43,18 @@ export async function POST(request: NextRequest) {
     const fontFamily = (formData.get("fontFamily") as string) || "helvetica";
 
     if (!file) {
-      return NextResponse.json({ error: "Text file is required" }, { status: 400 });
+      return toolJsonError(request, "Text file is required", 400);
     }
 
-    const ext = getFileExtension(file.name);
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only TXT, LOG, CSV, MD, JSON, XML, YAML, INI, and other text files are accepted." },
-        { status: 400 }
-      );
+    const validated = await validateSingleUpload(file, ["txt"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only TXT files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = validated.buffer;
     const pdfBuffer = await txtFileToPdf(buffer, file.name, {
       pageSize: pageSize as "a4" | "letter",
       orientation: orientation as "portrait" | "landscape",
@@ -99,7 +92,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "txt-to-pdf",
       userId,
       errorType: "CONVERT_ERROR",

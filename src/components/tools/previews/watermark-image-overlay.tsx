@@ -70,7 +70,7 @@ export function WatermarkImageOverlay({
           />
         )}
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         <img
           src={imageUrl}
           alt="Watermark"

@@ -36,6 +36,7 @@ import {
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { clickToNorm } from "@/lib/pdf/pdf-coordinates";
 import { ToolErrorBanner, ToolHiddenFileInput } from "@/components/tools/tool-ui";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 import { SignatureCreateModal } from "@/components/tools/sign-pdf/signature-create-modal";
 import { SignPageInsertDivider } from "@/components/tools/sign-pdf/sign-page-insert-divider";
 import { SignPageThumb } from "@/components/tools/sign-pdf/sign-page-thumb";
@@ -99,6 +100,7 @@ async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
 }
 
 export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspaceProps) {
+  const ws = useToolWorkspaceMessages();
   const [sessionId, setSessionId] = useState("");
   const [thumbnails, setThumbnails] = useState<string[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -255,7 +257,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
         return;
       }
       if (!preview.sessionId || preview.totalPages === 0) {
-        setError(preview.error ?? "Could not read this PDF.");
+        setError(preview.error ?? ws.couldNotReadPdfShort);
         return;
       }
       setSessionId(preview.sessionId);
@@ -273,10 +275,10 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
     }).then((result) => {
       if (requestId !== loadRef.current) return;
       if (result.passwordRequired) return;
-      if (result.totalPages === 0) setError(result.error ?? "Could not read this PDF.");
+      if (result.totalPages === 0) setError(ws.resolveApiError(result.error, "errors.corruptedPdf") || ws.couldNotReadPdfShort);
       setLoading(false);
     });
-  }, [fileKey, file]);
+  }, [fileKey, file, ws.couldNotReadPdfShort]);
 
   const placeAnnotation = useCallback(
     (partial: Omit<PlacedAnnotation, "id">) => {
@@ -324,7 +326,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
     }
 
     if (tool === "text") {
-      const text = window.prompt("Enter text", "Text")?.trim();
+      const text = window.prompt(ws.enterTextPrompt, ws.defaultSignText)?.trim();
       if (!text) return;
       placeAnnotation({
         page: currentPage,
@@ -529,7 +531,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
   const removeSlotAt = useCallback(
     (index: number) => {
       if (visibleSlots.length <= 1) {
-        setError("Cannot delete the only remaining page.");
+        setError(ws.cannotDeleteOnlyPage);
         return;
       }
       const deletedPage = index + 1;
@@ -554,7 +556,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
       });
       setError(null);
     },
-    [visibleSlots, remapAnnotationsOnDelete]
+    [visibleSlots, remapAnnotationsOnDelete, ws.cannotDeleteOnlyPage]
   );
 
   const rotateSlotAt = useCallback((index: number) => {
@@ -581,7 +583,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
       const res = await fetch("/api/tools/pdf-session", { method: "POST", body: formData });
       const data = (await res.json()) as { sessionId?: string; totalPages?: number; error?: string };
       if (!res.ok || !data.sessionId || !data.totalPages) {
-        setError(data.error ?? "Could not add document.");
+        setError(ws.resolveApiError(data.error) || ws.couldNotAddDocument);
         return;
       }
       const afterIndex = insertAfterIndexRef.current;
@@ -601,7 +603,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
       setCurrentPage(afterIndex + 2);
       setError(null);
     } catch {
-      setError("Could not add document.");
+      setError(ws.couldNotAddDocument);
     }
   };
 
@@ -634,7 +636,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
           const composeRes = await fetch("/api/tools/compose-pdf", { method: "POST", body: composeForm });
           if (!composeRes.ok) {
             const data = await composeRes.json().catch(() => ({}));
-            throw new Error((data as { error?: string }).error || "Failed to prepare PDF pages.");
+            throw new Error((data as { error?: string }).error || ws.failedPreparePages);
           }
           const composedBlob = await composeRes.blob();
           pdfToExport = new File([composedBlob], file.name, { type: "application/pdf" });
@@ -642,7 +644,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
         const url = URL.createObjectURL(pdfToExport);
         onComplete({ url, filename: file.name, size: pdfToExport.size });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Export failed.");
+        setError(err instanceof Error ? err.message : ws.exportFailed);
       } finally {
         setProcessing(false);
       }
@@ -692,7 +694,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
         const composeRes = await fetch("/api/tools/compose-pdf", { method: "POST", body: composeForm });
         if (!composeRes.ok) {
           const data = await composeRes.json().catch(() => ({}));
-          throw new Error((data as { error?: string }).error || "Failed to prepare PDF pages.");
+          throw new Error((data as { error?: string }).error || ws.failedPreparePages);
         }
         const composedBlob = await composeRes.blob();
         pdfToSign = new File([composedBlob], file.name, { type: "application/pdf" });
@@ -709,14 +711,14 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
       const res = await fetch("/api/tools/sign-pdf", { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to export signed PDF.");
+        throw new Error(data.error || ws.failedExportSignedPdf);
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const filename = file.name.replace(/\.pdf$/i, "") + "-signed.pdf";
       onComplete({ url, filename, size: blob.size });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed.");
+      setError(err instanceof Error ? err.message : ws.exportFailed);
     } finally {
       setProcessing(false);
     }
@@ -731,14 +733,14 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
       loadPdfDocumentPreview(pFile, pw).then((preview) => {
         if (preview.wrongPassword) {
           setPasswordPrompt((prev) =>
-            prev ? { ...prev, errorMsg: preview.error ?? "Incorrect password.", loading: false } : prev
+            prev ? { ...prev, errorMsg: preview.error ?? ws.incorrectPassword, loading: false } : prev
           );
           return;
         }
         if (preview.passwordRequired) return;
         setPasswordPrompt(null);
         if (!preview.sessionId || preview.totalPages === 0) {
-          setError(preview.error ?? "Could not read this PDF.");
+          setError(preview.error ?? ws.couldNotReadPdfShort);
           return;
         }
         setSessionId(preview.sessionId);
@@ -753,7 +755,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
         }, pw);
       });
     },
-    [passwordPrompt]
+    [passwordPrompt, ws.incorrectPassword, ws.couldNotReadPdfShort]
   );
 
   if (passwordPrompt) {
@@ -784,7 +786,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
       <ToolHiddenFileInput
         ref={insertFileRef}
         accept=".pdf,application/pdf"
-        ariaLabel="Insert PDF documents"
+        ariaLabel={ws.insertPdfDocuments}
         onChange={handleInsertDocuments}
       />
 
@@ -817,7 +819,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
               <div className="pointer-events-auto inline-flex w-fit flex-nowrap items-center gap-0.5 rounded-xl border border-pd-border bg-white px-1.5 py-1 shadow-sm">
                 <button
                   type="button"
-                  title="Select"
+                  title={ws.toolSelect}
                   onClick={() => setTool("select")}
                   className={cn(
                     "rounded-lg p-2",
@@ -844,7 +846,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                 <div className="relative">
                   <button
                     type="button"
-                    title="Date"
+                    title={ws.toolDate}
                     onClick={() => {
                       setTool("date");
                       setShowDatePicker((v) => !v);
@@ -864,14 +866,14 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                         onChange={(e) => e.target.value && setDateIso(e.target.value)}
                         className="rounded-lg border border-pd-border px-2 py-1 text-sm"
                       />
-                      <p className="mt-2 text-xs text-pd-muted">Click on the page to place {selectedDate}</p>
+                      <p className="mt-2 text-xs text-pd-muted">{ws.clickToPlaceDate(selectedDate)}</p>
                     </div>
                   )}
                 </div>
 
                 <button
                   type="button"
-                  title="Text"
+                  title={ws.toolText}
                   onClick={() => setTool("text")}
                   className={cn(
                     "rounded-lg p-2",
@@ -883,7 +885,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
 
                 <button
                   type="button"
-                  title="Checkmark"
+                  title={ws.toolCheckmark}
                   onClick={() => setTool("check")}
                   className={cn(
                     "rounded-lg p-2",
@@ -897,7 +899,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
 
                 <button
                   type="button"
-                  title="Undo"
+                  title={ws.toolUndo}
                   disabled={historyIndex <= 0}
                   onClick={undo}
                   className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
@@ -906,7 +908,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                 </button>
                 <button
                   type="button"
-                  title="Redo"
+                  title={ws.toolRedo}
                   disabled={historyIndex >= history.length - 1}
                   onClick={redo}
                   className="rounded-lg p-2 text-pd-muted hover:bg-pd-background disabled:opacity-30"
@@ -919,7 +921,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                     <div className="mx-1 h-5 w-px bg-pd-border" />
                     <button
                       type="button"
-                      title="Delete"
+                      title={ws.toolDelete}
                       onClick={deleteSelected}
                       className="rounded-lg p-2 text-red-600 hover:bg-red-50"
                     >
@@ -937,11 +939,11 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
               onClick={onReset}
               className="text-xs text-pd-muted hover:text-pd-foreground"
             >
-              Change file
+              {ws.changeFile}
             </button>
             <Button size="sm" onClick={handleExport} disabled={processing || loading}>
               {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              Export
+              {ws.exportPdf}
             </Button>
           </div>
         </div>
@@ -989,7 +991,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
             )}
           </aside>
 
-          <section aria-label="PDF signing workspace" className={cn("relative flex min-h-0 flex-1 flex-col overflow-auto", cursorClass)}>
+          <section aria-label={ws.signingWorkspace} className={cn("relative flex min-h-0 flex-1 flex-col overflow-auto", cursorClass)}>
             {error && (
               <div className="p-3">
                 <ToolErrorBanner message={error} />
@@ -998,7 +1000,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
 
             {loading && (
               <p className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs text-white">
-                Loading pages…
+                {ws.loadingPages}
               </p>
             )}
 
@@ -1012,7 +1014,9 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                 >
                   {tool === "signature" && pendingSignature && (
                     <p className="mb-2 text-center text-xs text-pd-brand">
-                      Click on the page to place your {pendingSignature.kind}
+                      {pendingSignature.kind === "initials"
+                        ? ws.clickToPlaceInitials
+                        : ws.clickToPlaceSignature}
                     </p>
                   )}
 
@@ -1023,13 +1027,13 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
                   >
                     {currentSlot?.kind === "blank" ? (
                       <div className="flex aspect-[3/4] w-full items-center justify-center bg-white text-sm text-pd-muted">
-                        Blank page
+                        {ws.blankPage}
                       </div>
                     ) : canvasUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                       
                       <img
                         src={canvasUrl}
-                        alt={`Page ${currentPage}`}
+                        alt={ws.pageAlt(currentPage)}
                         className="block h-auto w-full pointer-events-none"
                         style={{
                           transform: currentRotation ? `rotate(${currentRotation}deg)` : undefined,
@@ -1149,9 +1153,7 @@ export function SignPdfWorkspace({ file, onReset, onComplete }: SignPdfWorkspace
         </div>
       </div>
 
-      <p className="mt-3 text-center text-xs text-pd-muted">
-        <strong>Signatures</strong> — create or pick one, then click the page · <strong>Date / Text / Check</strong> — select tool, click to place · Drag to reposition · Export when done
-      </p>
+      <p className="mt-3 text-center text-xs text-pd-muted">{ws.signWorkspaceHint}</p>
     </>
   );
 }

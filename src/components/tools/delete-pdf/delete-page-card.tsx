@@ -40,6 +40,7 @@ export const DeletePageCard = memo(function DeletePageCard({
   onRotateLeft,
   onRotateRight,
 }: DeletePageCardProps) {
+  void onRotateLeft;
   const shortName =
     fileName.length > 16 ? `${fileName.slice(0, 13)}…` : fileName;
   const [imageReady, setImageReady] = useState(false);
@@ -146,7 +147,7 @@ export const DeletePageCard = memo(function DeletePageCard({
             ) : loadingThumb ? (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-b from-gray-50 to-gray-100" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 text-xs text-gray-400">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 text-xs text-pd-muted">
                 …
               </div>
             )}

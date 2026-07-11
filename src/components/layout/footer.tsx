@@ -19,10 +19,12 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { FooterLogo } from "@/components/common/logo";
-import { APP_NAME, SUPPORT_EMAIL } from "@/config/constants";
+import { SUPPORT_EMAIL } from "@/config/constants";
 import { TOOL_KEYS } from "@/components/marketing/home/home-shared";
 import { useTranslation } from "@/i18n";
 import { withLocalePrefix } from "@/lib/i18n/locale-path";
+import { useLocaleHref } from "@/hooks/use-locale-href";
+import { getExternalStatusPageUrl } from "@/lib/ops/status-page";
 
 const toolCount = TOOL_KEYS.length;
 
@@ -43,6 +45,9 @@ const companyLinks = [
   { nameKey: "footer.privacy", href: "/privacy" },
   { nameKey: "footer.cookies", href: "/cookies" },
   { nameKey: "footer.terms", href: "/terms" },
+  { nameKey: "footer.refund", href: "/refund" },
+  { nameKey: "footer.trust", href: "/trust" },
+  { nameKey: "footer.sla", href: "/sla" },
   { nameKey: "footer.faq", href: "/faq" },
   { nameKey: "nav.pricing", href: "/pricing" },
   { nameKey: "footer.allToolsLink", href: "/all-tools" },
@@ -50,9 +55,17 @@ const companyLinks = [
 
 export function Footer() {
   const { t } = useTranslation();
+  const localeHref = useLocaleHref();
   const pathname = usePathname();
   const enHref = withLocalePrefix(pathname, "en");
   const hiHref = withLocalePrefix(pathname, "hi");
+  const externalStatusUrl = getExternalStatusPageUrl();
+  const statusLink = {
+    nameKey: "footer.status" as const,
+    href: externalStatusUrl ?? "/status",
+    external: Boolean(externalStatusUrl),
+  };
+  const allCompanyLinks = [...companyLinks, statusLink];
 
   return (
     <footer className="pd-site-footer relative overflow-hidden border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
@@ -66,7 +79,7 @@ export function Footer() {
           {/* Brand column */}
           <div className="lg:col-span-4">
             <Link
-              href="/"
+              href={localeHref("/")}
               className="pd-footer-logo-link group inline-flex items-center rounded-lg"
             >
               <FooterLogo />
@@ -85,11 +98,11 @@ export function Footer() {
 
             {/* Contact info */}
             <div className="mt-4 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-[12px] text-gray-400">
+              <div className="flex items-center gap-2 text-[12px] text-pd-muted">
                 <Mail className="h-3.5 w-3.5" />
                 <span>{SUPPORT_EMAIL}</span>
               </div>
-              <div className="flex items-center gap-2 text-[12px] text-gray-400">
+              <div className="flex items-center gap-2 text-[12px] text-pd-muted">
                 <MapPin className="h-3.5 w-3.5" />
                 <span>India · Serving globally</span>
               </div>
@@ -98,7 +111,7 @@ export function Footer() {
 
           {/* Tools column */}
           <nav className="lg:col-span-3" aria-label="PDF tools">
-            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-pd-muted">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
               {t("footer.tools")}
             </h3>
@@ -106,7 +119,7 @@ export function Footer() {
               {toolLinks.map((link) => (
                 <li key={link.name}>
                   <Link
-                    href={link.href}
+                    href={localeHref(link.href)}
                     className="group/link flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900"
                   >
                     <link.icon className={`h-3.5 w-3.5 ${link.color}`} />
@@ -120,20 +133,32 @@ export function Footer() {
 
           {/* Company column */}
           <nav className="lg:col-span-2" aria-label="Company">
-            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-pd-muted">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-violet-500 to-purple-500" />
               {t("footer.company")}
             </h3>
             <ul className="mt-4 space-y-1.5">
-              {companyLinks.map((link) => (
+              {allCompanyLinks.map((link) => (
                 <li key={link.nameKey}>
-                  <Link
-                    href={link.href}
-                    className="group/link flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900"
-                  >
-                    <span>{t(link.nameKey)}</span>
-                    <ArrowUpRight className="ml-auto h-3 w-3 text-gray-300 opacity-0 transition-opacity group-hover/link:opacity-100" />
-                  </Link>
+                  {"external" in link && link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group/link flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900"
+                    >
+                      <span>{t(link.nameKey)}</span>
+                      <ArrowUpRight className="ml-auto h-3 w-3 text-gray-300 opacity-0 transition-opacity group-hover/link:opacity-100" />
+                    </a>
+                  ) : (
+                    <Link
+                      href={localeHref(link.href)}
+                      className="group/link flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900"
+                    >
+                      <span>{t(link.nameKey)}</span>
+                      <ArrowUpRight className="ml-auto h-3 w-3 text-gray-300 opacity-0 transition-opacity group-hover/link:opacity-100" />
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -141,7 +166,7 @@ export function Footer() {
 
           {/* Language + Newsletter column */}
           <div className="lg:col-span-3">
-            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+            <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-pd-muted">
               <div className="h-1 w-4 rounded-full bg-gradient-to-r from-rose-500 to-pink-500" />
               {t("footer.language")}
             </h3>
@@ -164,23 +189,23 @@ export function Footer() {
 
             {/* Quick stats */}
             <div className="mt-6 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{t("footer.whyTitle")}</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-pd-muted">{t("footer.whyTitle")}</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-lg font-extrabold text-blue-600">{toolCount}+</p>
-                  <p className="text-[10px] text-gray-400">{t("footer.toolsCount")}</p>
+                  <p className="text-[10px] text-pd-muted">{t("footer.toolsCount")}</p>
                 </div>
                 <div>
                   <p className="text-lg font-extrabold text-emerald-600">100%</p>
-                  <p className="text-[10px] text-gray-400">{t("footer.freeToUse")}</p>
+                  <p className="text-[10px] text-pd-muted">{t("footer.freeToUse")}</p>
                 </div>
                 <div>
                   <p className="text-lg font-extrabold text-violet-600">{toolCount}</p>
-                  <p className="text-[10px] text-gray-400">{t("footer.toolsCount")}</p>
+                  <p className="text-[10px] text-pd-muted">{t("footer.toolsCount")}</p>
                 </div>
                 <div>
                   <p className="text-lg font-extrabold text-rose-600">50+</p>
-                  <p className="text-[10px] text-gray-400">{t("footer.countries")}</p>
+                  <p className="text-[10px] text-pd-muted">{t("footer.countries")}</p>
                 </div>
               </div>
             </div>
@@ -189,10 +214,10 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-200 pt-6 sm:flex-row">
-          <p className="text-[13px] text-gray-400">
+          <p className="text-[13px] text-pd-muted">
             {t("footer.allRightsReserved", { year: String(new Date().getFullYear()) })}
           </p>
-          <p className="flex items-center gap-1 text-[12px] text-gray-400">
+          <p className="flex items-center gap-1 text-[12px] text-pd-muted">
             Made with <Heart className="h-3 w-3 fill-rose-500 text-rose-500" /> in India for the world
           </p>
         </div>

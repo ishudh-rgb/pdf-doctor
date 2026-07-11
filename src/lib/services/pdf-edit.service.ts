@@ -13,7 +13,6 @@ import type {
   ExportShapeOp,
   ExportStrokeOp,
   ExportTextOp,
-  TextDecoration,
 } from "@/components/tools/edit-pdf/edit-pdf-types";
 
 const FONT_MAP: Record<PdfFontKey, StandardFonts> = {

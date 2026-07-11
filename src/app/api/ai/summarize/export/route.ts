@@ -1,6 +1,9 @@
 import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 import { NextRequest, NextResponse } from "next/server";
-import { getApiUser } from "@/lib/auth/get-api-user";
+import { toolJsonError } from "@/lib/server/tool-api-error";
+import { toSafeApiError } from "@/lib/server/safe-error";
+import { tryGetApiUser } from "@/lib/auth/get-api-user";
 import {
   exportSummary,
   getSummaryExportFilename,
@@ -10,16 +13,22 @@ import {
 const ALLOWED_FORMATS: SummaryExportFormat[] = ["txt", "docx", "pdf"];
 
 export async function POST(request: NextRequest) {
+  const originBlocked = guardMutationOrigin(request);
+  if (originBlocked) return originBlocked;
+
   const rateLimited = await guardToolRateLimit(request, "ai-pdf-summarizer");
   if (rateLimited) return rateLimited;
 
   try {
-    const user = await getApiUser();
-    if (!user) {
-      return NextResponse.json(
-        { error: "Authentication required. Please sign in to download summaries." },
-        { status: 401 }
-      );
+    const auth = await tryGetApiUser();
+    if (!auth.ok) {
+      return auth.response.status === 401
+        ? toolJsonError(
+            request,
+            "Authentication required. Please sign in to download summaries.",
+            401
+          )
+        : auth.response;
     }
 
     const body = await request.json();
@@ -27,14 +36,11 @@ export async function POST(request: NextRequest) {
     const summary = body.summary;
 
     if (!format || !ALLOWED_FORMATS.includes(format)) {
-      return NextResponse.json(
-        { error: "Invalid format. Use txt, docx, or pdf." },
-        { status: 400 }
-      );
+      return toolJsonError(request, "Invalid format. Use txt, docx, or pdf.", 400);
     }
 
     if (!summary?.shortSummary) {
-      return NextResponse.json({ error: "Summary data is required." }, { status: 400 });
+      return toolJsonError(request, "Summary data is required.", 400);
     }
 
     const { buffer, mimeType } = await exportSummary(summary, format);
@@ -50,9 +56,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Summary export error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to export summary" },
-      { status: 500 }
+    return toolJsonError(
+      request,
+      toSafeApiError(error, "Failed to export summary."),
+      500
     );
   }
 }

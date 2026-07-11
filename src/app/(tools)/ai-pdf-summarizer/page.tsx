@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   Sparkles,
   Upload,
@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ToolPageShell } from "@/components/layout/tool-page-shell";
-import { ToolHiddenFileInput } from "@/components/tools/tool-ui";
+import { ToolHiddenFileInput, ToolUploadSizeHint } from "@/components/tools/tool-ui";
 import { mapRelatedTools } from "@/components/tools/tool-helpers";
 import {
   cleanSummaryText,
@@ -251,9 +251,9 @@ export default function AIPDFSummarizerPage() {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
-                <Upload className="mx-auto h-10 w-10 text-gray-400" />
+                <Upload className="mx-auto h-10 w-10 text-pd-muted" />
                 <p className="mt-3 text-base font-medium text-gray-700">Drag & drop your PDF here</p>
-                <p className="mt-1 text-sm text-gray-500">or click to select a file</p>
+                <p className="mt-1 text-sm text-pd-muted">or click to select a file</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="mt-3 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 cursor-pointer"
@@ -266,7 +266,7 @@ export default function AIPDFSummarizerPage() {
                   ariaLabel="Choose PDF file to summarize"
                   onChange={handleFileChange}
                 />
-                <p className="mt-3 text-xs text-gray-400">Any file size accepted</p>
+                <ToolUploadSizeHint formatNote="PDF only" className="mt-3 text-center text-pd-muted" />
               </div>
             ) : (
               <div>
@@ -274,7 +274,7 @@ export default function AIPDFSummarizerPage() {
                   <FileText className="h-8 w-8 shrink-0 text-purple-600" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">{file.name}</p>
-                    <p className="text-sm text-gray-500">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                    <p className="text-sm text-pd-muted">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
                   </div>
                   <button onClick={reset} className="text-sm text-red-600 hover:text-red-700 cursor-pointer">Remove</button>
                 </div>
@@ -300,7 +300,7 @@ export default function AIPDFSummarizerPage() {
                       >
                         <div className="h-2 rounded-full bg-purple-600 transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">{progress}%</p>
+                      <p className="mt-1 text-xs text-pd-muted">{progress}%</p>
                     </div>
                   </div>
                 ) : (
@@ -610,7 +610,7 @@ function StatPill({
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-pd-muted">{label}</p>
         <p className="text-lg font-semibold text-gray-900">{value}</p>
       </div>
     </div>
@@ -648,7 +648,7 @@ function SectionHeader({
         </div>
         <div>
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-500">{subtitle}</p>
+          <p className="text-sm text-pd-muted">{subtitle}</p>
         </div>
       </div>
       <SectionActions
@@ -703,7 +703,7 @@ function InsightCard({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-500">{subtitle}</p>
+            <p className="text-sm text-pd-muted">{subtitle}</p>
           </div>
         </div>
         <SectionActions
@@ -801,7 +801,7 @@ function DownloadFormatMenu({
               className="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-gray-700 hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="font-medium">{option.label}</span>
-              <span className="text-xs text-gray-400">{option.hint}</span>
+              <span className="text-xs text-pd-muted">{option.hint}</span>
             </button>
           ))}
         </div>
@@ -857,7 +857,7 @@ function ListenButton({
         "flex items-center gap-1 rounded-lg px-2 py-1 text-xs cursor-pointer transition-colors",
         isListening
           ? "bg-purple-100 text-purple-700"
-          : "text-gray-500 hover:bg-gray-100"
+          : "text-pd-muted hover:bg-gray-100"
       )}
       title={isListening ? "Stop listening" : "Listen to this section"}
       aria-label={isListening ? "Stop listening" : "Listen to this section"}
@@ -889,7 +889,7 @@ function CopyButton({
       type="button"
       onClick={() => onCopy(text, section)}
       aria-label={copied === section ? "Copied to clipboard" : "Copy section to clipboard"}
-      className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 cursor-pointer"
+      className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-pd-muted hover:bg-gray-100 cursor-pointer"
     >
       {copied === section ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
       {copied === section ? "Copied" : "Copy"}

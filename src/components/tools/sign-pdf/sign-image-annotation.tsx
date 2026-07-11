@@ -44,7 +44,7 @@ export function SignImageAnnotation({
         onDragStart(e, ann.id, ann.xNorm, ann.yNorm);
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      { }
       <img
         src={ann.dataUrl}
         alt=""

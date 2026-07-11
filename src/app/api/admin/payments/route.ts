@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyAdmin } from "@/lib/auth/verify-admin";
+import { storedAmountInInr } from "@/lib/payment/payment-amount";
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,8 +41,12 @@ export async function GET(request: NextRequest) {
     const thisMonth = completed.filter((p) => p.created_at && p.created_at >= monthStart.toISOString());
 
     const stats = {
-      totalRevenue: Math.round(completed.reduce((s, p) => s + Number(p.amount), 0) / 100),
-      thisMonth: Math.round(thisMonth.reduce((s, p) => s + Number(p.amount), 0) / 100),
+      totalRevenue: Math.round(
+        completed.reduce((s, p) => s + storedAmountInInr(Number(p.amount)), 0)
+      ),
+      thisMonth: Math.round(
+        thisMonth.reduce((s, p) => s + storedAmountInInr(Number(p.amount)), 0)
+      ),
       successfulCount: completed.length,
       failedCount: failed.length,
     };
@@ -51,7 +56,7 @@ export async function GET(request: NextRequest) {
       payments: (payments ?? []).map((p) => ({
         id: p.id,
         user_email: p.user_id ? emailByUser.get(p.user_id) ?? "Unknown" : "Unknown",
-        amount: Math.round(Number(p.amount) / 100),
+        amount: Math.round(storedAmountInInr(Number(p.amount))),
         status: p.status === "processing" ? "pending" : p.status,
         method: p.payment_method ?? "razorpay",
         created_at: p.created_at,

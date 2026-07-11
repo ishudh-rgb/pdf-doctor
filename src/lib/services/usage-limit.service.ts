@@ -9,10 +9,17 @@ import { logError } from "@/lib/db/queries";
 import { isLocalDevAuthEnabled } from "@/lib/auth/auth-config";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { isActivePro } from "@/lib/auth/plan-access";
+import { resolveProAccessForUser } from "@/lib/enterprise/org-access.service";
 import {
-  FILE_LIMITS,
-  isUnlimitedFileSizeMB,
-} from "@/config/constants";
+  checkUsageLimitWithOrg,
+  incrementOrganizationDailyUsage,
+} from "@/lib/enterprise/org-limits.service";
+import {
+  resolveFreeDailyToolLimit,
+  resolveMaxFileSizeMB,
+  resolveProDailyToolLimit,
+} from "@/lib/admin/effective-limits";
+import { FILE_LIMITS, isUnlimitedFileSizeMB } from "@/config/constants";
 import type { NextRequest } from "next/server";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 
@@ -34,9 +41,7 @@ export interface UsageLimitResult {
 }
 
 function resolveFreeDailyLimit(settings: Record<string, unknown>): number {
-  const raw = settings.free_daily_limit ?? settings.free_daily_file_limit;
-  if (typeof raw === "number") return raw;
-  return Number(raw) || 5;
+  return resolveFreeDailyToolLimit(settings);
 }
 
 export async function checkUsageLimit(
@@ -60,11 +65,26 @@ export async function checkUsageLimit(
     const settings = await getCachedAdminSettings();
 
     if (userId) {
+      let orgAccess: Awaited<ReturnType<typeof resolveProAccessForUser>> | null = null;
+      try {
+        orgAccess = await resolveProAccessForUser(userId);
+      } catch {
+        orgAccess = null;
+      }
+
       const profile = await getUserProfile(userId);
-      const isPro = isActivePro(profile);
+      const isPro = orgAccess?.isPro ?? isActivePro(profile);
 
       if (isPro) {
-        const dailyLimit = FILE_LIMITS.maxProUsesPerDay;
+        if (orgAccess?.source === "organization" && orgAccess.organizationId) {
+          try {
+            return await checkUsageLimitWithOrg(userId, tool);
+          } catch {
+            // fall through to individual Pro limits
+          }
+        }
+
+        const dailyLimit = resolveProDailyToolLimit(settings);
         const used = await getUserDailyUsage(userId);
 
         return {
@@ -87,7 +107,7 @@ export async function checkUsageLimit(
         limit: dailyLimit,
         message:
           used >= dailyLimit
-            ? `Daily limit of ${dailyLimit} files reached. Upgrade to Pro for ${FILE_LIMITS.maxProUsesPerDay} uses per day.`
+            ? `Daily limit of ${dailyLimit} files reached. Sign up or upgrade to Pro for more uses per day.`
             : undefined,
       };
     }
@@ -127,8 +147,8 @@ export async function requireProPlan(userId: string | null): Promise<UsageLimitR
   }
 
   try {
-    const profile = await getUserProfile(userId);
-    if (!isActivePro(profile)) {
+    const access = await resolveProAccessForUser(userId);
+    if (!access.isPro) {
       return {
         allowed: false,
         remaining: 0,
@@ -161,10 +181,8 @@ export async function checkAIUsageLimit(
     }
 
     const settings = await getCachedAdminSettings();
-    const profile = await getUserProfile(userId);
-    const isPro = isActivePro(profile);
-
-    if (isPro) {
+    const access = await resolveProAccessForUser(userId);
+    if (access.isPro) {
       return { allowed: true, remaining: -1, limit: -1 };
     }
 
@@ -195,19 +213,38 @@ export async function checkAIUsageLimit(
   }
 }
 
+
+export async function recordSuccessfulToolUse(userId: string | null): Promise<void> {
+  if (!userId) return;
+  try {
+    const access = await resolveProAccessForUser(userId);
+    if (access.source === "organization" && access.organizationId) {
+      await incrementOrganizationDailyUsage(access.organizationId);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export async function checkFileSizeLimit(
   userId: string | null,
   fileSizeBytes?: number,
   context?: Awaited<ReturnType<typeof resolveToolUserContext>>
 ): Promise<{ allowed: boolean; maxSizeMB: number }> {
   try {
-    let maxSizeMB = FILE_LIMITS.maxFreeFileSizeMB;
+    const settings = context?.settings ?? (await getCachedAdminSettings());
+    let maxSizeMB = resolveMaxFileSizeMB(settings, false);
 
     if (userId) {
-      const profile = context?.profile ?? (await getUserProfile(userId));
-      if (isActivePro(profile)) {
-        maxSizeMB = FILE_LIMITS.maxProFileSizeMB;
+      let isPro = false;
+      try {
+        const access = await resolveProAccessForUser(userId);
+        isPro = access.isPro;
+      } catch {
+        const profile = context?.profile ?? (await getUserProfile(userId));
+        isPro = isActivePro(profile);
       }
+      maxSizeMB = resolveMaxFileSizeMB(settings, isPro);
     } else if (context) {
       maxSizeMB = context.maxSizeMB;
     }

@@ -12,6 +12,7 @@ import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner, ToolHiddenFileInput } from "@/components/tools/tool-ui";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { runClientOrServerPdfExport } from "@/lib/pdf/client-pdf-export";
 import { extractPagesInBrowser } from "@/lib/pdf/pdf-browser";
@@ -38,6 +39,7 @@ export function ExtractPdfWorkspace({
   onChangeFile,
   onReset,
 }: ExtractPdfWorkspaceProps) {
+  const ws = useToolWorkspaceMessages();
   const [pageSlots, setPageSlots] = useState<WorkspacePageSlot[]>([]);
   const [selectedSlotIds, setSelectedSlotIds] = useState<Set<string>>(
     () => new Set()
@@ -55,7 +57,6 @@ export function ExtractPdfWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
-  const [resultSize, setResultSize] = useState(0);
   const [passwordPrompt, setPasswordPrompt] = useState<{
     file: File;
     fileName: string;
@@ -115,15 +116,15 @@ export function ExtractPdfWorkspace({
           return;
         }
         if (result.wrongPassword) {
-          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
           return;
         }
         if (result.totalPages === 0) {
           setError(
-            result.error ?? "Could not read this PDF. Try another file."
+            result.error ?? ws.couldNotReadPdf
           );
         } else if (result.error) {
-          setError(result.error);
+          setError(ws.resolveApiError(result.error));
         } else {
           setError(null);
         }
@@ -135,13 +136,13 @@ export function ExtractPdfWorkspace({
         setError(
           err instanceof Error
             ? err.message
-            : "Could not read this PDF. Try another file."
+            : ws.couldNotReadPdf
         );
       })
       .finally(() => {
         if (requestId === loadRequestRef.current) setLoadingThumbs(false);
       });
-  }, [fileKey, file]);
+  }, [fileKey, file, ws]);
 
   const retryWithPassword = useCallback((pw: string) => {
     if (!passwordPrompt) return;
@@ -160,13 +161,13 @@ export function ExtractPdfWorkspace({
       }
     }, pw).then((result) => {
       if (result.wrongPassword) {
-        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
         return;
       }
       setPasswordPrompt(null);
-      if (result.error) setError(result.error);
+      if (result.error) setError(ws.resolveApiError(result.error));
     });
-  }, [passwordPrompt]);
+  }, [passwordPrompt, ws]);
 
   /* ─── slot actions ─── */
 
@@ -277,7 +278,7 @@ export function ExtractPdfWorkspace({
           error?: string;
         };
         if (!res.ok || !data.sessionId || !data.totalPages) {
-          setError(data.error ?? "Could not add document.");
+          setError(ws.resolveApiError(data.error) || ws.couldNotAddDocument);
           return;
         }
 
@@ -305,10 +306,10 @@ export function ExtractPdfWorkspace({
           return [...nextVisible, ...hidden];
         });
       } catch {
-        setError("Could not add document.");
+        setError(ws.couldNotAddDocument);
       }
     },
-    [hiddenSlotIds]
+    [hiddenSlotIds, ws]
   );
 
   /* ─── export ─── */
@@ -316,7 +317,6 @@ export function ExtractPdfWorkspace({
   const handleExport = async () => {
     if (selectedVisibleCount === 0) {
       setResultUrl(URL.createObjectURL(file));
-      setResultSize(file.size);
       setCompleted(true);
       return;
     }
@@ -357,13 +357,12 @@ export function ExtractPdfWorkspace({
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(
-            (data as { error?: string }).error || "Failed to export PDF."
+            (data as { error?: string }).error || ws.failedExportPdf
           );
         }
 
         const blob = await res.blob();
         setResultUrl(URL.createObjectURL(blob));
-        setResultSize(blob.size);
         setCompleted(true);
         return;
       }
@@ -388,7 +387,7 @@ export function ExtractPdfWorkspace({
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
             throw new Error(
-              (data as { error?: string }).error || "Failed to extract pages."
+              (data as { error?: string }).error || ws.failedExtractPages
             );
           }
           return res.blob();
@@ -396,11 +395,10 @@ export function ExtractPdfWorkspace({
       });
 
       setResultUrl(URL.createObjectURL(blob));
-      setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An unexpected error occurred."
+        err instanceof Error ? err.message : ws.unexpectedError
       );
     } finally {
       setProcessing(false);
@@ -418,7 +416,6 @@ export function ExtractPdfWorkspace({
         onStartOver={() => {
           setCompleted(false);
           setResultUrl(null);
-          setResultSize(0);
           onReset();
         }}
       />
@@ -445,7 +442,7 @@ export function ExtractPdfWorkspace({
       <ToolHiddenFileInput
         ref={insertFileRef}
         accept=".pdf,application/pdf"
-        ariaLabel="Insert PDF documents"
+        ariaLabel={ws.insertPdfDocuments}
         onChange={handleInsertDocuments}
       />
 
@@ -512,8 +509,8 @@ export function ExtractPdfWorkspace({
             <button
               type="button"
               disabled
-              className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-40"
-              title="Rotate right"
+              className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-pd-muted transition-colors hover:bg-gray-100 disabled:opacity-40"
+              title={ws.rotateRight}
             >
               <RotateCw className="h-4 w-4" />
             </button>
@@ -522,29 +519,29 @@ export function ExtractPdfWorkspace({
               onClick={removeSelected}
               disabled={selectedVisibleCount === 0}
               className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-35"
-              title="Remove selected"
+              title={ws.removeSelected}
             >
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Selection counter — Smallpdf style */}
+          {/* Selection counter */}
           <div className="flex items-center gap-1.5">
             {selectedVisibleCount > 0 ? (
               <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
                 {selectedVisibleCount} page{selectedVisibleCount !== 1 ? "s" : ""} selected
               </span>
             ) : (
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-pd-muted">
                 Click pages to select for extraction
               </span>
             )}
           </div>
 
           <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-sm text-gray-500 lg:inline">
+            <span className="hidden text-sm text-pd-muted lg:inline">
               {file.name}
-              <span className="ml-1.5 text-gray-400">
+              <span className="ml-1.5 text-pd-muted">
                 {totalPages} pages · {formatFileSize(file.size)}
               </span>
             </span>
@@ -587,7 +584,7 @@ export function ExtractPdfWorkspace({
         {/* ── Page grid ── */}
         <div className="bg-gray-100 px-4 py-5 sm:px-6 sm:py-6">
           {loadingThumbs && !thumbnails.some(Boolean) && (
-            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-pd-muted">
               <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
               Generating page previews…
             </div>
@@ -596,12 +593,12 @@ export function ExtractPdfWorkspace({
           {totalPages > 0 && (
             <>
               {truncated && (
-                <p className="mb-3 text-center text-xs text-gray-400">
+                <p className="mb-3 text-center text-xs text-pd-muted">
                   Showing first {thumbnails.length} of {totalPages} page
                   previews.
                 </p>
               )}
-              <p className="mb-4 text-center text-sm text-gray-400">
+              <p className="mb-4 text-center text-sm text-pd-muted">
                 Click pages to <strong className="text-blue-600">select</strong>{" "}
                 them for extraction · Click{" "}
                 <strong className="text-blue-600">+</strong> between pages to
@@ -640,7 +637,7 @@ export function ExtractPdfWorkspace({
           )}
         </div>
 
-        <div className="border-t border-gray-200 bg-white px-4 py-2.5 text-center text-xs text-gray-400 sm:px-5">
+        <div className="border-t border-gray-200 bg-white px-4 py-2.5 text-center text-xs text-pd-muted sm:px-5">
           Selected pages will be extracted into a new PDF · Files auto-delete after 2 hours
         </div>
       </div>

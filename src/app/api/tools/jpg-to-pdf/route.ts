@@ -1,10 +1,11 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { jpgToPdf } from "@/lib/services/pdf-convert.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -18,7 +19,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -27,20 +30,14 @@ export async function POST(request: NextRequest) {
 
     const usageResult = await checkUsageLimit(userId, request, "jpg-to-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     let formData: FormData;
     try {
       formData = await request.formData();
     } catch {
-      return NextResponse.json(
-        {
-          error:
-            "Upload too large or invalid. Try fewer images or check your connection.",
-        },
-        { status: 413 }
-      );
+      return toolJsonError(request, "Upload too large or invalid. Try fewer images or check your connection.", 413);
     }
 
     const files = formData.getAll("files") as File[];
@@ -50,36 +47,28 @@ export async function POST(request: NextRequest) {
     const margin = marginRaw === "medium" ? "normal" : marginRaw;
 
     if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: "At least one image file is required" },
-        { status: 400 }
-      );
+      return toolJsonError(request, "At least one image file is required", 400);
     }
 
     if (files.length > 20) {
-      return NextResponse.json(
-        { error: "Maximum 20 images allowed" },
-        { status: 400 }
-      );
+      return toolJsonError(request, "Maximum 20 images allowed", 400);
     }
 
+    const imageBuffers: Buffer[] = [];
     for (const file of files) {
-      if (!isValidFileType(file, ["image"])) {
-        return NextResponse.json(
-          { error: `Invalid file type: ${file.name}. Only image files (JPG, PNG, WebP, GIF) are accepted.` },
-          { status: 400 }
-        );
+      const validated = await validateSingleUpload(file, ["image"], maxSizeMB);
+      if (!validated.ok) {
+        if (validated.error === "Invalid file type.") {
+          return toolJsonError(
+            request,
+            `Invalid file type: ${file.name}. Only image files (JPG, PNG, WebP, GIF) are accepted.`,
+            400
+          );
+        }
+        return uploadValidationResponse(request, validated);
       }
-
-      const sizeCheck = validateFileSize(file, maxSizeMB);
-      if (!sizeCheck.valid) {
-        return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-      }
+      imageBuffers.push(validated.buffer);
     }
-
-    const imageBuffers = await Promise.all(
-      files.map(async (file) => Buffer.from(await file.arrayBuffer()))
-    );
 
     const pdfBuffer = await jpgToPdf(imageBuffers, {
       pageSize,
@@ -113,7 +102,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "jpg-to-pdf",
       userId,
       errorType: "CONVERT_ERROR",

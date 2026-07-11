@@ -1,6 +1,7 @@
 import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 
 import {
 
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
 
   if (!jobId) {
 
-    return NextResponse.json({ error: "jobId is required" }, { status: 400 });
+    return toolJsonError(request, "jobId is required", 400);
 
   }
 
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   if (!peek || peek.status !== "done" || (!peek.outputPath && !peek.storagePath)) {
 
-    return NextResponse.json({ error: "File not ready or already downloaded" }, { status: 404 });
+    return toolJsonError(request, "File not ready or already downloaded", 404);
 
   }
 
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
 
   if (!assertJobOwner(peek.ownerKey, ownerKey)) {
 
-    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    return toolJsonError(request, "Access denied", 403);
 
   }
 
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
 
   if (!job || (!job.outputPath && !job.storagePath)) {
 
-    return NextResponse.json({ error: "File not ready or already downloaded" }, { status: 404 });
+    return toolJsonError(request, "File not ready or already downloaded", 404);
 
   }
 
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
 
     await releasePdfToWordJob(job);
 
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
+    return toolJsonError(request, "File not found", 404);
 
   }
 

@@ -1,10 +1,11 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { jpgToPdf } from "@/lib/services/pdf-convert.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -18,7 +19,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const usageResult = await checkUsageLimit(userId, request, "pdf-scanner");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
@@ -35,39 +38,30 @@ export async function POST(request: NextRequest) {
     const filter = (formData.get("filter") as string) || "none";
 
     if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: "At least one image file is required" },
-        { status: 400 }
-      );
+      return toolJsonError(request, "At least one image file is required", 400);
     }
 
     if (files.length > 10) {
-      return NextResponse.json(
-        { error: "Maximum 10 images allowed for scanning" },
-        { status: 400 }
-      );
+      return toolJsonError(request, "Maximum 10 images allowed for scanning", 400);
     }
 
+    const imageBuffers: Buffer[] = [];
     for (const file of files) {
-      if (!isValidFileType(file, ["image"])) {
-        return NextResponse.json(
-          { error: `Invalid file type: ${file.name}. Only image files are accepted.` },
-          { status: 400 }
-        );
+      const validated = await validateSingleUpload(file, ["image"], maxSizeMB);
+      if (!validated.ok) {
+        if (validated.error === "Invalid file type.") {
+          return toolJsonError(request, `Invalid file type: ${file.name}. Only image files are accepted.`, 400);
+        }
+        return uploadValidationResponse(request, validated);
       }
-
-      const sizeCheck = validateFileSize(file, maxSizeMB);
-      if (!sizeCheck.valid) {
-        return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-      }
+      imageBuffers.push(validated.buffer);
     }
 
     const sharp = (await import("sharp")).default;
 
     const processedImages = await Promise.all(
-      files.map(async (file) => {
-        const arrayBuffer = await file.arrayBuffer();
-        let imageBuffer: Buffer = Buffer.from(arrayBuffer) as Buffer;
+      files.map(async (_, index) => {
+        let imageBuffer: Buffer = imageBuffers[index];
 
         if (filter !== "none") {
           let pipeline = sharp(imageBuffer);
@@ -126,7 +120,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "pdf-scanner",
       userId,
       errorType: "SCANNER_ERROR",

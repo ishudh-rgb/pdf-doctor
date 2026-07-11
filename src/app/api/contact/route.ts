@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendContactEmail } from "@/lib/email/contact-mailer";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
+import { guardMutationOrigin } from "@/lib/server/mutation-origin";
 import { validateContactPayload } from "@/lib/validation/contact-validation";
 import { captureApiError, toSafeApiError } from "@/lib/server/safe-error";
 
 export async function POST(request: NextRequest) {
   const rateLimited = await guardGeneralApiRateLimit(request);
   if (rateLimited) return rateLimited;
+
+  const originBlocked = guardMutationOrigin(request);
+  if (originBlocked) return originBlocked;
 
   try {
     const body = (await request.json()) as Parameters<typeof validateContactPayload>[0];

@@ -368,7 +368,7 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
               </div>
               {typedText.trim() && (
                 <div className="rounded-xl border border-dashed border-pd-border bg-pd-background p-6 text-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  { }
                   <img src={typedPreviewUrl() ?? ""} alt="Preview" className="mx-auto max-h-20" />
                 </div>
               )}
@@ -381,7 +381,7 @@ export function SignatureCreateModal({ kind, onClose, onCreate }: SignatureCreat
               className="cursor-pointer rounded-xl border-2 border-dashed border-pd-border p-10 text-center transition-colors hover:border-pd-brand hover:bg-pd-background"
             >
               {uploadPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
+                 
                 <img src={uploadPreview} alt="Upload" className="mx-auto max-h-28" />
               ) : (
                 <>

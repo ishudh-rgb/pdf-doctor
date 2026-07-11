@@ -1,10 +1,12 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { createPdfSession } from "@/lib/pdf/pdf-session-store";
 import { ownerHashFromRequest } from "@/lib/server/request-security";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 import { createClient } from "@/lib/supabase/server";
+import { assertMfaAal2Satisfied } from "@/lib/auth/mfa-assurance";
 import { probePdfAccess } from "@/lib/pdf/pdf-password.server";
 import { unlockPDF } from "@/lib/services/pdf-security.service";
 
@@ -19,7 +21,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await assertMfaAal2Satisfied(supabase);
+    }
     const ownerHash = ownerHashFromRequest(request, user?.id ?? null);
 
     const formData = await request.formData();
@@ -27,47 +34,37 @@ export async function POST(request: NextRequest) {
     const password = (formData.get("password") as string | null) || null;
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json({ error: "Only PDF files are accepted" }, { status: 400 });
+    const validated = await validateSingleUpload(file, ["pdf"], FILE_LIMITS.maxFreeFileSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Only PDF files are accepted", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, FILE_LIMITS.maxFreeFileSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    let buffer = Buffer.from(await file.arrayBuffer());
+    let buffer = validated.buffer;
     const withoutPassword = await probePdfAccess(buffer);
 
     if (withoutPassword.status === "unreadable") {
-      return NextResponse.json({ error: withoutPassword.message }, { status: 400 });
+      return toolJsonError(request, withoutPassword.message, 400);
     }
 
     let totalPages = withoutPassword.status === "ok" ? withoutPassword.pages : 0;
 
     if (withoutPassword.status === "password_required") {
       if (!password) {
-        return NextResponse.json(
-          { error: "This PDF is password-protected.", code: "password_required", fileName: file.name },
-          { status: 400 }
-        );
+        return toolJsonError(request, "This PDF is password-protected.", 400);
       }
 
       const withPassword = await probePdfAccess(buffer, password);
       if (withPassword.status === "wrong_password") {
-        return NextResponse.json(
-          { error: WRONG_PASSWORD_MSG, code: "wrong_password" },
-          { status: 400 }
-        );
+        return toolJsonError(request, WRONG_PASSWORD_MSG, 400);
       }
       if (withPassword.status !== "ok") {
-        return NextResponse.json(
-          { error: withPassword.status === "unreadable" ? withPassword.message : WRONG_PASSWORD_MSG },
-          { status: 400 }
-        );
+        return toolJsonError(request, withPassword.status === "unreadable" ? withPassword.message : WRONG_PASSWORD_MSG, 400);
       }
 
       try {
@@ -80,18 +77,12 @@ export async function POST(request: NextRequest) {
         }
       } catch (unlockErr) {
         const msg = unlockErr instanceof Error ? unlockErr.message : WRONG_PASSWORD_MSG;
-        return NextResponse.json(
-          {
-            error: msg.includes("Incorrect password") ? msg : WRONG_PASSWORD_MSG,
-            code: "wrong_password",
-          },
-          { status: 400 }
-        );
+        return toolJsonError(request, msg.includes("Incorrect password") ? msg : WRONG_PASSWORD_MSG, 400);
       }
     }
 
     if (totalPages === 0) {
-      return NextResponse.json({ error: "Could not read this PDF." }, { status: 400 });
+      return toolJsonError(request, "Could not read this PDF.", 400);
     }
 
     const sessionId = await createPdfSession(buffer, ownerHash);
@@ -102,7 +93,7 @@ export async function POST(request: NextRequest) {
       truncated: totalPages > 500,
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "pdf-session",
       errorType: "SESSION_ERROR",
       fallbackMessage: "Failed to open PDF",

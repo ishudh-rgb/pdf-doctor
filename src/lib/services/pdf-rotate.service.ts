@@ -1,4 +1,4 @@
-import { PDFDocument, degrees, PageSizes, PDFPage, PDFName, PDFArray, PDFNumber } from "pdf-lib";
+import { degrees, PageSizes, PDFPage, PDFName, PDFArray, PDFNumber } from "pdf-lib";
 import { safePdfLoad } from "@/lib/pdf/pdf-safe-load";
 import { logError } from "@/lib/db/queries";
 

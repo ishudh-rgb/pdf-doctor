@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { planFileSizeFaqLine } from '@/lib/billing/billing-copy';
 import { FileText } from 'lucide-react';
 import { formatFileSize } from '@/lib/utils/file';
 import { ToolPageShell } from '@/components/layout/tool-page-shell';
@@ -22,7 +23,7 @@ const RELATED_TOOLS = [
 const FAQS = [
   { q: 'What Word formats are supported?', a: 'We support both .doc and .docx formats. For best results, use the newer .docx format.' },
   { q: 'Will the formatting be preserved?', a: 'Yes, all formatting including fonts, images, tables, and styles are perfectly preserved using native rendering.' },
-  { q: 'Is there a file size limit?', a: 'No — convert Word documents of any size.' },
+  { q: 'Is there a file size limit?', a: planFileSizeFaqLine() },
   { q: 'Can I convert multiple files at once?', a: 'Currently, conversion works one file at a time. You can use our Merge tool to combine the resulting PDFs.' },
 ];
 
@@ -143,7 +144,7 @@ export default function WordToPdfPage() {
         <>
           <ToolDropzone
             hint="Drop a Word document here or click to browse"
-            subHint="Supports .doc and .docx files"
+            formatNote="Supports .doc and .docx files"
             dragOver={dragOver}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}

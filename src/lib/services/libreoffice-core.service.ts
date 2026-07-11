@@ -180,7 +180,6 @@ export async function libreOfficeConvert(
   const soffice = resolveLibreOfficeBinary();
   if (!soffice) return undefined;
 
-  const diskOnly = Boolean(options.outputPath);
   const timeoutMs = options.timeoutMs ?? 180_000;
   const tmpDir =
     options.inputPath && options.outputPath

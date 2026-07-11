@@ -9,13 +9,11 @@ import {
   FileCheck,
   IndianRupee,
   Activity,
-  Zap,
   Trash2,
   Megaphone,
   Wrench,
   CheckCircle2,
   AlertCircle,
-  Clock,
 } from "lucide-react";
 
 interface DashboardData {
@@ -39,49 +37,6 @@ interface DashboardData {
     queue: "healthy" | "degraded" | "down";
   };
 }
-
-const mockData: DashboardData = {
-  stats: {
-    totalUsers: 12847,
-    proUsers: 1243,
-    filesProcessedToday: 3421,
-    revenueThisMonth: 185600,
-    usersTrend: 12.5,
-    proTrend: 8.3,
-    fileTrend: -2.1,
-    revenueTrend: 15.7,
-  },
-  dailyUsage: [
-    { date: "Mon", count: 2400 },
-    { date: "Tue", count: 3100 },
-    { date: "Wed", count: 2800 },
-    { date: "Thu", count: 3400 },
-    { date: "Fri", count: 3900 },
-    { date: "Sat", count: 2200 },
-    { date: "Sun", count: 1800 },
-  ],
-  toolPopularity: [
-    { tool: "Merge PDF", count: 4520 },
-    { tool: "Compress PDF", count: 3810 },
-    { tool: "PDF to Word", count: 2930 },
-    { tool: "Split PDF", count: 2100 },
-    { tool: "JPG to PDF", count: 1840 },
-    { tool: "Protect PDF", count: 920 },
-  ],
-  recentActivity: [
-    { id: "1", user: "user@example.com", action: "Upgraded to Pro", time: "2 min ago" },
-    { id: "2", user: "john@company.com", action: "Processed 5 files (Merge PDF)", time: "5 min ago" },
-    { id: "3", user: "sara@startup.io", action: "Payment completed - ₹299", time: "12 min ago" },
-    { id: "4", user: "dev@test.com", action: "Account created", time: "18 min ago" },
-    { id: "5", user: "admin@onlymypdf.in", action: "Ran cleanup job", time: "1 hour ago" },
-  ],
-  systemHealth: {
-    database: "healthy",
-    storage: "healthy",
-    api: "healthy",
-    queue: "healthy",
-  },
-};
 
 const healthColors = {
   healthy: "text-green-600 bg-green-50",

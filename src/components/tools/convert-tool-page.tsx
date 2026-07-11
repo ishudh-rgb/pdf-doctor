@@ -11,6 +11,7 @@ import {
   ToolSuccessPanel,
 } from "@/components/tools/tool-ui";
 import { mapRelatedTools } from "@/components/tools/tool-helpers";
+import { useToolErrors } from "@/hooks/use-tool-errors";
 
 interface RelatedTool {
   name: string;
@@ -58,6 +59,7 @@ export function ConvertToolPage({
   fetchTimeoutMs = 120_000,
   progressCap = 92,
 }: ConvertToolPageProps) {
+  const { resolveApiError, resolveCatchError } = useToolErrors();
   const [file, setFile] = useState<File | null>(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -130,7 +132,14 @@ export function ConvertToolPage({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Processing failed. Please try again.");
+        throw new Error(
+          resolveApiError(
+            typeof err === "object" && err && "error" in err
+              ? (err as { error?: string; correlationId?: string })
+              : undefined,
+            "errors.processingFailed"
+          )
+        );
       }
 
       const blob = await res.blob();
@@ -141,15 +150,7 @@ export function ConvertToolPage({
       setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
-      const message =
-        err instanceof DOMException && err.name === "AbortError"
-          ? "Conversion timed out. Large spreadsheets can take 2–3 minutes — please try again."
-          : err instanceof TypeError && /failed to fetch/i.test(err.message)
-            ? "Server not reachable. Make sure `npm run dev` is running, wait for conversion, then retry."
-            : err instanceof Error
-              ? err.message
-              : "An unexpected error occurred.";
-      setError(message);
+      setError(resolveCatchError(err));
     } finally {
       window.clearTimeout(timeoutId);
       stopProgressTimer();
@@ -180,7 +181,7 @@ export function ConvertToolPage({
         <>
           <ToolDropzone
             hint="Drop a file here or click to browse"
-            subHint={uploadHint}
+            formatNote={uploadHint}
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();

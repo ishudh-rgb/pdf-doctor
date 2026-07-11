@@ -11,14 +11,12 @@ import {
   Scissors,
   FileDown,
   FileUp,
-  FileImage,
   PenLine,
   PenTool,
   Lock,
   Unlock,
   Sparkles,
   ScanLine,
-  ArrowRightLeft,
   ImageIcon,
   Table,
   Presentation,
@@ -35,6 +33,7 @@ import { LanguageSwitch } from "@/components/common/language-switch";
 import { Logo } from "@/components/common/logo";
 import { useAuthContext } from "@/components/providers/auth-provider";
 import { useTranslation } from "@/i18n";
+import { useLocaleHref } from "@/hooks/use-locale-href";
 
 interface ToolLink {
   name: string;
@@ -165,13 +164,21 @@ const HOVER_COLORS: Record<string, { bg: string; shadow: string; text: string }>
   "text-teal-600":    { bg: "#ccfbf1", shadow: "0 2px 10px rgba(13,148,136,0.18)",  text: "#0d9488" },
 };
 
-function MegaToolLink({ tool, onClose }: { tool: ToolLink; onClose: () => void }) {
+function MegaToolLink({
+  tool,
+  onClose,
+  localeHref,
+}: {
+  tool: ToolLink;
+  onClose: () => void;
+  localeHref: (path: string) => string;
+}) {
   const [hovered, setHovered] = React.useState(false);
   const colors = HOVER_COLORS[tool.iconText];
 
   return (
     <Link
-      href={tool.href}
+      href={localeHref(tool.href)}
       onClick={onClose}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -206,10 +213,12 @@ function MegaCol({
   categories,
   onClose,
   t,
+  localeHref,
 }: {
   categories: ToolCategory[];
   onClose: () => void;
   t: (key: string) => string;
+  localeHref: (path: string) => string;
 }) {
   return (
     <>
@@ -220,7 +229,7 @@ function MegaCol({
           </h3>
           <div className="space-y-0.5">
             {category.tools.map((tool) => (
-              <MegaToolLink key={tool.name} tool={tool} onClose={onClose} />
+              <MegaToolLink key={tool.name} tool={tool} onClose={onClose} localeHref={localeHref} />
             ))}
           </div>
         </div>
@@ -243,6 +252,7 @@ export function Header() {
   const megaMenuRef = React.useRef<HTMLDivElement>(null);
   const { user, profile, loading, signOut } = useAuthContext();
   const { t } = useTranslation();
+  const localeHref = useLocaleHref();
   const isLoggedIn = !loading && !!(user || profile);
 
   React.useEffect(() => {
@@ -293,13 +303,13 @@ export function Header() {
   return (
     <header className="pd-site-header sticky top-0 z-40 w-full bg-pd-surface">
       <div className="pd-header-row pd-container">
-        <Logo link href="/" variant="wordmark" />
+        <Logo link href={localeHref("/")} variant="wordmark" />
 
         <nav className="pd-nav-links hidden items-center lg:flex" aria-label="Main navigation">
           {navLinks.map((link) => (
             <Link
               key={link.nameKey}
-              href={link.href}
+              href={localeHref(link.href)}
               className={navItemClass}
             >
               {t(link.nameKey)}
@@ -340,20 +350,20 @@ export function Header() {
               >
                 <div className="grid grid-cols-4 gap-6">
                   <div>
-                    <MegaCol categories={[megaMenuCategories[0]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[0]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
                   </div>
                   <div>
-                    <MegaCol categories={[megaMenuCategories[3]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[3]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
                   </div>
                   <div className="space-y-5">
-                    <MegaCol categories={[megaMenuCategories[2]]} onClose={() => setMegaMenuOpen(false)} t={t} />
-                    <MegaCol categories={[megaMenuCategories[1]]} onClose={() => setMegaMenuOpen(false)} t={t} />
-                    <MegaCol categories={[megaMenuCategories[6]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[2]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
+                    <MegaCol categories={[megaMenuCategories[1]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
+                    <MegaCol categories={[megaMenuCategories[6]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
                   </div>
                   <div className="space-y-5">
-                    <MegaCol categories={[megaMenuCategories[4]]} onClose={() => setMegaMenuOpen(false)} t={t} />
-                    <MegaCol categories={[megaMenuCategories[5]]} onClose={() => setMegaMenuOpen(false)} t={t} />
-                    <MegaCol categories={[megaMenuCategories[7]]} onClose={() => setMegaMenuOpen(false)} t={t} />
+                    <MegaCol categories={[megaMenuCategories[4]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
+                    <MegaCol categories={[megaMenuCategories[5]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
+                    <MegaCol categories={[megaMenuCategories[7]]} onClose={() => setMegaMenuOpen(false)} t={t} localeHref={localeHref} />
                   </div>
                 </div>
               </div>
@@ -364,7 +374,7 @@ export function Header() {
         <div className="pd-header-cta hidden items-center gap-3 lg:flex">
           <LanguageSwitch />
           <Link
-            href="/pricing"
+            href={localeHref("/pricing")}
             className={cn(
               headerNavTextClass,
               "transition-colors hover:text-pd-brand"
@@ -374,7 +384,7 @@ export function Header() {
           </Link>
           {isLoggedIn ? (
             <>
-              <Link href="/dashboard">
+              <Link href={localeHref("/dashboard")}>
                 <Button
                   variant="ghost"
                   className={cn(headerNavTextClass, "h-auto px-3 py-2 hover:bg-pd-brand-muted hover:text-pd-brand")}
@@ -391,7 +401,7 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <Link href="/login">
+            <Link href={localeHref("/login")}>
               <Button
                 variant="ghost"
                 className={cn(headerNavTextClass, "h-auto px-3 py-2 hover:bg-pd-brand-muted hover:text-pd-brand")}
@@ -400,7 +410,7 @@ export function Header() {
               </Button>
             </Link>
           )}
-          <Link href="/pricing">
+          <Link href={localeHref("/pricing")}>
             <Button size="sm" className="text-base font-bold px-4 py-2.5">
               {t("nav.getPro")}
             </Button>
@@ -429,7 +439,7 @@ export function Header() {
         >
           <div className="pd-header-row flex items-center justify-between px-4">
             <Link
-              href="/"
+              href={localeHref("/")}
               className="pd-site-logo-link inline-flex shrink-0 items-center justify-center"
               onClick={() => setMobileOpen(false)}
             >
@@ -455,7 +465,7 @@ export function Header() {
                     {category.tools.map((tool) => (
                       <Link
                         key={tool.name}
-                        href={tool.href}
+                        href={localeHref(tool.href)}
                         onClick={() => setMobileOpen(false)}
                         className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-pd-foreground transition-colors hover:bg-pd-background"
                       >
@@ -478,7 +488,7 @@ export function Header() {
 
             <div className="mt-8 space-y-3 border-t border-pd-border pt-6">
               <Link
-                href="/pricing"
+                href={localeHref("/pricing")}
                 onClick={() => setMobileOpen(false)}
                 className="block rounded-xl px-3 py-3 text-sm font-medium text-pd-foreground hover:bg-pd-background"
               >
@@ -490,7 +500,7 @@ export function Header() {
               <div className="flex gap-3 pt-2">
                 {isLoggedIn ? (
                   <>
-                    <Link href="/dashboard" className="flex-1" onClick={() => setMobileOpen(false)}>
+                    <Link href={localeHref("/dashboard")} className="flex-1" onClick={() => setMobileOpen(false)}>
                       <Button variant="outline" className="w-full">
                         Dashboard
                       </Button>
@@ -508,12 +518,12 @@ export function Header() {
                   </>
                 ) : (
                   <>
-                    <Link href="/login" className="flex-1" onClick={() => setMobileOpen(false)}>
+                    <Link href={localeHref("/login")} className="flex-1" onClick={() => setMobileOpen(false)}>
                       <Button variant="outline" className="w-full">
                         Login
                       </Button>
                     </Link>
-                    <Link href="/pricing" className="flex-1" onClick={() => setMobileOpen(false)}>
+                    <Link href={localeHref("/pricing")} className="flex-1" onClick={() => setMobileOpen(false)}>
                       <Button className="w-full">{t("nav.getPro")}</Button>
                     </Link>
                   </>

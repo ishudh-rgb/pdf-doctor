@@ -21,6 +21,10 @@ vi.mock("@/lib/services/payment.service", () => ({
   verifyPayment: vi.fn(() => true),
 }));
 
+vi.mock("@/lib/billing/invoice.service", () => ({
+  issueGstInvoiceForPayment: vi.fn(async () => ({ invoiceId: "inv-1", invoiceNumber: "OMP-2026-00001" })),
+}));
+
 import {
   getPaymentByRazorpayPaymentId,
   getPaymentByRazorpayOrderId,
@@ -41,7 +45,7 @@ describe("fulfillPendingPayment", () => {
       id: "pay-1",
       user_id: "user-1",
       status: "pending",
-      amount: 29900,
+      amount: 299,
       plan_name: "pro",
       plan_duration: "monthly",
       coupon_code: null,
@@ -52,7 +56,7 @@ describe("fulfillPendingPayment", () => {
       id: "pay-1",
       user_id: "user-1",
       status: "processing",
-      amount: 29900,
+      amount: 299,
       plan_name: "pro",
       plan_duration: "monthly",
       coupon_code: null,
@@ -78,6 +82,20 @@ describe("fulfillPendingPayment", () => {
     }
   });
 
+  it("rejects INR capture amount when order is stored in INR (verify-route bug)", async () => {
+    const result = await fulfillPendingPayment({
+      razorpay_order_id: "order_1",
+      razorpay_payment_id: "pay_1",
+      amount: 299,
+      requireSignature: false,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBe("Payment amount mismatch");
+    }
+  });
+
   it("fulfills when amount matches pending order", async () => {
     const result = await fulfillPendingPayment({
       razorpay_order_id: "order_1",
@@ -99,7 +117,7 @@ describe("fulfillPendingPayment", () => {
         id: "pay-1",
         user_id: "user-1",
         status: "pending",
-        amount: 29900,
+        amount: 299,
         plan_name: "pro",
         plan_duration: "monthly",
         coupon_code: null,
@@ -108,7 +126,7 @@ describe("fulfillPendingPayment", () => {
         id: "pay-1",
         user_id: "user-1",
         status: "processing",
-        amount: 29900,
+        amount: 299,
         plan_name: "pro",
         plan_duration: "monthly",
         coupon_code: null,

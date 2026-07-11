@@ -30,7 +30,7 @@ export function WatermarkPageThumb({
         active ? "border-pd-brand ring-2 ring-pd-brand/20" : "border-transparent hover:border-pd-border"
       )}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      { }
       <img
         src={thumb}
         alt={`Page ${displayIndex}`}

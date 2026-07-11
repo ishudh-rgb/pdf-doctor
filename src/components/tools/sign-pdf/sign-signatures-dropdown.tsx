@@ -78,7 +78,7 @@ export function SignSignaturesDropdown({
                     }}
                     className="flex w-full items-center rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 hover:bg-[#f9fafb]"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    { }
                     <img src={sig.dataUrl} alt={sig.label} className="h-9 max-w-full object-contain" />
                   </button>
                 ))}
@@ -109,7 +109,7 @@ export function SignSignaturesDropdown({
                     }}
                     className="flex w-full items-center rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 hover:bg-[#f9fafb]"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    { }
                     <img src={sig.dataUrl} alt={sig.label} className="h-8 max-w-full object-contain" />
                   </button>
                 ))}

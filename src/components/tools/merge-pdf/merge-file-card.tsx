@@ -71,7 +71,7 @@ export function MergeFileCard({
           <MergeSelectionCheckbox selected={Boolean(selected)} onToggle={onSelect} />
         )}
 
-        {/* Thumbnail stack — Smallpdf multi-page files */}
+        {/* Thumbnail stack for multi-page files */}
         <div
           className={cn(
             "relative mx-auto flex justify-center",

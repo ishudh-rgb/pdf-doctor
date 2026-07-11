@@ -1,6 +1,6 @@
 import CFB from "cfb";
 import PPT from "ppt-to-text";
-import type { ParsedImage, ParsedSlide, ParsedTextBlock } from "@/lib/services/pptx-parse.service";
+import type { ParsedSlide, ParsedTextBlock } from "@/lib/services/pptx-parse.service";
 
 interface LegacyTextBox {
   t?: string;

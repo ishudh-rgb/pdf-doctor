@@ -83,7 +83,7 @@ export async function isDocxConversionAcceptable(
 }
 
 /**
- * Light post-process: left-align only. Images/tables preserved for Smallpdf parity.
+ * Light post-process: left-align only. Images/tables preserved for layout fidelity.
  */
 export async function postProcessDocx(buffer: Buffer): Promise<Buffer> {
   const zip = await JSZip.loadAsync(buffer);

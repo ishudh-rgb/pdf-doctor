@@ -1,6 +1,7 @@
 import { guardToolRateLimit } from "@/lib/server/rate-limiter";
 
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 
 import { getPdfToWordJob } from "@/lib/services/pdf-to-word-jobs.service";
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   if (!jobId) {
 
-    return NextResponse.json({ error: "jobId is required" }, { status: 400 });
+    return toolJsonError(request, "jobId is required", 400);
 
   }
 
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   if (!job) {
 
-    return NextResponse.json({ error: "Job not found or expired" }, { status: 404 });
+    return toolJsonError(request, "Job not found or expired", 404);
 
   }
 
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
 
   if (!assertJobOwner(job.ownerKey, ownerKey)) {
 
-    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    return toolJsonError(request, "Access denied", 403);
 
   }
 

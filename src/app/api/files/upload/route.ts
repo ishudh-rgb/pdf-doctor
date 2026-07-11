@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { uploadFile, validateFile } from "@/lib/services/upload.service";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { createUploadedFileRecord } from "@/lib/db/queries";
-import { getApiUser } from "@/lib/auth/get-api-user";
+import { tryGetApiUser } from "@/lib/auth/get-api-user";
 import { getGuestSessionIdFromRequest } from "@/lib/privacy/guest-session";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 import { generateSecureFilename } from "@/lib/utils/file";
@@ -11,7 +11,7 @@ import { validateBufferMagic } from "@/lib/utils/file-magic";
 import { FILE_LIMITS } from "@/config/constants";
 import { guardMaintenanceMode } from "@/lib/server/tool-request-guards";
 import { guardMutationOrigin } from "@/lib/server/mutation-origin";
-import { userBlockedResponse } from "@/lib/server/user-blocked-http";
+import { authGuardResponse } from "@/lib/server/auth-guard-http";
 import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
 
 export const maxDuration = 60;
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const originBlocked = guardMutationOrigin(request);
   if (originBlocked) return originBlocked;
 
-  const maintenance = await guardMaintenanceMode();
+  const maintenance = await guardMaintenanceMode(request);
   if (maintenance) return maintenance;
 
   const rateLimited = await guardToolRateLimit(request, "file-upload");
@@ -29,8 +29,12 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    const apiUser = await getApiUser();
-    userId = apiUser?.id ?? null;
+    const auth = await tryGetApiUser();
+    if (auth.ok) {
+      userId = auth.user.id;
+    } else if (auth.response.status !== 401) {
+      return auth.response;
+    }
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -95,7 +99,7 @@ export async function POST(request: NextRequest) {
       mimeType: file.type,
     });
   } catch (error) {
-    const blocked = userBlockedResponse(error);
+    const blocked = authGuardResponse(error);
     if (blocked) return blocked;
 
     const message = toSafeApiError(error, "Failed to upload file");

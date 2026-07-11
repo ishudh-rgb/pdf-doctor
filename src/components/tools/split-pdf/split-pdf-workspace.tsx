@@ -20,6 +20,7 @@ import {
   splitAfterFromEveryN,
 } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 import { PdfPasswordModal } from "@/components/tools/pdf-password-modal";
 import { ExtractToolbar } from "@/components/tools/split-pdf/extract-toolbar";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
@@ -43,6 +44,7 @@ interface SplitPdfWorkspaceProps {
 }
 
 export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorkspaceProps) {
+  const ws = useToolWorkspaceMessages();
   const [tab, setTab] = useState<WorkspaceTab>("split");
   const [separatePdfs, setSeparatePdfs] = useState(false);
   const [autoEvery, setAutoEvery] = useState(false);
@@ -151,13 +153,13 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
           return;
         }
         if (result.wrongPassword) {
-          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
           return;
         }
         if (result.totalPages === 0) {
-          setError(result.error ?? "Could not read this PDF. Try another file.");
+          setError(ws.resolveApiError(result.error, "errors.corruptedPdf") || ws.couldNotReadPdf);
         } else if (result.error) {
-          setError(result.error);
+          setError(ws.resolveApiError(result.error));
         } else {
           setError(null);
         }
@@ -167,13 +169,13 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         setThumbnails([]);
         setTotalPages(0);
         setError(
-          err instanceof Error ? err.message : "Could not read this PDF. Try another file."
+          err instanceof Error ? err.message : ws.couldNotReadPdf
         );
       })
       .finally(() => {
         if (requestId === loadRequestRef.current) setLoadingThumbs(false);
       });
-  }, [fileKey, file]);
+  }, [fileKey, file, ws]);
 
   const retryWithPassword = useCallback((pw: string) => {
     if (!passwordPrompt) return;
@@ -194,14 +196,14 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       }
     }, pw).then((result) => {
       if (result.wrongPassword) {
-        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
         return;
       }
       setPdfPassword(pw);
       setPasswordPrompt(null);
-      if (result.error) setError(result.error);
+      if (result.error) setError(ws.resolveApiError(result.error));
     });
-  }, [passwordPrompt]);
+  }, [passwordPrompt, ws]);
 
   useEffect(() => {
     if (manualSplits || tab !== "split" || splitVisibleSlots.length === 0) return;
@@ -248,7 +250,6 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
   };
 
   const removeSlot = (slotId: string) => {
-    const slot = pageSlots.find((s) => s.id === slotId);
     const visible = pageSlots.filter((s) => !hiddenSlotIds.has(s.id));
     const removedIndex = visible.findIndex((s) => s.id === slotId);
 
@@ -382,7 +383,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       const res = await fetch("/api/tools/pdf-session", { method: "POST", body: formData });
       const data = (await res.json()) as { sessionId?: string; totalPages?: number; error?: string };
       if (!res.ok || !data.sessionId || !data.totalPages) {
-        setError(data.error ?? "Could not add document.");
+        setError(ws.resolveApiError(data.error) || ws.couldNotAddDocument);
         return;
       }
 
@@ -411,7 +412,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         return next;
       });
     } catch {
-      setError("Could not add document.");
+      setError(ws.couldNotAddDocument);
     }
   };
 
@@ -452,7 +453,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         const res = await fetch("/api/tools/compose-pdf", { method: "POST", body: formData });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Failed to extract PDF. Please try again.");
+          throw new Error(data.error || ws.failedExtractPdf);
         }
 
         const contentType = res.headers.get("content-type") || "";
@@ -469,7 +470,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       const ranges = rangesFromSplitAfter(splitSlots.length, splitCutPositions);
 
       if (!isDefaultSplitLayout) {
-        if (splitSlots.length === 0) throw new Error("No pages left to export.");
+        if (splitSlots.length === 0) throw new Error(ws.noPagesLeftExport);
         const composeSlots = splitSlots.map((s) => ({
           kind: "original" as const,
           page: s.page,
@@ -480,7 +481,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
         const res = await fetch("/api/tools/compose-pdf", { method: "POST", body: formData });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Failed to split PDF. Please try again.");
+          throw new Error(data.error || ws.failedSplitPdf);
         }
         const contentType = res.headers.get("content-type") || "";
         const isZip = contentType.includes("application/zip");
@@ -495,7 +496,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       const includedPages = originalVisiblePages;
 
       if (hiddenSlotIds.size > 0) {
-        if (includedPages.length === 0) throw new Error("No pages left to export.");
+        if (includedPages.length === 0) throw new Error(ws.noPagesLeftExport);
         formData.append("mode", "extract");
         formData.append("pages", includedPages.join(","));
       } else if (ranges.length === 1 && ranges[0].start === 1 && ranges[0].end === totalPages) {
@@ -515,7 +516,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       const res = await fetch("/api/tools/split-pdf", { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to split PDF. Please try again.");
+        throw new Error(data.error || ws.failedSplitPdf);
       }
 
       const contentType = res.headers.get("content-type") || "";
@@ -526,7 +527,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      setError(err instanceof Error ? err.message : ws.unexpectedError);
     } finally {
       setProcessing(false);
     }
@@ -536,23 +537,23 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
     tab === "extract"
       ? separatePdfs
         ? `Finish (${selectedVisibleCount} PDFs)`
-        : "Finish"
+        : ws.finish
       : outputPdfCount > 1
         ? `Split (${outputPdfCount} PDFs)`
-        : "Split PDF";
+        : ws.splitPdf;
 
   if (completed && resultUrl) {
     return (
       <ToolWorkspaceReadyPanel
         description={
           resultFilename?.endsWith(".zip")
-            ? "Each part is in a ZIP file."
-            : "Your document is ready to download."
+            ? ws.zipPartsReady
+            : ws.documentReadyDownload
         }
         downloadUrl={resultUrl}
         downloadFilename={resultFilename || "split.pdf"}
         resultSizeBytes={resultSize}
-        resetLabel="Split another file"
+        resetLabel={ws.splitAnotherFile}
         onReset={() => {
           setCompleted(false);
           setResultUrl(null);
@@ -581,7 +582,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
       <ToolHiddenFileInput
         ref={insertFileRef}
         accept=".pdf,application/pdf"
-        ariaLabel="Insert PDF documents"
+        ariaLabel={ws.insertPdfDocuments}
         onChange={handleInsertDocuments}
       />
 
@@ -665,7 +666,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
                     setEveryN((n) => Math.max(1, n - 1));
                   }}
                   className="px-2 py-1 text-pd-muted hover:text-pd-foreground"
-                  aria-label="Decrease"
+                  aria-label={ws.decrease}
                 >
                   <Minus className="h-3.5 w-3.5" />
                 </button>
@@ -677,7 +678,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
                     setEveryN((n) => Math.min(totalPages || 1, n + 1));
                   }}
                   className="px-2 py-1 text-pd-muted hover:text-pd-foreground"
-                  aria-label="Increase"
+                  aria-label={ws.increase}
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
@@ -759,7 +760,7 @@ export function SplitPdfWorkspace({ file, onChangeFile, onReset }: SplitPdfWorks
             type="button"
             onClick={onChangeFile}
             className="shrink-0 text-pd-muted hover:text-pd-foreground sm:hidden"
-            aria-label="Change file"
+            aria-label={ws.changeFile}
           >
             <X className="h-4 w-4" />
           </button>

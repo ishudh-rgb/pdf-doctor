@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getUserProfile } from "@/lib/db/queries";
+import { tryGetApiUser } from "@/lib/auth/get-api-user";
 import {
   getLocalDevSessionUser,
   isLocalDevAuthEnabled,
 } from "@/lib/auth/local-dev-auth";
+import { getUserProfile } from "@/lib/db/queries";
 import { guardGeneralApiRateLimit } from "@/lib/server/rate-limiter";
 
 export async function GET(request: NextRequest) {
@@ -29,28 +29,22 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
+    const auth = await tryGetApiUser({ skipMfaAssurance: true });
+    if (!auth.ok) return auth.response;
 
     let profile = null;
     try {
-      profile = await getUserProfile(user.id);
+      profile = await getUserProfile(auth.user.id);
     } catch {
       // Profile may not exist yet for new users
     }
 
     return NextResponse.json({
       user: {
-        id: user.id,
-        email: user.email,
+        id: auth.user.id,
+        email: auth.user.email,
         role: profile?.role ?? "user",
-        plan: profile?.plan ?? "free",
+        plan: profile?.plan ?? auth.user.plan,
         full_name: profile?.full_name ?? null,
       },
     });

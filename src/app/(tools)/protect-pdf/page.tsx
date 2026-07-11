@@ -165,7 +165,7 @@ export default function ProtectPdfPage() {
         <>
           <ToolDropzone
             hint="or drop files here"
-            subHint="Select a PDF to protect with a password"
+            formatNote="PDF only"
             dragOver={dragOver}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}

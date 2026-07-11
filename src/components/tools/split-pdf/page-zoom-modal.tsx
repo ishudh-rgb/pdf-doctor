@@ -159,7 +159,7 @@ export function PageZoomModal({
               )}
             </div>
           ) : (
-            <div className="flex h-[70vh] w-[50vw] max-w-2xl items-center justify-center rounded-lg bg-white text-gray-400 shadow-2xl">
+            <div className="flex h-[70vh] w-[50vw] max-w-2xl items-center justify-center rounded-lg bg-white text-pd-muted shadow-2xl">
               Preview not available
             </div>
           )}

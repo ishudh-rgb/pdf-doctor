@@ -9,6 +9,12 @@ import {
   getLocalDevTotalProcessed,
   isLocalDevActivityEnabled,
 } from "@/lib/auth/local-dev-activity";
+import { buildSessionPayload, buildSessionPayloadForUser } from "@/lib/auth/session-payload";
+import {
+  createMfaLoginChallenge,
+  MfaAssuranceUnavailableError,
+  resolveMfaAssurance,
+} from "@/lib/auth/mfa-assurance";
 
 /** Session bootstrap — higher limit than general API (header auth sync). */
 async function guardSessionRateLimit(request: NextRequest): Promise<Response | null> {
@@ -40,23 +46,26 @@ export async function GET(request: NextRequest) {
           ])
         : [0, 0];
 
-      return NextResponse.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at,
-        },
-        profile: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          role: user.role,
-          plan: user.plan,
-          plan_expires_at: null,
-          total_files_processed: totalProcessed,
-          ai_credits_used: aiUsedToday,
-        },
-      });
+      return NextResponse.json(
+        buildSessionPayload(
+          {
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+          },
+          {
+            id: user.id,
+            email: user.email,
+            full_name: user.full_name,
+            role: user.role,
+            plan: user.plan,
+            plan_expires_at: null,
+            total_files_processed: totalProcessed,
+            ai_credits_used: aiUsedToday,
+            is_blocked: false,
+          }
+        )
+      );
     }
 
     const supabase = await createClient();
@@ -80,15 +89,47 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
     }
 
-    return NextResponse.json({
-      user: {
+    const assurance = await resolveMfaAssurance(supabase);
+    const mfaChallenge = assurance.requiresMfaVerification
+      ? await createMfaLoginChallenge(supabase)
+      : null;
+
+    const payload = await buildSessionPayloadForUser(
+      {
         id: user.id,
-        email: user.email,
+        email: user.email ?? "",
         created_at: user.created_at,
       },
-      profile: profile || null,
+      profile as Parameters<typeof buildSessionPayload>[1]
+    );
+
+    if (assurance.requiresMfaVerification) {
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          email: user.email ?? "",
+          created_at: user.created_at,
+        },
+        profile: null,
+        accountStatus: "active" as const,
+        effectivePlan: "free" as const,
+        requiresMfa: true,
+        ...(mfaChallenge ? { mfaChallenge } : {}),
+      });
+    }
+
+    return NextResponse.json({
+      ...payload,
+      requiresMfa: false,
+      ...(mfaChallenge ? { mfaChallenge } : {}),
     });
   } catch (err) {
+    if (err instanceof MfaAssuranceUnavailableError) {
+      return NextResponse.json(
+        { error: err.message, code: "MFA_ASSURANCE_UNAVAILABLE" },
+        { status: 503 }
+      );
+    }
     console.error("Session error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

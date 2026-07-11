@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Check,
   Download,
   Loader2,
   RotateCcw,
@@ -10,9 +9,9 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
 import { formatFileSize } from "@/lib/utils/file";
 import { Button } from "@/components/ui/button";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 import { loadPdfThumbnailsBatched } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PageInsertDivider } from "@/components/tools/split-pdf/page-insert-divider";
@@ -36,6 +35,8 @@ interface RotatePdfWorkspaceProps {
 }
 
 export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWorkspaceProps) {
+  void onChangeFile;
+  const ws = useToolWorkspaceMessages();
   const [pageSlots, setPageSlots] = useState<WorkspacePageSlot[]>([]);
   const [selectedSlotIds, setSelectedSlotIds] = useState<Set<string>>(() => new Set());
   const [hiddenSlotIds, setHiddenSlotIds] = useState<Set<string>>(() => new Set());
@@ -110,13 +111,13 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
           return;
         }
         if (result.wrongPassword) {
-          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+          setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
           return;
         }
         if (result.totalPages === 0) {
-          setError(result.error ?? "Could not read this PDF. Try another file.");
+          setError(ws.resolveApiError(result.error, "errors.corruptedPdf") || ws.couldNotReadPdf);
         } else if (result.error) {
-          setError(result.error);
+          setError(ws.resolveApiError(result.error));
         } else {
           setError(null);
         }
@@ -126,13 +127,13 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
         setThumbnails([]);
         setTotalPages(0);
         setError(
-          err instanceof Error ? err.message : "Could not read this PDF. Try another file."
+          err instanceof Error ? err.message : ws.couldNotReadPdf
         );
       })
       .finally(() => {
         if (requestId === loadRequestRef.current) setLoadingThumbs(false);
       });
-  }, [fileKey, file]);
+  }, [fileKey, file, ws]);
 
   const retryWithPassword = useCallback((pw: string) => {
     if (!passwordPrompt) return;
@@ -150,13 +151,13 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
       }
     }, pw).then((result) => {
       if (result.wrongPassword) {
-        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? "Incorrect password.", loading: false } : prev);
+        setPasswordPrompt((prev) => prev ? { ...prev, errorMsg: result.error ?? ws.incorrectPassword, loading: false } : prev);
         return;
       }
       setPasswordPrompt(null);
-      if (result.error) setError(result.error);
+      if (result.error) setError(ws.resolveApiError(result.error));
     });
-  }, [passwordPrompt]);
+  }, [passwordPrompt, ws]);
 
   const rotateSlot = useCallback((slotId: string, delta: number) => {
     setRotations((prev) => ({
@@ -264,7 +265,7 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
       const res = await fetch("/api/tools/pdf-session", { method: "POST", body: formData });
       const data = (await res.json()) as { sessionId?: string; totalPages?: number; error?: string };
       if (!res.ok || !data.sessionId || !data.totalPages) {
-        setError(data.error ?? "Could not add document.");
+        setError(ws.resolveApiError(data.error) || ws.couldNotAddDocument);
         return;
       }
 
@@ -293,7 +294,7 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
         return next;
       });
     } catch {
-      setError("Could not add document.");
+      setError(ws.couldNotAddDocument);
     }
   };
 
@@ -328,7 +329,7 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
           const res = await fetch("/api/tools/rotate-pdf", { method: "POST", body: formData });
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            throw new Error(data.error || "Failed to rotate PDF. Please try again.");
+            throw new Error(data.error || ws.failedRotatePdf);
           }
           return res.blob();
         },
@@ -338,7 +339,7 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
       setResultSize(blob.size);
       setCompleted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      setError(err instanceof Error ? err.message : ws.unexpectedError);
     } finally {
       setProcessing(false);
     }
@@ -347,11 +348,11 @@ export function RotatePdfWorkspace({ file, onChangeFile, onReset }: RotatePdfWor
   if (completed && resultUrl) {
     return (
       <ToolWorkspaceReadyPanel
-        description="Your rotated document is ready to download."
+        description={ws.rotatedDocumentReady}
         downloadUrl={resultUrl}
         downloadFilename={`rotated-${file.name}`}
         resultSizeBytes={resultSize}
-        resetLabel="Rotate another file"
+        resetLabel={ws.rotateAnotherFile}
         onReset={() => {
           setCompleted(false);
           setResultUrl(null);

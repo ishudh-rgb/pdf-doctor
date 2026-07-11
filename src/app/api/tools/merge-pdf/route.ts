@@ -1,12 +1,13 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { mergePDFs } from "@/lib/services/pdf-merge.service";
 import { resolvePdfBuffer } from "@/lib/pdf/pdf-password.server";
 import { checkUsageLimit } from "@/lib/services/usage-limit.service";
 import { resolveToolUserContext } from "@/lib/services/user-tool-context.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 import { getGuestUsageKey } from "@/lib/server/client-ip";
 
@@ -20,11 +21,13 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const usageResult = await checkUsageLimit(userId, request, "merge-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const userContext = await resolveToolUserContext(userId);
@@ -38,31 +41,23 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll("files") as File[];
 
     if (!files || files.length < 2) {
-      return NextResponse.json(
-        { error: "At least 2 PDF files are required" },
-        { status: 400 }
-      );
+      return toolJsonError(request, "At least 2 PDF files are required", 400);
     }
 
     if (files.length > maxFiles) {
-      return NextResponse.json(
-        { error: `Maximum ${maxFiles} files allowed` },
-        { status: 400 }
-      );
+      return toolJsonError(request, `Maximum ${maxFiles} files allowed`, 400);
     }
 
+    const rawBuffers: Buffer[] = [];
     for (const file of files) {
-      if (!isValidFileType(file, ["pdf"])) {
-        return NextResponse.json(
-          { error: `Invalid file type: ${file.name}. Only PDF files are accepted.` },
-          { status: 400 }
-        );
+      const validated = await validateSingleUpload(file, ["pdf"], maxSizeMB);
+      if (!validated.ok) {
+        if (validated.error === "Invalid file type.") {
+          return toolJsonError(request, `Invalid file type: ${file.name}. Only PDF files are accepted.`, 400);
+        }
+        return uploadValidationResponse(request, validated);
       }
-
-      const sizeCheck = validateFileSize(file, maxSizeMB);
-      if (!sizeCheck.valid) {
-        return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-      }
+      rawBuffers.push(validated.buffer);
     }
 
     let passwords: Array<string | null> = [];
@@ -82,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     const buffers = await Promise.all(
       files.map(async (file, index) => {
-        const raw = Buffer.from(await file.arrayBuffer());
+        const raw = rawBuffers[index];
         const password = passwords[index] ?? null;
         try {
           return await resolvePdfBuffer(raw, password);
@@ -128,7 +123,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "merge-pdf",
       userId,
       errorType: "MERGE_ERROR",

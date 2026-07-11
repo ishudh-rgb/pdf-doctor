@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { hasApiKeyHeader } from "@/lib/auth/api-key-auth";
 
 function allowedHosts(): Set<string> {
   const hosts = new Set<string>(["localhost", "127.0.0.1"]);
@@ -55,4 +56,10 @@ export function guardMutationOrigin(request: NextRequest): Response | null {
     return mutationOriginDeniedResponse();
   }
   return null;
+}
+
+/** CSRF for browser sessions; skipped when a valid API key header is present. */
+export function guardToolMutationOrigin(request: NextRequest): Response | null {
+  if (hasApiKeyHeader(request)) return null;
+  return guardMutationOrigin(request);
 }

@@ -3,31 +3,43 @@ import {
   isMaintenanceModeEnabled,
   MAINTENANCE_MESSAGE,
 } from "@/lib/server/maintenance-mode";
-import { guardToolRateLimit } from "@/lib/server/rate-limiter";
+import { guardToolRateLimit, guardApiKeyRateLimit } from "@/lib/server/rate-limiter";
+import { guardToolMutationOrigin } from "@/lib/server/mutation-origin";
 import { heavyJobCapacityResponse } from "@/lib/server/heavy-job-http";
-import { userBlockedResponse } from "@/lib/server/user-blocked-http";
+import { authGuardResponse } from "@/lib/server/auth-guard-http";
 import { toSafeApiError, captureApiError } from "@/lib/server/safe-error";
 import { logError } from "@/lib/db/queries";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 
-export async function guardMaintenanceMode(): Promise<NextResponse | null> {
+export async function guardMaintenanceMode(request: NextRequest): Promise<NextResponse | null> {
   if (await isMaintenanceModeEnabled()) {
-    return NextResponse.json({ error: MAINTENANCE_MESSAGE }, { status: 503 });
+    return toolJsonError(request, MAINTENANCE_MESSAGE, 503);
   }
   return null;
 }
 
-/** Maintenance + per-tool rate limit — call at the start of custom tool routes. */
+/** Maintenance + CSRF + per-tool rate limit — call at the start of custom tool routes. */
 export async function beginToolRoute(
   request: NextRequest,
   toolSlug: string
-): Promise<NextResponse | null> {
-  const maintenance = await guardMaintenanceMode();
+): Promise<Response | null> {
+  const originBlocked = guardToolMutationOrigin(request);
+  if (originBlocked) {
+    return toolJsonError(request, "Invalid request origin", 403);
+  }
+
+  const maintenance = await guardMaintenanceMode(request);
   if (maintenance) return maintenance;
+
+  const apiKeyRate = await guardApiKeyRateLimit(request, toolSlug);
+  if (apiKeyRate) return apiKeyRate;
+
   const rate = await guardToolRateLimit(request, toolSlug);
-  return rate as NextResponse | null;
+  return rate;
 }
 
 export type ToolRouteErrorContext = {
+  request: NextRequest;
   toolSlug: string;
   userId?: string | null;
   errorType?: string;
@@ -39,7 +51,7 @@ export async function handleToolRouteFailure(
   error: unknown,
   ctx: ToolRouteErrorContext
 ): Promise<NextResponse> {
-  const blocked = userBlockedResponse(error);
+  const blocked = authGuardResponse(error);
   if (blocked) return blocked;
 
   const capacity = heavyJobCapacityResponse(error);
@@ -47,7 +59,7 @@ export async function handleToolRouteFailure(
 
   const rawMessage = error instanceof Error ? error.message : "";
   if (rawMessage.includes("usage limit") || rawMessage.includes("limit reached")) {
-    return NextResponse.json({ error: rawMessage }, { status: 429 });
+    return toolJsonError(ctx.request, rawMessage, 429);
   }
 
   const message = toSafeApiError(error, ctx.fallbackMessage ?? "Processing failed");
@@ -62,5 +74,5 @@ export async function handleToolRouteFailure(
 
   captureApiError(error, { route: `tools/${ctx.toolSlug}`, user_id: ctx.userId });
 
-  return NextResponse.json({ error: message }, { status: 500 });
+  return toolJsonError(ctx.request, message, 500);
 }

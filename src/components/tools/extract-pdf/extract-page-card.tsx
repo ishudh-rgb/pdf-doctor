@@ -67,7 +67,7 @@ export const ExtractPageCard = memo(function ExtractPageCard({
             : "bg-transparent hover:bg-gray-50"
         )}
       >
-        {/* Checkbox — Smallpdf-style blue filled */}
+        {/* Checkbox — blue filled when selected */}
         <div className="absolute left-3 top-3 z-20">
           <label className="flex cursor-pointer">
             <input
@@ -155,7 +155,7 @@ export const ExtractPageCard = memo(function ExtractPageCard({
             ) : loadingThumb ? (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-b from-gray-50 to-gray-100" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 text-xs text-gray-400">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 text-xs text-pd-muted">
                 …
               </div>
             )}
@@ -177,7 +177,7 @@ export const ExtractPageCard = memo(function ExtractPageCard({
             "mx-auto mt-2 max-w-full truncate rounded-full px-2.5 py-0.5 text-center text-[10px] font-medium transition-colors",
             selected
               ? "bg-blue-100 text-blue-800"
-              : "bg-gray-100 text-gray-500"
+              : "bg-gray-100 text-pd-muted"
           )}
           title={fileName}
         >
@@ -185,7 +185,7 @@ export const ExtractPageCard = memo(function ExtractPageCard({
         </p>
         <p className={cn(
           "mt-0.5 text-center text-xs font-semibold transition-colors",
-          selected ? "text-blue-700" : "text-gray-400"
+          selected ? "text-blue-700" : "text-pd-muted"
         )}>
           {pageNum}
         </p>

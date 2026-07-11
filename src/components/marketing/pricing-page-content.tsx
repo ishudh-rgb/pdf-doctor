@@ -14,6 +14,8 @@ import {
   CreditCard,
   Users,
   Sparkles,
+  Building2,
+  KeyRound,
   Headphones,
   BadgeCheck,
   ArrowRight,
@@ -26,9 +28,10 @@ import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n";
 import { useAuthContext } from "@/components/providers/auth-provider";
-import { PRO_PRICING, planFileSizeMarketingLabel } from "@/config/constants";
+import { PRO_PRICING, planFileSizeMarketingLabel, FILE_LIMITS } from "@/config/constants";
 import { useProCheckout } from "@/hooks/use-pro-checkout";
 import { FREE_FEATURES, PRO_FEATURES } from "@/components/marketing/home/home-shared";
+import { MockBillingNotice } from "@/components/billing/mock-billing-notice";
 
 const PRO_MONTHLY = PRO_PRICING.monthlyInr;
 const PRO_YEARLY = PRO_PRICING.yearlyInr;
@@ -39,23 +42,27 @@ interface CompareRow {
   labelKey: string;
   free: CompareValue;
   pro: CompareValue;
+  business: CompareValue;
   freeTextKey?: string;
   proTextKey?: string;
+  businessTextKey?: string;
 }
 
 const COMPARE_ROWS: CompareRow[] = [
-  { labelKey: "dailyUses", free: "text", pro: "text", freeTextKey: "dailyUsesFree", proTextKey: "dailyUsesPro" },
-  { labelKey: "fileSize", free: "text", pro: "text", freeTextKey: "fileSizeFree", proTextKey: "fileSizePro" },
-  { labelKey: "basicTools", free: "yes", pro: "yes" },
-  { labelKey: "convertTools", free: "yes", pro: "yes" },
-  { labelKey: "signPdf", free: "no", pro: "yes" },
-  { labelKey: "aiSummarizer", free: "no", pro: "yes" },
-  { labelKey: "batchProcessing", free: "no", pro: "yes" },
-  { labelKey: "processingSpeed", free: "text", pro: "text", freeTextKey: "speedStandard", proTextKey: "speedPriority" },
-  { labelKey: "fileRetention", free: "text", pro: "text", freeTextKey: "retention2h", proTextKey: "retention24h" },
-  { labelKey: "dashboardHistory", free: "yes", pro: "yes" },
-  { labelKey: "ads", free: "text", pro: "text", freeTextKey: "adsYes", proTextKey: "adsNo" },
-  { labelKey: "support", free: "text", pro: "text", freeTextKey: "supportCommunity", proTextKey: "supportPriority" },
+  { labelKey: "dailyUses", free: "text", pro: "text", business: "text", freeTextKey: "dailyUsesFree", proTextKey: "dailyUsesPro", businessTextKey: "dailyUsesBusiness" },
+  { labelKey: "fileSize", free: "text", pro: "text", business: "text", freeTextKey: "fileSizeFree", proTextKey: "fileSizePro", businessTextKey: "fileSizeBusiness" },
+  { labelKey: "basicTools", free: "yes", pro: "yes", business: "yes" },
+  { labelKey: "convertTools", free: "yes", pro: "yes", business: "yes" },
+  { labelKey: "signPdf", free: "no", pro: "yes", business: "yes" },
+  { labelKey: "aiSummarizer", free: "no", pro: "yes", business: "yes" },
+  { labelKey: "batchProcessing", free: "no", pro: "yes", business: "yes" },
+  { labelKey: "teamSeats", free: "no", pro: "no", business: "text", businessTextKey: "teamSeatsBusiness" },
+  { labelKey: "apiAccess", free: "no", pro: "no", business: "yes" },
+  { labelKey: "processingSpeed", free: "text", pro: "text", business: "text", freeTextKey: "speedStandard", proTextKey: "speedPriority", businessTextKey: "speedDedicated" },
+  { labelKey: "fileRetention", free: "text", pro: "text", business: "text", freeTextKey: "retention2h", proTextKey: "retention24h", businessTextKey: "retentionBusiness" },
+  { labelKey: "dashboardHistory", free: "yes", pro: "yes", business: "yes" },
+  { labelKey: "ads", free: "text", pro: "text", business: "text", freeTextKey: "adsYes", proTextKey: "adsNo", businessTextKey: "adsNo" },
+  { labelKey: "support", free: "text", pro: "text", business: "text", freeTextKey: "supportCommunity", proTextKey: "supportPriority", businessTextKey: "supportDedicated" },
 ];
 
 const FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"] as const;
@@ -92,7 +99,7 @@ function CompareCell({
   if (value === "no") {
     return (
       <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100">
-        <X className="h-4 w-4 text-slate-400" aria-hidden />
+        <X className="h-4 w-4 text-slate-600" aria-hidden />
       </span>
     );
   }
@@ -125,12 +132,14 @@ function PlanFeatureList({
   variant,
 }: {
   items: string[];
-  variant: "free" | "pro";
+  variant: "free" | "pro" | "business";
 }) {
   const checkClass =
     variant === "free"
       ? "bg-emerald-100 text-emerald-700"
-      : "bg-blue-100 text-blue-700";
+      : variant === "pro"
+        ? "bg-blue-100 text-blue-700"
+        : "bg-violet-100 text-violet-700";
 
   return (
     <ul className="w-full space-y-2.5">
@@ -156,7 +165,7 @@ function PlanCardShell({
   children,
   footer,
 }: {
-  variant: "free" | "pro";
+  variant: "free" | "pro" | "business";
   children: ReactNode;
   footer: ReactNode;
 }) {
@@ -167,14 +176,17 @@ function PlanCardShell({
         variant === "free" &&
           "border-slate-200/90 shadow-sm hover:border-emerald-200/80 hover:shadow-md",
         variant === "pro" &&
-          "border-pd-brand/40 shadow-lg shadow-blue-500/10 ring-1 ring-pd-brand/15 hover:shadow-xl hover:shadow-blue-500/15"
+          "border-pd-brand/40 shadow-lg shadow-blue-500/10 ring-1 ring-pd-brand/15 hover:shadow-xl hover:shadow-blue-500/15",
+        variant === "business" &&
+          "border-slate-300/90 shadow-md hover:border-violet-200/80 hover:shadow-lg"
       )}
     >
       <div
         className={cn(
           "absolute inset-0 rounded-2xl",
           variant === "free" && "bg-gradient-to-br from-emerald-50/40 via-white to-slate-50/30",
-          variant === "pro" && "bg-gradient-to-br from-blue-50/70 via-indigo-50/25 to-white"
+          variant === "pro" && "bg-gradient-to-br from-blue-50/70 via-indigo-50/25 to-white",
+          variant === "business" && "bg-gradient-to-br from-slate-50/80 via-violet-50/20 to-white"
         )}
         aria-hidden
       />
@@ -251,6 +263,8 @@ export function PricingPageContent() {
             {t("pricing.page.heroDesc")}
           </p>
 
+          <MockBillingNotice className="mx-auto mt-6 max-w-xl text-left" />
+
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {TRUST_PILLS.map(({ icon: Icon, key }) => (
               <span
@@ -286,7 +300,7 @@ export function PricingPageContent() {
         </div>
       </section>
 
-      <div className="pd-container max-w-5xl pb-16 pt-8">
+      <div className="pd-container max-w-6xl pb-16 pt-8">
         {/* Billing toggle */}
         <div className="flex justify-center">
           <div className="inline-flex items-center rounded-full border border-pd-border bg-white/90 p-1 shadow-sm backdrop-blur-sm">
@@ -331,8 +345,8 @@ export function PricingPageContent() {
           </p>
         )}
 
-        {/* Pricing cards */}
-        <div className="mx-auto mt-8 grid max-w-lg gap-5 sm:max-w-2xl sm:grid-cols-2 lg:max-w-3xl lg:gap-5">
+        {/* Pricing cards — Free · Pro · Business */}
+        <div className="mx-auto mt-8 grid max-w-lg gap-5 sm:max-w-none sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
           <PlanCardShell
             variant="free"
             footer={
@@ -452,6 +466,70 @@ export function PricingPageContent() {
               variant="pro"
             />
           </PlanCardShell>
+
+          <PlanCardShell
+            variant="business"
+            footer={
+              <Link href="/contact?subject=business" className="block">
+                <Button
+                  variant="outline"
+                  className="h-11 w-full rounded-xl border-2 border-violet-300 bg-white text-sm font-bold text-violet-800 transition-all hover:border-violet-400 hover:bg-violet-50"
+                >
+                  {t("pricing.page.businessCta")}
+                </Button>
+              </Link>
+            }
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-slate-700 shadow-md shadow-violet-200/40">
+                  <Building2 className="h-5 w-5 text-white" aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-bold text-pd-foreground">{t("pricing.page.businessName")}</h2>
+                    <Crown className="h-4 w-4 text-amber-500" aria-hidden />
+                  </div>
+                  <p className="text-sm font-medium text-slate-600">{t("pricing.page.businessTagline")}</p>
+                </div>
+              </div>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
+                <Users className="h-3.5 w-3.5" aria-hidden />
+                20+
+              </span>
+            </div>
+
+            <div className="mt-3">
+              <span className="text-4xl font-extrabold tracking-tight text-pd-foreground">
+                {t("pricing.page.businessPrice")}
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-medium text-slate-600">{t("pricing.page.businessPriceDesc")}</p>
+
+            <div className="my-3 h-px bg-slate-200/80" />
+
+            <p className="mb-2 text-sm font-bold text-pd-foreground">{t("pricing.page.businessIncludes")}</p>
+            <PlanFeatureList
+              items={[
+                t("pricing.page.businessFeature1"),
+                t("pricing.page.businessFeature2"),
+                t("pricing.page.businessFeature3"),
+              ]}
+              variant="business"
+            />
+
+            <div className="mt-3 rounded-xl border border-violet-200/80 bg-violet-50/60 px-3 py-3">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-violet-700" aria-hidden />
+                <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                  {t("pricing.page.businessHighlightBadge")}
+                </span>
+              </div>
+              <p className="mt-2 text-sm font-medium leading-snug text-violet-950">
+                {t("pricing.page.businessHighlightDesc")}
+              </p>
+            </div>
+          </PlanCardShell>
         </div>
 
         {/* Comparison table */}
@@ -465,7 +543,7 @@ export function PricingPageContent() {
 
           <div className="mt-8 overflow-hidden rounded-3xl border border-pd-border/80 bg-white/90 shadow-sm backdrop-blur-sm">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[540px] border-collapse text-left">
+              <table className="w-full min-w-[720px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-pd-border bg-slate-50/80">
                     <th className="px-5 py-4 text-sm font-bold text-pd-foreground sm:px-6">
@@ -476,6 +554,9 @@ export function PricingPageContent() {
                     </th>
                     <th className="px-4 py-4 text-center text-sm font-bold text-pd-brand">
                       {t("pricing.page.proName")}
+                    </th>
+                    <th className="px-4 py-4 text-center text-sm font-bold text-violet-700">
+                      {t("pricing.page.businessName")}
                     </th>
                   </tr>
                 </thead>
@@ -512,6 +593,16 @@ export function PricingPageContent() {
                               : row.proTextKey
                                 ? t(`pricing.page.compare.${row.proTextKey}`)
                                 : undefined
+                          }
+                        />
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <CompareCell
+                          value={row.business}
+                          text={
+                            row.businessTextKey
+                              ? t(`pricing.page.compare.${row.businessTextKey}`)
+                              : undefined
                           }
                         />
                       </td>
@@ -572,7 +663,14 @@ export function PricingPageContent() {
               <FaqItem
                 key={key}
                 question={t(`pricing.page.faq.${key}`)}
-                answer={t(`pricing.page.faq.a${key.slice(1)}`)}
+                answer={
+                  key === "q1"
+                    ? t("pricing.page.faq.a1", {
+                        freeSize: FILE_LIMITS.maxFreeFileSizeMB,
+                        proSize: FILE_LIMITS.maxProFileSizeMB,
+                      })
+                    : t(`pricing.page.faq.a${key.slice(1)}`)
+                }
               />
             ))}
           </div>

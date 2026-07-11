@@ -44,7 +44,7 @@ function redisKey(sessionId: string): string {
   return `${REDIS_PREFIX}${sessionId}`;
 }
 
-function useDistributedStore(): boolean {
+function isDistributedStoreEnabled(): boolean {
   return isUpstashConfigured() && isSupabaseConfigured();
 }
 
@@ -174,7 +174,7 @@ export async function createPdfSession(buffer: Buffer, ownerHash?: string): Prom
   const filePath = path.join(os.tmpdir(), `pdf-doctor-session-${id}.pdf`);
   await fs.writeFile(filePath, buffer);
 
-  const storagePath = useDistributedStore() ? await uploadSessionPdf(id, buffer) : null;
+  const storagePath = isDistributedStoreEnabled() ? await uploadSessionPdf(id, buffer) : null;
 
   const session: PdfSession = {
     filePath,
@@ -185,7 +185,7 @@ export async function createPdfSession(buffer: Buffer, ownerHash?: string): Prom
   };
   sessions.set(id, session);
 
-  if (useDistributedStore()) {
+  if (isDistributedStoreEnabled()) {
     await writeStoredSession(id, {
       ownerHash: ownerHash ?? "",
       expiresAt,
@@ -223,7 +223,7 @@ export async function getPdfSessionBuffer(id: string, ownerHash?: string): Promi
 }
 
 async function persistThumbCache(sessionId: string, session: PdfSession) {
-  if (!useDistributedStore()) return;
+  if (!isDistributedStoreEnabled()) return;
   await writeStoredSession(sessionId, {
     ownerHash: session.ownerHash,
     expiresAt: session.expires,

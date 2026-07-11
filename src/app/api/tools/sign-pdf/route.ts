@@ -1,10 +1,11 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { addSignatureToPDF, applySignAnnotations, type SignAnnotationInput } from "@/lib/services/pdf-sign.service";
 import { checkFileSizeLimit, requireProPlan } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -18,14 +19,13 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const proResult = await requireProPlan(userId);
     if (!proResult.allowed) {
-      return NextResponse.json(
-        { error: proResult.message ?? "Pro subscription required.", code: "PRO_REQUIRED" },
-        { status: 403 }
-      );
+      return toolJsonError(request, proResult.message ?? "Pro subscription required.", 403);
     }
 
     const sizeResult = userId
@@ -41,22 +41,18 @@ export async function POST(request: NextRequest) {
     const imageFiles = formData.getAll("images") as File[];
 
     if (!file) {
-      return NextResponse.json({ error: "PDF file is required" }, { status: 400 });
+      return toolJsonError(request, "PDF file is required", 400);
     }
 
-    if (!isValidFileType(file, ["pdf"])) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only PDF files are accepted." },
-        { status: 400 }
-      );
+    const validated = await validateSingleUpload(file, ["pdf"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only PDF files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const pdfBuffer = Buffer.from(await file.arrayBuffer());
+    const pdfBuffer = validated.buffer;
     let signedPdf: Buffer;
 
     if (annotationsJson) {
@@ -64,11 +60,11 @@ export async function POST(request: NextRequest) {
       try {
         annotations = JSON.parse(annotationsJson);
       } catch {
-        return NextResponse.json({ error: "Invalid annotations JSON" }, { status: 400 });
+        return toolJsonError(request, "Invalid annotations JSON", 400);
       }
 
       if (!Array.isArray(annotations) || annotations.length === 0) {
-        return NextResponse.json({ error: "At least one annotation is required" }, { status: 400 });
+        return toolJsonError(request, "At least one annotation is required", 400);
       }
 
       const imageBuffers: Buffer[] = [];
@@ -81,13 +77,14 @@ export async function POST(request: NextRequest) {
       signedPdf = await applySignAnnotations(pdfBuffer, annotations, imageBuffers);
     } else {
       if (!signature) {
-        return NextResponse.json({ error: "Signature image is required" }, { status: 400 });
+        return toolJsonError(request, "Signature image is required", 400);
       }
 
       if (!positionJson) {
-        return NextResponse.json(
-          { error: "Position data is required (JSON with x, y, width, height, page)" },
-          { status: 400 }
+        return toolJsonError(
+          request,
+          "Position data is required (JSON with x, y, width, height, page).",
+          400
         );
       }
 
@@ -95,7 +92,7 @@ export async function POST(request: NextRequest) {
       try {
         position = JSON.parse(positionJson);
       } catch {
-        return NextResponse.json({ error: "Invalid position JSON" }, { status: 400 });
+        return toolJsonError(request, "Invalid position JSON", 400);
       }
 
       if (
@@ -105,9 +102,10 @@ export async function POST(request: NextRequest) {
         typeof position.height !== "number" ||
         typeof position.page !== "number"
       ) {
-        return NextResponse.json(
-          { error: "Position must include numeric x, y, width, height, and page" },
-          { status: 400 }
+        return toolJsonError(
+          request,
+          "Position must include numeric x, y, width, height, and page.",
+          400
         );
       }
 
@@ -147,7 +145,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "sign-pdf",
       userId,
       errorType: "SIGN_ERROR",

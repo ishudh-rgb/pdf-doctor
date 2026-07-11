@@ -14,7 +14,7 @@ const RELATED_TOOLS = [
 ];
 
 const FAQS = [
-  { q: 'Is there a limit to how many PDFs I can merge?', a: 'You can merge up to 20 PDF files at once (50 for Pro). There is no file size limit per file.' },
+  { q: 'Is there a limit to how many PDFs I can merge?', a: 'You can merge up to 20 PDF files at once (50 for Pro). File size limits follow your plan — see Pricing for current limits.' },
   { q: 'Will the merged PDF keep the original formatting?', a: 'Yes, merging preserves all formatting, images, links, and bookmarks from the original documents.' },
   { q: 'Can I reorder the files before merging?', a: 'Yes! Drag files in the grid or use the + buttons to add documents in the order you want.' },
   { q: 'Is my data secure?', a: 'All uploaded files are processed securely and automatically deleted from our servers after processing.' },
@@ -60,7 +60,7 @@ export default function MergePdfPage() {
         <div className="mx-auto max-w-xl">
           <ToolDropzone
             hint="or drop files here"
-            subHint="Select multiple PDF files to merge"
+            formatNote="Select multiple PDF files to merge"
             dragOver={dragOver}
             onDragOver={(e) => {
               e.preventDefault();
@@ -77,7 +77,7 @@ export default function MergePdfPage() {
           
           {uploadError && <ToolErrorBanner message={uploadError} />}
           <p className="mt-4 text-center text-xs text-pd-muted">
-            After upload you&apos;ll see a file grid with thumbnails — like Smallpdf Merge.
+            After upload you&apos;ll see a file grid with page thumbnails — drag to reorder before merging.
           </p>
         </div>
       ) : (

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Send, Mail, Clock, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -18,6 +19,7 @@ const inputClass =
 
 export function ContactPageContent() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -28,6 +30,17 @@ export function ContactPageContent() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    const subjectParam = searchParams.get("subject")?.toLowerCase();
+    if (subjectParam === "business" || subjectParam === "sales") {
+      setFormData((prev) => ({
+        ...prev,
+        subject: "Business / Sales",
+        message: prev.message || "I'm interested in the Business plan for my team.",
+      }));
+    }
+  }, [searchParams]);
 
   function validate() {
     const fieldErrors = getContactFieldErrors(formData);
@@ -152,6 +165,7 @@ export function ContactPageContent() {
                     className={inputClass}
                   >
                     <option value="General">General</option>
+                    <option value="Business / Sales">Business / Sales</option>
                     <option value="Bug Report">Bug Report</option>
                     <option value="Feature Request">Feature Request</option>
                     <option value="Billing">Billing</option>

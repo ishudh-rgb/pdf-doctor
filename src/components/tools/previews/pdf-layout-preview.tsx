@@ -39,7 +39,7 @@ export function PdfLayoutPreview({
             {imagePreviewUrl ? (
               <img src={imagePreviewUrl} alt="PDF page preview" className="h-full w-full object-contain" />
             ) : (
-              <div className="flex h-full items-center justify-center text-xs text-gray-400">Image area</div>
+              <div className="flex h-full items-center justify-center text-xs text-pd-muted">Image area</div>
             )}
           </div>
         </div>

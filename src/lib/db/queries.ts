@@ -463,9 +463,11 @@ export async function createPayment(data: {
   razorpay_order_id?: string | null;
   razorpay_payment_id?: string | null;
   razorpay_signature?: string | null;
+  razorpay_subscription_id?: string | null;
+  billing_mode?: "one_time" | "subscription" | null;
   amount: number;
   currency?: string;
-  status?: "pending" | "completed" | "failed" | "refunded";
+  status?: "pending" | "completed" | "failed" | "refunded" | "processing";
   payment_method?: string | null;
   plan_name?: string | null;
   plan_duration?: string | null;
@@ -480,6 +482,8 @@ export async function createPayment(data: {
       razorpay_order_id: data.razorpay_order_id ?? null,
       razorpay_payment_id: data.razorpay_payment_id ?? null,
       razorpay_signature: data.razorpay_signature ?? null,
+      razorpay_subscription_id: data.razorpay_subscription_id ?? null,
+      billing_mode: data.billing_mode ?? "one_time",
       amount: data.amount,
       currency: data.currency ?? "INR",
       status: data.status ?? "pending",
@@ -750,6 +754,13 @@ export const logToolUsage = async (data: {
     processing_time_ms: data.processingTimeMs ?? null,
     status: succeeded ? "success" : "failed",
   });
+
+  if (data.userId && succeeded) {
+    const { recordSuccessfulToolUse } = await import(
+      "@/lib/services/usage-limit.service"
+    );
+    await recordSuccessfulToolUse(data.userId).catch(() => {});
+  }
 
   if (data.userId && succeeded && data.output) {
     const { persistCompletedToolJob } = await import(

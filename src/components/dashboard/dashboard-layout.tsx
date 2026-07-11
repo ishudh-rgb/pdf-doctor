@@ -12,6 +12,7 @@ import {
   LogOut,
   Crown,
   Settings,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuthContext } from "@/components/providers/auth-provider";
@@ -21,8 +22,10 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, labelKey: "dashboard.overview" },
   { href: "/dashboard/files", icon: FolderOpen, labelKey: "dashboard.myFiles" },
   { href: "/dashboard/settings", icon: Settings, labelKey: "dashboard.privacySettings" },
+  { href: "/dashboard/security", icon: Shield, labelKey: "dashboard.security" },
   { href: "/#tools", icon: Wrench, labelKey: "dashboard.browseTools" },
   { href: "/dashboard/pricing", icon: CreditCard, labelKey: "nav.pricing" },
+  { href: "/dashboard/enterprise", icon: Building2, labelKey: "dashboard.enterprise" },
   { href: "/contact", icon: HelpCircle, labelKey: "dashboard.helpSupport" },
 ] as const;
 
@@ -44,7 +47,7 @@ function UserInitials({ name, email }: { name?: string | null; email?: string | 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const { user, profile, isPro, signOut } = useAuthContext();
+  const { user, profile, isPro, proSource, organizationName, signOut } = useAuthContext();
 
   const displayName =
     profile?.full_name?.trim() ||
@@ -117,7 +120,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   >
                     {isPro ? (
                       <>
-                        <Crown className="h-3 w-3" /> Pro
+                        <Crown className="h-3 w-3" />{" "}
+                        {proSource === "organization" && organizationName
+                          ? `Pro · ${organizationName}`
+                          : "Pro"}
                       </>
                     ) : (
                       t("dashboard.freePlan")

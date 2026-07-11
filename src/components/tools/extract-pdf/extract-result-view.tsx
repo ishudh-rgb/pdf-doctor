@@ -130,7 +130,7 @@ export function ExtractResultView({
           {loadingPreview ? (
             <div className="flex flex-col items-center justify-center gap-3 py-20">
               <div className="h-8 w-8 animate-spin rounded-full border-3 border-gray-300 border-t-blue-600" />
-              <p className="text-sm text-gray-500">Loading preview…</p>
+              <p className="text-sm text-pd-muted">Loading preview…</p>
             </div>
           ) : resultThumbs.length > 0 ? (
             <div className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -156,7 +156,7 @@ export function ExtractResultView({
           ) : (
             <div className="flex flex-col items-center justify-center gap-3 py-20">
               <FileText className="h-12 w-12 text-gray-300" />
-              <p className="text-sm text-gray-400">Preview not available</p>
+              <p className="text-sm text-pd-muted">Preview not available</p>
             </div>
           )}
         </div>
@@ -171,7 +171,7 @@ export function ExtractResultView({
               <p className="mt-0.5 truncate text-sm font-medium text-gray-700" title={resultFileName}>
                 {resultFileName}
               </p>
-              <p className="mt-0.5 text-sm text-gray-400">
+              <p className="mt-0.5 text-sm text-pd-muted">
                 {resultPages > 0
                   ? `${resultPages} page${resultPages !== 1 ? "s" : ""}`
                   : `${extractedCount} page${extractedCount !== 1 ? "s" : ""} extracted`}
@@ -200,7 +200,7 @@ export function ExtractResultView({
               <button
                 type="button"
                 onClick={handleShare}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-pd-muted transition-colors hover:bg-gray-100 hover:text-pd-foreground"
                 title="Share"
               >
                 <Share2 className="h-4.5 w-4.5" />
@@ -209,7 +209,7 @@ export function ExtractResultView({
             <button
               type="button"
               onClick={handlePrint}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-pd-muted transition-colors hover:bg-gray-100 hover:text-pd-foreground"
               title="Print"
             >
               <Printer className="h-4.5 w-4.5" />
@@ -222,7 +222,7 @@ export function ExtractResultView({
               <p className="mb-2 text-sm font-semibold text-gray-800">
                 Smart tip! <span className="text-amber-500">💡</span>
               </p>
-              <p className="mb-3 text-xs text-gray-500">
+              <p className="mb-3 text-xs text-pd-muted">
                 That&apos;s a lot of pages in one document. Why not try:
               </p>
               <div className="flex flex-col gap-1.5">
@@ -238,7 +238,7 @@ export function ExtractResultView({
                       </div>
                       <span className="text-sm font-medium text-gray-700">{tip.name}</span>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                    <ChevronRight className="h-4 w-4 text-pd-muted" />
                   </Link>
                 ))}
               </div>
@@ -247,7 +247,7 @@ export function ExtractResultView({
 
           {/* Continue in */}
           <div className="mt-5">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-pd-muted">
               Continue in
             </p>
             <div className="flex flex-col gap-1">
@@ -273,7 +273,7 @@ export function ExtractResultView({
           <button
             type="button"
             onClick={onStartOver}
-            className="mt-6 w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+            className="mt-6 w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-medium text-pd-muted transition-colors hover:bg-gray-50 hover:text-pd-foreground"
           >
             Extract from another file
           </button>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useToolWorkspaceMessages } from "@/hooks/use-tool-workspace-messages";
 import { loadPdfDocumentPreview } from "@/lib/pdf/pdf-thumbnails.client";
 import { ToolErrorBanner, ToolHiddenFileInput, ToolWorkspaceReadyPanel } from "@/components/tools/tool-ui";
 import { PageZoomModal } from "@/components/tools/split-pdf/page-zoom-modal";
@@ -76,6 +76,7 @@ export function MergePdfWorkspace({
   onReset,
   onFilesChange,
 }: MergePdfWorkspaceProps) {
+  const ws = useToolWorkspaceMessages();
   const [items, setItems] = useState<MergeFileItem[]>(() =>
     initialFiles.filter(isPdfFile).map(createMergeFileItem)
   );
@@ -129,7 +130,7 @@ export function MergePdfWorkspace({
     if (preview.wrongPassword) {
       setPasswordPrompt((prev) =>
         prev?.itemId === id
-          ? { ...prev, errorMsg: preview.error ?? "Incorrect password.", loading: false }
+          ? { ...prev, errorMsg: preview.error ?? ws.incorrectPassword, loading: false }
           : prev
       );
       return;
@@ -158,7 +159,7 @@ export function MergePdfWorkspace({
         prev && /password/i.test(prev) ? null : prev
       );
     }
-  }, []);
+  }, [ws]);
 
   useEffect(() => {
     for (const item of items) {
@@ -196,7 +197,7 @@ export function MergePdfWorkspace({
       }
       return next;
     });
-  }, [items.length]);
+  }, [items]);
 
   const selectedFileCount = items.filter((i) => selectedFileIds.has(i.id)).length;
   const allFilesSelected =
@@ -228,7 +229,7 @@ export function MergePdfWorkspace({
   const addFilesAt = (newFiles: File[], afterFileIndex: number | null) => {
     const pdfs = newFiles.filter(isPdfFile);
     if (pdfs.length === 0) {
-      setError("Please select PDF files only.");
+      setError(ws.pdfOnly);
       return;
     }
 
@@ -248,7 +249,7 @@ export function MergePdfWorkspace({
   const insertPagesFromFiles = async (newFiles: File[], afterPageIndex: number | null) => {
     const pdfs = newFiles.filter(isPdfFile);
     if (pdfs.length === 0) {
-      setError("Please select PDF files only.");
+      setError(ws.pdfOnly);
       return;
     }
 
@@ -258,7 +259,7 @@ export function MergePdfWorkspace({
     for (const file of pdfs) {
       const preview = await loadPdfDocumentPreview(file);
       if (!preview.sessionId || preview.totalPages === 0) {
-        setError(preview.error ?? "Could not add document.");
+        setError(preview.error ?? ws.couldNotAddDocument);
         continue;
       }
       const item = createMergeFileItem(file);
@@ -447,14 +448,14 @@ export function MergePdfWorkspace({
       file: locked.file,
       fileName: locked.file.name,
     });
-    setError("Enter the password for all PDF files before exporting.");
+    setError(ws.enterPasswordBeforeExport);
     return true;
   };
 
   const handleExport = async () => {
     if (!allItemsLoaded) {
       if (promptNextLockedFile()) return;
-      setError("Please wait for all files to finish loading.");
+      setError(ws.waitForFilesLoading);
       return;
     }
 
@@ -464,7 +465,7 @@ export function MergePdfWorkspace({
         (s): s is MergePageSlot & { kind: "page" } => s.kind === "page"
       );
       if (!mainId || !mainSlot) {
-        setError("Add at least one PDF page to merge.");
+        setError(ws.addPageToMerge);
         return;
       }
 
@@ -495,7 +496,7 @@ export function MergePdfWorkspace({
             if (!res.ok) {
               const data = await res.json().catch(() => ({}));
               throw new Error(
-                (data as { error?: string }).error || "Failed to merge PDFs. Please try again."
+                (data as { error?: string }).error || ws.failedMergePdf
               );
             }
             return res.blob();
@@ -534,7 +535,7 @@ export function MergePdfWorkspace({
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
             throw new Error(
-              (data as { error?: string }).error || "Failed to merge PDFs. Please try again."
+              (data as { error?: string }).error || ws.failedMergePdf
             );
           }
           return res.blob();
@@ -555,13 +556,13 @@ export function MergePdfWorkspace({
   if (completed && resultUrl) {
     return (
       <ToolWorkspaceReadyPanel
-        title="PDFs merged"
-        description="Your merged document is ready to download."
+        title={ws.pdfsMerged}
+        description={ws.mergedDocumentReady}
         downloadUrl={resultUrl}
         downloadFilename="merged.pdf"
-        downloadLabel="Download Merged PDF"
+        downloadLabel={ws.downloadMergedPdf}
         resultSizeBytes={resultSize}
-        resetLabel="Merge more files"
+        resetLabel={ws.mergeMoreFiles}
         onReset={() => {
           setCompleted(false);
           setResultUrl(null);

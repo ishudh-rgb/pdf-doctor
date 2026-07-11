@@ -18,6 +18,7 @@ export default function DashboardSettingsPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const [exporting, setExporting] = useState(false);
+  const [exportPassword, setExportPassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [message, setMessage] = useState("");
@@ -27,11 +28,33 @@ export default function DashboardSettingsPage() {
   }, []);
 
   async function handleExport() {
+    if (!exportPassword || exportPassword.length < 8) {
+      setMessage(t("settingsPage.exportPasswordLabel"));
+      return;
+    }
+
     setExporting(true);
     setMessage("");
     try {
-      const res = await fetch("/api/user/account");
-      if (!res.ok) throw new Error("Export failed");
+      const res = await fetch("/api/user/account", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: exportPassword }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (res.status === 403) {
+          throw new Error(
+            typeof json.error === "string"
+              ? json.error
+              : t("settingsPage.exportReauthFail")
+          );
+        }
+        throw new Error(
+          typeof json.error === "string" ? json.error : t("settingsPage.exportFail")
+        );
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -40,8 +63,8 @@ export default function DashboardSettingsPage() {
       a.click();
       URL.revokeObjectURL(url);
       setMessage(t("settingsPage.exportDone"));
-    } catch {
-      setMessage(t("settingsPage.exportFail"));
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t("settingsPage.exportFail"));
     } finally {
       setExporting(false);
     }
@@ -109,6 +132,21 @@ export default function DashboardSettingsPage() {
           <div className="flex-1">
             <h2 className="font-semibold text-pd-foreground">{t("settingsPage.exportTitle")}</h2>
             <p className="mt-1 text-sm text-pd-muted">{t("settingsPage.exportDesc")}</p>
+            <label htmlFor="export-password" className="mt-4 block text-sm font-medium text-pd-foreground">
+              {t("settingsPage.exportPasswordLabel")}
+            </label>
+            <div className="relative mt-1.5 max-w-sm">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-muted" />
+              <input
+                id="export-password"
+                type="password"
+                value={exportPassword}
+                onChange={(e) => setExportPassword(e.target.value)}
+                placeholder={t("settingsPage.exportPasswordPlaceholder")}
+                className="w-full rounded-xl border border-pd-border bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-pd-brand focus:ring-2 focus:ring-pd-brand/20"
+                autoComplete="current-password"
+              />
+            </div>
             <Button className="mt-3" onClick={() => void handleExport()} disabled={exporting}>
               {exporting ? t("settingsPage.exporting") : t("settingsPage.exportBtn")}
             </Button>

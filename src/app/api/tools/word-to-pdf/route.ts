@@ -1,11 +1,13 @@
 import { beginToolRoute, handleToolRouteFailure } from "@/lib/server/tool-request-guards";
 import { NextRequest, NextResponse } from "next/server";
+import { toolJsonError } from "@/lib/server/tool-api-error";
 import { wordToPdf } from "@/lib/services/word-to-pdf.service";
 import { withHeavyJobGuard } from "@/lib/server/conversion-semaphore";
 import { checkUsageLimit, checkFileSizeLimit } from "@/lib/services/usage-limit.service";
 import { logToolUsage } from "@/lib/db/queries";
-import { getToolRequestUserId } from "@/lib/auth/get-tool-request-user";
-import { isValidFileType, validateFileSize, sanitizeFilename } from "@/lib/utils/file";
+import { resolveMutationToolUser } from "@/lib/auth/tool-mutation-auth";
+import { validateSingleUpload, uploadValidationResponse } from "@/lib/server/upload-validation";
+import { sanitizeFilename } from "@/lib/utils/file";
 import { FILE_LIMITS } from "@/config/constants";
 import { clientIpForLogs } from "@/lib/server/request-security";
 
@@ -19,7 +21,9 @@ export async function POST(request: NextRequest) {
   let userId: string | null = null;
 
   try {
-    userId = await getToolRequestUserId();
+    const mutationAuth = await resolveMutationToolUser(request);
+    if (mutationAuth.denied) return mutationAuth.denied;
+    userId = mutationAuth.userId;
 
     const sizeResult = userId
       ? await checkFileSizeLimit(userId)
@@ -28,32 +32,25 @@ export async function POST(request: NextRequest) {
 
     const usageResult = await checkUsageLimit(userId, request, "word-to-pdf");
     if (!usageResult.allowed) {
-      return NextResponse.json({ error: usageResult.message ?? "Daily usage limit reached." }, { status: 429 });
+      return toolJsonError(request, usageResult.message ?? "Daily usage limit reached.", 429);
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "Word document is required" },
-        { status: 400 }
-      );
+      return toolJsonError(request, "Word document is required", 400);
     }
 
-    if (!isValidFileType(file, ["word"])) {
-      return NextResponse.json(
-        { error: "Invalid file type. Only DOC/DOCX files are accepted." },
-        { status: 400 }
-      );
+    const validated = await validateSingleUpload(file, ["word"], maxSizeMB);
+    if (!validated.ok) {
+      if (validated.error === "Invalid file type.") {
+        return toolJsonError(request, "Invalid file type. Only DOC/DOCX files are accepted.", 400);
+      }
+      return uploadValidationResponse(request, validated);
     }
 
-    const sizeCheck = validateFileSize(file, maxSizeMB);
-    if (!sizeCheck.valid) {
-      return NextResponse.json({ error: sizeCheck.message }, { status: 400 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = validated.buffer;
     const pdfBuffer = await Promise.race([
       withHeavyJobGuard(() => wordToPdf(buffer, file.name)),
       new Promise<never>((_, reject) => {
@@ -98,7 +95,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return handleToolRouteFailure(error, {
+    return handleToolRouteFailure(error, { request, 
       toolSlug: "word-to-pdf",
       userId,
       errorType: "CONVERT_ERROR",

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { AlertTriangle, Loader2, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { AlertTriangle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface ErrorLogEntry {
   id: string;
@@ -19,11 +19,7 @@ export default function AdminErrorsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterTool, setFilterTool] = useState("");
 
-  useEffect(() => {
-    fetchErrors();
-  }, []);
-
-  const fetchErrors = async () => {
+  const fetchErrors = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/jobs?type=errors");
       if (res.ok) {
@@ -35,7 +31,11 @@ export default function AdminErrorsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchErrors();
+  }, [fetchErrors]);
 
   const filteredErrors = filterTool
     ? errors.filter((e) => e.tool_name === filterTool)

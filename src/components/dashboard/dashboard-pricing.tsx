@@ -28,6 +28,8 @@ import { useAuthContext } from "@/components/providers/auth-provider";
 import { PRO_PRICING, planFileSizeMarketingLabel } from "@/config/constants";
 import { useProCheckout } from "@/hooks/use-pro-checkout";
 import { DashboardMobileNav } from "@/components/dashboard/dashboard-layout";
+import { DashboardBillingPanel } from "@/components/dashboard/dashboard-billing-panel";
+import { MockBillingNotice } from "@/components/billing/mock-billing-notice";
 
 const PRO_MONTHLY = PRO_PRICING.monthlyInr;
 const PRO_YEARLY = PRO_PRICING.yearlyInr;
@@ -325,6 +327,8 @@ export function DashboardPricingContent() {
             </div>
           </div>
 
+          <MockBillingNotice className="mt-4 max-w-2xl" />
+
           {isYearly && (
             <p className="text-right text-xs text-white/55">
               {t("dashboard.pricing.yearlyEquiv", { amount: monthlyEq.toLocaleString("en-IN") })}
@@ -521,6 +525,8 @@ export function DashboardPricingContent() {
           </div>
         </div>
       </section>
+
+      {isPro && <DashboardBillingPanel />}
 
       {/* Pro highlights */}
       <section>

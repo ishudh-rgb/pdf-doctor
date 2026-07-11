@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { stripLocalePrefix } from "@/lib/i18n/locale-path";
 import { useDesignPreview } from "@/components/design/design-preview-provider";
 import type { LayoutStyleId } from "@/config/design-system";
 
@@ -62,7 +63,7 @@ export function ToolLayoutChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { layoutStyle } = useDesignPreview();
 
-  const slug = pathname.replace(/^\//, "");
+  const slug = stripLocalePrefix(pathname).replace(/^\//, "");
   const toolLabel = TOOL_SLUG_LABELS[slug];
 
   return (
